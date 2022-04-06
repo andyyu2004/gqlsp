@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "gqls",
+    "gqls-parse",
+    "gqls-syntax",
+]

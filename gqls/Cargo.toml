@@ -1,0 +1,25 @@
+[package]
+name = "gqls"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "gqls"
+
+[dependencies]
+anyhow = "1"
+lsp-types = "0.92"
+serde_json = "1"
+tower-lsp = "0.16"
+tracing = "0.1"
+
+[dependencies.tokio]
+version = "1"
+features = ["macros", "rt-multi-thread", "io-std"]
+
+[dev-dependencies]
+tower = "0.4"
+
+[dev-dependencies.tokio-util]
+version = "0.7"
+features = ["codec"]
