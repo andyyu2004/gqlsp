@@ -33,14 +33,16 @@ impl LanguageServer for Gqls {
     }
 
     async fn initialized(&self, _: InitializedParams) {
-        self.client.log_message(MessageType::INFO, "server initialized!").await;
+        tracing::info!("gqls initialized");
     }
 
     async fn shutdown(&self) -> Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(skip(self))]
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
+        tracing::info!("open");
         let _ = params;
     }
 }
