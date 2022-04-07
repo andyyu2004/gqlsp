@@ -19,6 +19,7 @@ features = ["macros", "rt-multi-thread", "io-std"]
 
 [dev-dependencies]
 tower = "0.4"
+serde = "1"
 
 [dev-dependencies.tokio-util]
 version = "0.7"

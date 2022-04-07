@@ -12,19 +12,23 @@ impl Gqls {
     }
 }
 
+pub fn capabilities() -> ServerCapabilities {
+    ServerCapabilities {
+        text_document_sync: Some(TextDocumentSyncCapability::Kind(
+            TextDocumentSyncKind::INCREMENTAL,
+        )),
+        // hover_provider: Some(HoverProviderCapability::Simple(true)),
+        // completion_provider: Some(CompletionOptions::default()),
+        ..Default::default()
+    }
+}
+
 #[tower_lsp::async_trait]
 impl LanguageServer for Gqls {
     async fn initialize(&self, _: InitializeParams) -> Result<InitializeResult> {
         Ok(InitializeResult {
-            capabilities: ServerCapabilities {
-                text_document_sync: Some(TextDocumentSyncCapability::Kind(
-                    TextDocumentSyncKind::INCREMENTAL,
-                )),
-                // hover_provider: Some(HoverProviderCapability::Simple(true)),
-                // completion_provider: Some(CompletionOptions::default()),
-                ..Default::default()
-            },
-            ..Default::default()
+            capabilities: capabilities(),
+            server_info: Some(ServerInfo { name: "gqls".to_owned(), version: None }),
         })
     }
 

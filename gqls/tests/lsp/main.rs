@@ -2,8 +2,10 @@ use std::sync::atomic::AtomicI64;
 
 use anyhow::Result;
 use gqls::Gqls;
-use lsp_types::lsp_request;
 use lsp_types::request::Request as _;
+use lsp_types::{lsp_request, InitializeParams, InitializeResult};
+use serde::de::DeserializeOwned;
+use serde::Deserialize;
 use serde_json::json;
 use tower::{Service, ServiceExt};
 use tower_lsp::jsonrpc::{Request, Response};
@@ -25,21 +27,22 @@ macro_rules! request {
     ($request:tt, $params:expr) => {{ Request::build(<lsp_request!($request)>::METHOD).id(next_id()).params($params).finish() }};
 }
 
+trait ResponseExt {
+    fn json<T: DeserializeOwned>(&self) -> Result<T, serde_json::Error>;
+}
+
+impl ResponseExt for Response {
+    fn json<T: DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
+        serde_json::from_value(self.result().unwrap().clone())
+    }
+}
+
 #[tokio::test]
-async fn another_test_style() -> Result<()> {
+async fn test_lsp_init() -> Result<()> {
     make_service!(service);
     let response =
         service.call(request!("initialize", json!({ "capabilities": {} }))).await?.unwrap();
-    assert_eq!(
-        response,
-        Response::from_ok(
-            0.into(),
-            json!({
-                "capabilities": {
-                    "textDocumentSync": 2
-                }
-            })
-        )
-    );
+    let initialize_result = response.json::<InitializeResult>()?;
+    assert_eq!(initialize_result.capabilities, gqls::capabilities());
     Ok(())
 }

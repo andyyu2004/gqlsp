@@ -1,3 +1,3 @@
 mod lsp;
 
-pub use lsp::Gqls;
+pub use lsp::{capabilities, Gqls};
