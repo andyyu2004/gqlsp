@@ -1,3 +1,5 @@
+#![deny(rust_2018_idioms)]
+
 pub use gqls_base_db::SourceDatabase;
 pub use salsa::{self, Database, ParallelDatabase, Snapshot};
 

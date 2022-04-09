@@ -1,7 +1,13 @@
-use tree_sitter::{Language, Parser, Tree};
+#![deny(rust_2018_idioms)]
+
+use tree_sitter::{Language, Parser, Query, Tree};
 
 extern "C" {
     fn tree_sitter_graphql() -> Language;
+}
+
+pub fn language() -> Language {
+    unsafe { tree_sitter_graphql() }
 }
 
 pub fn parse(text: &str, old_tree: Option<&Tree>) -> Tree {
@@ -9,10 +15,13 @@ pub fn parse(text: &str, old_tree: Option<&Tree>) -> Tree {
     parser.parse(text, old_tree).unwrap()
 }
 
+pub fn query(query: &str) -> Query {
+    Query::new(language(), query).unwrap()
+}
+
 fn make_parser() -> Parser {
-    let language = unsafe { tree_sitter_graphql() };
     let mut parser = Parser::new();
-    parser.set_language(language).unwrap();
+    parser.set_language(language()).unwrap();
     parser
 }
 

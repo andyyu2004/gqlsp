@@ -260,6 +260,7 @@ dependencies = [
  "expect-test",
  "gqls-db",
  "gqls-parse",
+ "once_cell",
  "ropey",
  "tracing",
  "tree-sitter",

@@ -1,3 +1,5 @@
+#![deny(rust_2018_idioms)]
+
 use std::path::Path;
 
 use self::interner::PathInterner;
@@ -17,7 +19,11 @@ impl Vfs {
         self.interner.intern(path.as_ref().to_path_buf())
     }
 
-    pub fn get(&mut self, path: impl AsRef<Path>) -> Option<FileId> {
+    pub fn get(&self, path: impl AsRef<Path>) -> Option<FileId> {
         self.interner.get(path.as_ref())
+    }
+
+    pub fn lookup(&self, file: FileId) -> &Path {
+        self.interner.lookup(file)
     }
 }

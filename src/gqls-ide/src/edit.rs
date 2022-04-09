@@ -8,6 +8,12 @@ pub struct Range {
     pub end: Point,
 }
 
+impl From<tree_sitter::Range> for Range {
+    fn from(range: tree_sitter::Range) -> Self {
+        Self { start: range.start_point, end: range.end_point }
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Clone, Default)]
 pub struct Patch {
     pub range: Range,
@@ -24,10 +30,8 @@ impl Patch {
         rope.insert(start_byte, with);
         let new_end_byte = rope.char_to_byte(start_byte + with.len());
         let new_end_line = rope.byte_to_line(new_end_byte);
-        let new_end_position = Point {
-            row: new_end_line,
-            column: new_end_byte - rope.line_to_byte(new_end_line),
-        };
+        let new_end_position =
+            Point { row: new_end_line, column: new_end_byte - rope.line_to_byte(new_end_line) };
         tree_sitter::InputEdit {
             start_byte,
             old_end_byte,
@@ -40,19 +44,19 @@ impl Patch {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Change {
+pub struct Changeset {
     pub file: FileId,
-    pub kind: ChangeKind,
+    pub changes: Vec<Change>,
 }
 
-impl Change {
-    pub fn new(file: FileId, kind: ChangeKind) -> Self {
-        Self { file, kind }
+impl Changeset {
+    pub fn new(file: FileId, changes: Vec<Change>) -> Self {
+        Self { file, changes }
     }
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum ChangeKind {
+pub enum Change {
     Patch(Patch),
     Set(String),
 }

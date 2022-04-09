@@ -1,34 +1,23 @@
 use ropey::Rope;
 
-
-
 #[macro_export]
 macro_rules! point {
     ($row:literal:$col:literal) => {
-        tree_sitter::Point {
-            row: $row,
-            column: $col,
-        }
+        tree_sitter::Point { row: $row, column: $col }
     };
 }
 
 #[macro_export]
 macro_rules! range {
     ($a:literal:$b:literal..$x:literal:$y:literal) => {
-        $crate::Range {
-            start: $crate::point!($a: $b),
-            end: $crate::point!($x: $y),
-        }
+        $crate::Range { start: $crate::point!($a: $b), end: $crate::point!($x: $y) }
     };
 }
 
 #[macro_export]
 macro_rules! patch {
     ($a:literal:$b:literal..$x:literal:$y:literal => $with:expr) => {
-        $crate::Patch {
-            range: $crate::range!($a: $b..$x: $y),
-            with: $with.to_owned(),
-        }
+        $crate::Patch { range: $crate::range!($a: $b..$x: $y), with: $with.to_owned() }
     };
 }
 

@@ -1,10 +1,9 @@
-use anyhow::{Result};
-use gqls_ide::{ChangeKind, Ide, Patch, Point, Range};
+use anyhow::Result;
+use gqls_ide::{Change, ChangeSummary, Ide, Patch, Point, Range};
 use lsp_types::*;
 use parking_lot::Mutex;
-use std::path::PathBuf;
-use tower_lsp::jsonrpc;
-use tower_lsp::{Client, LanguageServer};
+use std::path::{Path, PathBuf};
+use tower_lsp::{jsonrpc, Client, LanguageServer};
 
 pub struct Gqls {
     client: Client,
@@ -13,10 +12,7 @@ pub struct Gqls {
 
 impl Gqls {
     pub fn new(client: Client) -> Self {
-        Self {
-            client,
-            ide: Default::default(),
-        }
+        Self { client, ide: Default::default() }
     }
 }
 
@@ -28,6 +24,44 @@ pub fn capabilities() -> ServerCapabilities {
         // hover_provider: Some(HoverProviderCapability::Simple(true)),
         // completion_provider: Some(CompletionOptions::default()),
         ..Default::default()
+    }
+}
+
+trait PathExt {
+    fn to_url(&self) -> Url;
+}
+
+impl PathExt for Path {
+    fn to_url(&self) -> Url {
+        Url::from_file_path(self).unwrap()
+    }
+}
+
+trait LspRangeExt {
+    fn convert(self) -> Range;
+}
+
+impl LspRangeExt for lsp_types::Range {
+    fn convert(self) -> Range {
+        fn convert_pos(pos: Position) -> Point {
+            Point::new(pos.line as usize, pos.character as usize)
+        }
+
+        Range { start: convert_pos(self.start), end: convert_pos(self.end) }
+    }
+}
+
+trait RangeExt {
+    fn convert(self) -> lsp_types::Range;
+}
+
+impl RangeExt for Range {
+    fn convert(self) -> lsp_types::Range {
+        fn convert_pos(pos: Point) -> Position {
+            Position::new(pos.row as u32, pos.column as u32)
+        }
+
+        lsp_types::Range { start: convert_pos(self.start), end: convert_pos(self.end) }
     }
 }
 
@@ -76,17 +110,19 @@ impl LanguageServer for Gqls {
                 tracing::error!(%err);
                 jsonrpc::Error::internal_error()
             })?;
+
         let mut ide = self.ide.lock();
-        for (path, content) in paths {
-            ide.change(path, ChangeKind::Set(content));
+        let changesets = paths
+            .into_iter()
+            .map(|(path, content)| ide.make_changeset(&path, vec![Change::Set(content)]))
+            .collect::<Vec<_>>();
+        for summary in ide.apply_changesets(changesets) {
+            self.diagnostics(&summary).await;
         }
 
         Ok(InitializeResult {
             capabilities: capabilities(),
-            server_info: Some(ServerInfo {
-                name: "gqls".to_owned(),
-                version: None,
-            }),
+            server_info: Some(ServerInfo { name: "gqls".to_owned(), version: None }),
         })
     }
 
@@ -113,29 +149,40 @@ impl LanguageServer for Gqls {
 
 impl Gqls {
     async fn handle_did_change(&self, params: DidChangeTextDocumentParams) -> Result<()> {
-        fn convert_pos(pos: Position) -> Point {
-            Point::new(pos.line as usize, pos.character as usize)
-        }
-
-        fn convert_range(range: lsp_types::Range) -> Range {
-            Range {
-                start: convert_pos(range.start),
-                end: convert_pos(range.end),
-            }
-        }
-
+        let path = params.text_document.uri.to_path().unwrap();
+        let changes = params
+            .content_changes
+            .into_iter()
+            .map(|change| match change.range {
+                Some(range) => Change::Patch(Patch { range: range.convert(), with: change.text }),
+                None => Change::Set(change.text),
+            })
+            .collect();
         let mut ide = self.ide.lock();
-        for change in params.content_changes {
-            let change_kind = match change.range {
-                Some(range) => ChangeKind::Patch(Patch {
-                    range: convert_range(range),
-                    with: change.text,
-                }),
-                None => ChangeKind::Set(change.text),
-            };
-            let path = params.text_document.uri.to_path()?;
-            ide.change(path, change_kind);
-        }
+        let changeset = ide.make_changeset(&path, changes);
+        let summary = ide.apply_changeset(changeset);
+        self.diagnostics(&summary).await;
         Ok(())
+    }
+
+    async fn diagnostics(&self, summary: &ChangeSummary) {
+        let mut diagnostics = vec![];
+        for &range in &summary.error_ranges {
+            diagnostics.push(Diagnostic {
+                range: range.convert(),
+                message: "SYNTAX_ERROR".to_owned(),
+                ..Default::default()
+            });
+        }
+
+        if diagnostics.is_empty() {
+            return;
+        }
+        let uri = self.ide.lock().vfs().lookup(summary.file).to_url();
+        self.client
+            .send_notification::<lsp_types::notification::PublishDiagnostics>(
+                PublishDiagnosticsParams { uri, diagnostics, version: None },
+            )
+            .await;
     }
 }

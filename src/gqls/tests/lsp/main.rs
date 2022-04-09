@@ -25,19 +25,14 @@ fn next_id() -> i64 {
 
 macro_rules! request {
     ($service:ident: $request:tt, $params:expr) => {{
-        let response = $service
-            .call(build_request!($request, $params))
-            .await?
-            .unwrap();
+        let response = $service.call(build_request!($request, $params)).await?.unwrap();
         response.json::<<lsp_request!($request) as lsp_types::request::Request>::Result>()?
     }};
 }
 
 macro_rules! notify {
     ($service:ident: $notification:tt, $params:expr) => {{
-        let response = $service
-            .call(build_notification!($notification, $params))
-            .await?;
+        let response = $service.call(build_notification!($notification, $params)).await?;
         assert!(response.is_none());
     }};
 }
@@ -50,9 +45,9 @@ macro_rules! build_notification {
     ($request:tt, $params:expr) => {{
         type Notification = lsp_types::lsp_notification!($request);
         Request::build(<Notification>::METHOD)
-            .params(verify::<
-                <Notification as lsp_types::notification::Notification>::Params,
-            >(serde_json::to_value($params).unwrap()))
+            .params(verify::<<Notification as lsp_types::notification::Notification>::Params>(
+                serde_json::to_value($params).unwrap(),
+            ))
             .finish()
     }};
 }
@@ -96,20 +91,13 @@ macro_rules! fixture_path {
         let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("tests/lsp/fixtures")
             .join($name);
-        assert!(
-            path.exists(),
-            "fixture `{}` does not exist (path `{}`)",
-            $name,
-            path.display()
-        );
+        assert!(path.exists(), "fixture `{}` does not exist (path `{}`)", $name, path.display());
         path
     }};
 }
 
 macro_rules! fixture {
-    ($name:literal) => {{
-        url::Url::from_file_path(fixture_path!($name)).unwrap()
-    }};
+    ($name:literal) => {{ url::Url::from_file_path(fixture_path!($name)).unwrap() }};
 }
 
 #[test]
