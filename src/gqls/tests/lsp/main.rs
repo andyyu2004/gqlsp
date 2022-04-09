@@ -139,7 +139,7 @@ async fn test_lsp_document_change() -> Result<()> {
         content_changes: vec![TextDocumentContentChangeEvent {
             range: Default::default(),
             range_length: None,
-            text: "test".to_owned(),
+            text: "{}".to_owned(),
         }],
     };
     notify!(service: "textDocument/didChange", params);

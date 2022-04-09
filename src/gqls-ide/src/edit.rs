@@ -2,7 +2,7 @@ use ropey::Rope;
 pub use tree_sitter::Point;
 use vfs::FileId;
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Default)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash, Default)]
 pub struct Range {
     pub start: Point,
     pub end: Point,

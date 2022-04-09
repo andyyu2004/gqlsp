@@ -4,7 +4,7 @@ mod edit;
 
 pub use self::edit::{Change, Changeset, Patch, Point, Range};
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use gqls_db::{GqlsDatabase, SourceDatabase};
@@ -22,13 +22,13 @@ pub struct Ide {
     file_ropes: HashMap<FileId, Rope>,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ChangeSummary {
     pub file: FileId,
-    pub diagnostics: Vec<Diagnostic>,
+    pub diagnostics: HashSet<Diagnostic>,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Diagnostic {
     pub range: Range,
     pub kind: DiagnosticKind,
@@ -44,7 +44,7 @@ impl Diagnostic {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum DiagnosticKind {
     Syntax,
 }
@@ -59,15 +59,7 @@ impl Display for DiagnosticKind {
 
 impl ChangeSummary {
     pub fn empty(file: FileId) -> Self {
-        Self { file, diagnostics: vec![] }
-    }
-}
-
-impl ChangeSummary {
-    fn aggregate(&mut self, other: &Self) {
-        let &Self { file, diagnostics: ref error_ranges } = other;
-        assert_eq!(self.file, file);
-        self.diagnostics.extend_from_slice(error_ranges);
+        Self { file, diagnostics: Default::default() }
     }
 }
 
@@ -89,29 +81,28 @@ impl Ide {
 
     #[must_use]
     pub fn apply_changeset<'a>(&mut self, changeset: Changeset) -> ChangeSummary {
-        let mut summary = ChangeSummary::empty(changeset.file);
+        let file = changeset.file;
         for change in changeset.changes {
-            summary.aggregate(&self.apply(changeset.file, &change));
+            self.apply(file, &change);
         }
-        summary
-    }
-
-    pub fn apply(&mut self, file: FileId, change: &Change) -> ChangeSummary {
-        self.db.request_cancellation();
-        self.patch_tree(file, change);
         let diagnostics = self.diagnostics(file);
         ChangeSummary { file, diagnostics }
     }
 
-    fn diagnostics(&self, file: FileId) -> Vec<Diagnostic> {
-        static QUERY: Lazy<Query> = Lazy::new(|| query("(ERROR)"));
+    fn apply(&mut self, file: FileId, change: &Change) {
+        self.db.request_cancellation();
+        self.patch_tree(file, change);
+    }
+
+    fn diagnostics(&self, file: FileId) -> HashSet<Diagnostic> {
+        static QUERY: Lazy<Query> = Lazy::new(|| query("(ERROR) @error"));
         let text = RopeText::new(&self.file_ropes[&file]);
         let mut cursor = QueryCursor::new();
         let tree = self.db.file_tree(file);
         cursor.set_match_limit(30);
         cursor
-            .matches(&QUERY, tree.root_node(), text)
-            .flat_map(|query_match| query_match.captures)
+            .captures(&QUERY, tree.root_node(), text)
+            .flat_map(|(captures, _)| captures.captures)
             .map(|capture| Diagnostic::syntax(capture.node.range().into()))
             .collect()
     }
