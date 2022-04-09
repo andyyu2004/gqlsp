@@ -165,12 +165,14 @@ impl Gqls {
         Ok(())
     }
 
+    #[tracing::instrument(skip(self))]
     async fn diagnostics(&self, summary: &ChangeSummary) {
+        tracing::info!("emitting diagnostics");
         let mut diagnostics = vec![];
-        for &range in &summary.error_ranges {
+        for diagnostic in &summary.diagnostics {
             diagnostics.push(Diagnostic {
-                range: range.convert(),
-                message: "SYNTAX_ERROR".to_owned(),
+                range: diagnostic.range.convert(),
+                message: diagnostic.kind.to_string(),
                 ..Default::default()
             });
         }

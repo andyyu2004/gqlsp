@@ -11,6 +11,7 @@ use gqls_db::{GqlsDatabase, SourceDatabase};
 use gqls_parse::query;
 use once_cell::sync::Lazy;
 use ropey::Rope;
+use std::fmt::{self, Display};
 use tree_sitter::{Query, QueryCursor, TextProvider};
 use vfs::{FileId, Vfs};
 
@@ -21,23 +22,52 @@ pub struct Ide {
     file_ropes: HashMap<FileId, Rope>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ChangeSummary {
     pub file: FileId,
-    pub error_ranges: Vec<Range>,
+    pub diagnostics: Vec<Diagnostic>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Diagnostic {
+    pub range: Range,
+    pub kind: DiagnosticKind,
+}
+
+impl Diagnostic {
+    pub fn new(range: Range, kind: DiagnosticKind) -> Self {
+        Self { range, kind }
+    }
+
+    pub fn syntax(range: Range) -> Self {
+        Self::new(range, DiagnosticKind::Syntax)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum DiagnosticKind {
+    Syntax,
+}
+
+impl Display for DiagnosticKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Syntax => write!(f, "Syntax Error"),
+        }
+    }
 }
 
 impl ChangeSummary {
-    pub fn new(file: FileId) -> Self {
-        Self { file, error_ranges: vec![] }
+    pub fn empty(file: FileId) -> Self {
+        Self { file, diagnostics: vec![] }
     }
 }
 
 impl ChangeSummary {
     fn aggregate(&mut self, other: &Self) {
-        let &Self { file, ref error_ranges } = other;
+        let &Self { file, diagnostics: ref error_ranges } = other;
         assert_eq!(self.file, file);
-        self.error_ranges.extend_from_slice(error_ranges);
+        self.diagnostics.extend_from_slice(error_ranges);
     }
 }
 
@@ -59,7 +89,7 @@ impl Ide {
 
     #[must_use]
     pub fn apply_changeset<'a>(&mut self, changeset: Changeset) -> ChangeSummary {
-        let mut summary = ChangeSummary::new(changeset.file);
+        let mut summary = ChangeSummary::empty(changeset.file);
         for change in changeset.changes {
             summary.aggregate(&self.apply(changeset.file, &change));
         }
@@ -69,11 +99,11 @@ impl Ide {
     pub fn apply(&mut self, file: FileId, change: &Change) -> ChangeSummary {
         self.db.request_cancellation();
         self.patch_tree(file, change);
-        let error_ranges = self.error_ranges(file);
-        ChangeSummary { file, error_ranges }
+        let diagnostics = self.diagnostics(file);
+        ChangeSummary { file, diagnostics }
     }
 
-    fn error_ranges(&self, file: FileId) -> Vec<Range> {
+    fn diagnostics(&self, file: FileId) -> Vec<Diagnostic> {
         static QUERY: Lazy<Query> = Lazy::new(|| query("(ERROR)"));
         let text = RopeText::new(&self.file_ropes[&file]);
         let mut cursor = QueryCursor::new();
@@ -82,7 +112,7 @@ impl Ide {
         cursor
             .matches(&QUERY, tree.root_node(), text)
             .flat_map(|query_match| query_match.captures)
-            .map(|capture| capture.node.range().into())
+            .map(|capture| Diagnostic::syntax(capture.node.range().into()))
             .collect()
     }
 
