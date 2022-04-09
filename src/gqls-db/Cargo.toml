@@ -1,0 +1,10 @@
+[package]
+name = "gqls-db"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+salsa = "0.17.0-pre.2"
+
+[dependencies.gqls-base-db]
+path = "../gqls-base-db"

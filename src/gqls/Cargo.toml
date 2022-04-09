@@ -10,6 +10,7 @@ name = "gqls"
 anyhow = "1"
 atty = "0.2"
 lsp-types = "0.92"
+parking_lot = "0.12"
 tower-lsp = "0.16"
 tracing = "0.1"
 tracing-subscriber = "0.3"
@@ -18,6 +19,12 @@ walkdir = "2"
 [dependencies.tokio]
 version = "1"
 features = ["macros", "rt-multi-thread", "io-std", "fs"]
+
+[dependencies.gqls-ide]
+path = "../gqls-ide"
+
+[dependencies.vfs]
+path = "../vfs"
 
 [dev-dependencies]
 tower = "0.4"

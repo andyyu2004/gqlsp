@@ -6,3 +6,10 @@ edition = "2021"
 [dependencies]
 ropey = "1"
 tree-sitter = "0.20"
+
+[dependencies.gqls-db]
+path = "../gqls-db"
+
+[dependencies.vfs]
+path = "../vfs"
+

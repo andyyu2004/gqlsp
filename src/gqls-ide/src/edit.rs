@@ -1,5 +1,6 @@
 use ropey::Rope;
-use tree_sitter::Point;
+pub use tree_sitter::Point;
+use vfs::FileId;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Default)]
 pub struct Range {
@@ -36,8 +37,21 @@ impl Patch {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum Change {
+pub struct Change {
+    pub file: FileId,
+    pub kind: ChangeKind,
+}
+
+impl Change {
+    pub fn new(file: FileId, kind: ChangeKind) -> Self {
+        Self { file, kind }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum ChangeKind {
     Patch(Patch),
+    Set(String),
 }
 
 #[cfg(test)]

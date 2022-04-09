@@ -1,16 +1,21 @@
-use std::path::PathBuf;
-
+use anyhow::{bail, Result};
+use gqls_ide::{Change, ChangeKind, Ide, Patch, Point, Range};
 use lsp_types::*;
-use tower_lsp::jsonrpc::{self, Result};
+use parking_lot::Mutex;
+use std::path::PathBuf;
+use tower_lsp::jsonrpc;
 use tower_lsp::{Client, LanguageServer};
+use vfs::Vfs;
 
 pub struct Gqls {
     client: Client,
+    vfs: Mutex<Vfs>,
+    ide: Mutex<Ide>,
 }
 
 impl Gqls {
     pub fn new(client: Client) -> Self {
-        Self { client }
+        Self { client, ide: Default::default(), vfs: Default::default() }
     }
 }
 
@@ -25,33 +30,41 @@ pub fn capabilities() -> ServerCapabilities {
     }
 }
 
-fn uri_to_path(uri: &Url) -> Result<PathBuf> {
-    if uri.scheme() != "file" {
-        return Err(jsonrpc::Error::invalid_params(
-            "Only file URIs are supported for workspace folders: `{uri}`",
-        ));
+trait UrlExt {
+    fn to_path(&self) -> jsonrpc::Result<PathBuf>;
+}
+
+impl UrlExt for Url {
+    fn to_path(&self) -> jsonrpc::Result<PathBuf> {
+        if self.scheme() != "file" {
+            return Err(jsonrpc::Error::invalid_params(
+                "Only file URIs are supported for workspace folders: `{uri}`",
+            ));
+        }
+        self.to_file_path()
+            .map_err(|()| jsonrpc::Error::invalid_params(format!("Invalid file path: `{self}`")))
     }
-    uri.to_file_path()
-        .map_err(|()| jsonrpc::Error::invalid_params(format!("Invalid file path: `{uri}`")))
 }
 
 #[tower_lsp::async_trait]
 impl LanguageServer for Gqls {
     #[tracing::instrument(skip(self))]
-    async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
+    async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
         // TODO should probably check client capabilities, but going to assume they have everything we need for now
         fn find_graphql_files(
             folders: impl IntoIterator<Item = WorkspaceFolder>,
-        ) -> anyhow::Result<Vec<PathBuf>> {
+        ) -> anyhow::Result<Vec<(PathBuf, String)>> {
             let mut paths = vec![];
             for folder in folders {
-                let path = uri_to_path(&folder.uri)?;
+                let path = folder.uri.to_path()?;
                 for entry in walkdir::WalkDir::new(&path).into_iter() {
                     let entry = entry?;
                     if entry.path().extension() != Some("graphql".as_ref()) {
                         continue;
                     }
-                    paths.push(entry.path().to_path_buf());
+                    let path = entry.path().to_path_buf();
+                    let content = std::fs::read_to_string(&path)?;
+                    paths.push((path, content));
                 }
             }
             Ok(paths)
@@ -59,7 +72,11 @@ impl LanguageServer for Gqls {
 
         let paths = find_graphql_files(params.workspace_folders.into_iter().flatten())
             .map_err(|_| jsonrpc::Error::internal_error())?;
-        tracing::error!(?paths);
+        let mut ide = self.ide.lock();
+        let mut vfs = self.vfs.lock();
+        for (path, content) in paths {
+            ide.apply(Change::new(vfs.intern(path), ChangeKind::Set(content)));
+        }
 
         Ok(InitializeResult {
             capabilities: capabilities(),
@@ -71,7 +88,7 @@ impl LanguageServer for Gqls {
         tracing::info!("gqls initialized");
     }
 
-    async fn shutdown(&self) -> Result<()> {
+    async fn shutdown(&self) -> jsonrpc::Result<()> {
         Ok(())
     }
 
@@ -82,13 +99,34 @@ impl LanguageServer for Gqls {
 
     #[tracing::instrument(skip(self))]
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
-        for change in params.content_changes {
-            match change.range {
-                Some(range) => {
-                    tracing::error!(?range);
-                }
-                None => {}
-            }
+        if let Err(err) = self.handle_did_change(params).await {
+            tracing::error!(?err);
         }
+    }
+}
+
+impl Gqls {
+    async fn handle_did_change(&self, params: DidChangeTextDocumentParams) -> Result<()> {
+        fn convert_pos(pos: Position) -> Point {
+            Point::new(pos.line as usize, pos.character as usize)
+        }
+
+        fn convert_range(range: lsp_types::Range) -> Range {
+            Range { start: convert_pos(range.start), end: convert_pos(range.end) }
+        }
+
+        for change in params.content_changes {
+            let change_kind = match change.range {
+                Some(range) =>
+                    ChangeKind::Patch(Patch { range: convert_range(range), with: change.text }),
+                None => ChangeKind::Set(change.text),
+            };
+            let file_id =
+                self.vfs.lock().get(params.text_document.uri.to_path()?).ok_or_else(|| {
+                    anyhow::anyhow!("got change for unknown file `{}`", params.text_document.uri)
+                })?;
+            self.ide.lock().apply(Change::new(file_id, change_kind));
+        }
+        Ok(())
     }
 }
