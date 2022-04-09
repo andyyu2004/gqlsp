@@ -224,8 +224,8 @@ dependencies = [
 name = "gqls-base-db"
 version = "0.1.0"
 dependencies = [
- "ropey",
  "salsa",
+ "tree-sitter",
  "vfs",
 ]
 
@@ -242,6 +242,7 @@ name = "gqls-ide"
 version = "0.1.0"
 dependencies = [
  "gqls-db",
+ "gqls-parse",
  "ropey",
  "tree-sitter",
  "vfs",
