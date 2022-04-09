@@ -2,7 +2,6 @@ mod edit;
 
 use std::collections::HashMap;
 use std::path::Path;
-use std::sync::Arc;
 
 pub use self::edit::{Change, ChangeKind, Patch, Point, Range};
 use gqls_db::{GqlsDatabase, SourceDatabase};
@@ -44,7 +43,7 @@ impl Ide {
             ChangeKind::Set(text) => {
                 let rope = Rope::from_str(text);
                 self.file_ropes.insert(change.file, rope);
-                gqls_parse::parse(&text, None)
+                gqls_parse::parse(text, None)
             }
         };
 

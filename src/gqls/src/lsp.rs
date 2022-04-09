@@ -1,5 +1,5 @@
-use anyhow::{bail, Result};
-use gqls_ide::{Change, ChangeKind, Ide, Patch, Point, Range};
+use anyhow::{Result};
+use gqls_ide::{ChangeKind, Ide, Patch, Point, Range};
 use lsp_types::*;
 use parking_lot::Mutex;
 use std::path::PathBuf;

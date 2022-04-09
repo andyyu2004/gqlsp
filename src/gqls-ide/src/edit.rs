@@ -21,7 +21,7 @@ impl Patch {
         let start_byte = rope.line_to_byte(range.start.row) + range.start.column;
         let old_end_byte = rope.line_to_byte(range.end.row) + range.end.column;
         rope.remove(start_byte..old_end_byte);
-        rope.insert(start_byte, &with);
+        rope.insert(start_byte, with);
         let new_end_byte = rope.char_to_byte(start_byte + with.len());
         let new_end_line = rope.byte_to_line(new_end_byte);
         let new_end_position = Point {
