@@ -70,12 +70,15 @@ impl LanguageServer for Gqls {
             Ok(paths)
         }
 
-        let paths = find_graphql_files(params.workspace_folders.into_iter().flatten())
-            .map_err(|_| jsonrpc::Error::internal_error())?;
+        let paths =
+            find_graphql_files(params.workspace_folders.into_iter().flatten()).map_err(|err| {
+                tracing::error!(%err);
+                jsonrpc::Error::internal_error()
+            })?;
         let mut ide = self.ide.lock();
         let mut vfs = self.vfs.lock();
         for (path, content) in paths {
-            ide.apply(Change::new(vfs.intern(path), ChangeKind::Set(content)));
+            ide.apply(&Change::new(vfs.intern(path), ChangeKind::Set(content)));
         }
 
         Ok(InitializeResult {
@@ -100,7 +103,7 @@ impl LanguageServer for Gqls {
     #[tracing::instrument(skip(self))]
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         if let Err(err) = self.handle_did_change(params).await {
-            tracing::error!(?err);
+            tracing::error!(%err);
         }
     }
 }
@@ -125,7 +128,7 @@ impl Gqls {
                 self.vfs.lock().get(params.text_document.uri.to_path()?).ok_or_else(|| {
                     anyhow::anyhow!("got change for unknown file `{}`", params.text_document.uri)
                 })?;
-            self.ide.lock().apply(Change::new(file_id, change_kind));
+            self.ide.lock().apply(&Change::new(file_id, change_kind));
         }
         Ok(())
     }

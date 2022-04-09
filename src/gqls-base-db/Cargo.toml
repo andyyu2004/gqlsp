@@ -4,4 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ropey = "1"
 salsa = "0.17.0-pre.2"
+
+[dependencies.vfs]
+path = "../vfs"

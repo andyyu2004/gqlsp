@@ -1,9 +1,8 @@
 mod edit;
 
-use std::sync::Arc;
-
 pub use self::edit::{Change, ChangeKind, Patch, Point, Range};
 use gqls_db::{GqlsDatabase, SourceDatabase};
+use ropey::Rope;
 
 #[derive(Default)]
 pub struct Ide {
@@ -11,11 +10,16 @@ pub struct Ide {
 }
 
 impl Ide {
-    pub fn apply(&mut self, change: Change) {
+    pub fn apply(&mut self, change: &Change) {
         self.db.request_cancellation();
-        match change.kind {
-            ChangeKind::Patch(_) => todo!(),
-            ChangeKind::Set(text) => self.db.set_file_text(todo!(), Arc::new(text)),
-        }
+        let rope = match &change.kind {
+            ChangeKind::Patch(patch) => {
+                let mut rope = self.db.file_rope(change.file);
+                patch.apply(&mut rope);
+                rope
+            }
+            ChangeKind::Set(text) => Rope::from_str(text),
+        };
+        self.db.set_file_rope(change.file, rope);
     }
 }
