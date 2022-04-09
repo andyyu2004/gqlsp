@@ -15,7 +15,11 @@ pub struct Gqls {
 
 impl Gqls {
     pub fn new(client: Client) -> Self {
-        Self { client, ide: Default::default(), vfs: Default::default() }
+        Self {
+            client,
+            ide: Default::default(),
+            vfs: Default::default(),
+        }
     }
 }
 
@@ -83,7 +87,10 @@ impl LanguageServer for Gqls {
 
         Ok(InitializeResult {
             capabilities: capabilities(),
-            server_info: Some(ServerInfo { name: "gqls".to_owned(), version: None }),
+            server_info: Some(ServerInfo {
+                name: "gqls".to_owned(),
+                version: None,
+            }),
         })
     }
 
@@ -115,20 +122,28 @@ impl Gqls {
         }
 
         fn convert_range(range: lsp_types::Range) -> Range {
-            Range { start: convert_pos(range.start), end: convert_pos(range.end) }
+            Range {
+                start: convert_pos(range.start),
+                end: convert_pos(range.end),
+            }
         }
 
+        let mut ide = self.ide.lock();
+        let mut vfs = self.vfs.lock();
         for change in params.content_changes {
             let change_kind = match change.range {
-                Some(range) =>
-                    ChangeKind::Patch(Patch { range: convert_range(range), with: change.text }),
+                Some(range) => ChangeKind::Patch(Patch {
+                    range: convert_range(range),
+                    with: change.text,
+                }),
                 None => ChangeKind::Set(change.text),
             };
-            let file_id =
-                self.vfs.lock().get(params.text_document.uri.to_path()?).ok_or_else(|| {
+            let file_id = vfs
+                .get(params.text_document.uri.to_path()?)
+                .ok_or_else(|| {
                     anyhow::anyhow!("got change for unknown file `{}`", params.text_document.uri)
                 })?;
-            self.ide.lock().apply(&Change::new(file_id, change_kind));
+            ide.apply(&Change::new(file_id, change_kind));
         }
         Ok(())
     }

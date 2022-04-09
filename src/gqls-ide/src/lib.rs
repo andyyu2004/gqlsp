@@ -19,8 +19,11 @@ impl Ide {
         self.db.request_cancellation();
         let rope = match &change.kind {
             ChangeKind::Patch(patch) => {
-                let mut rope =
-                    self.file_ropes.get(&change.file).cloned().expect("patch on initial edit");
+                let mut rope = self
+                    .file_ropes
+                    .get(&change.file)
+                    .cloned()
+                    .expect("patch on initial edit");
                 patch.apply(&mut rope);
                 rope
             }
@@ -28,9 +31,11 @@ impl Ide {
         };
         // FIXME don't need to create this string from the rope in the `ChangeKind::Set` case
         let text = rope.to_string();
-        let old = self.file_ropes.insert(change.file, rope).map(|_| self.db.file_tree(change.file));
+        let old = self
+            .file_ropes
+            .insert(change.file, rope)
+            .map(|_| self.db.file_tree(change.file));
         let tree = gqls_parse::parse(&text, old.as_deref());
-        tracing::info!(?tree);
         self.db.set_file_tree(change.file, Arc::new(tree));
     }
 }
