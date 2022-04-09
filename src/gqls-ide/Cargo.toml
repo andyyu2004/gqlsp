@@ -1,0 +1,8 @@
+[package]
+name = "gqls-ide"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ropey = "1"
+tree-sitter = "0.20"
