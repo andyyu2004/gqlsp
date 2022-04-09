@@ -244,6 +244,7 @@ dependencies = [
  "gqls-db",
  "gqls-parse",
  "ropey",
+ "tracing",
  "tree-sitter",
  "vfs",
 ]

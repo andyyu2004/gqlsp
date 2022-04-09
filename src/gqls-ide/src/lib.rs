@@ -26,10 +26,11 @@ impl Ide {
             }
             ChangeKind::Set(text) => Rope::from_str(text),
         };
-        // FIXME don't need to create this string from the rope in the `Set` case
+        // FIXME don't need to create this string from the rope in the `ChangeKind::Set` case
         let text = rope.to_string();
         let old = self.file_ropes.insert(change.file, rope).map(|_| self.db.file_tree(change.file));
         let tree = gqls_parse::parse(&text, old.as_deref());
+        tracing::info!(?tree);
         self.db.set_file_tree(change.file, Arc::new(tree));
     }
 }
