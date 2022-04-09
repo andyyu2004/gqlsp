@@ -7,5 +7,5 @@ pub trait SourceDatabase {
     #[salsa::input]
     fn files(&self) -> Arc<Vec<FileId>>;
     #[salsa::input]
-    fn file_tree(&self, file_id: FileId) -> Arc<Tree>;
+    fn file_tree(&self, file_id: FileId) -> Tree;
 }

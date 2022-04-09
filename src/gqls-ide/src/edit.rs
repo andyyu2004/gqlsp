@@ -15,6 +15,7 @@ pub struct Patch {
 }
 
 impl Patch {
+    #[must_use]
     pub fn apply(&self, rope: &mut Rope) -> tree_sitter::InputEdit {
         let Patch { range, with } = self;
         let start_byte = rope.line_to_byte(range.start.row) + range.start.column;
@@ -23,8 +24,10 @@ impl Patch {
         rope.insert(start_byte, &with);
         let new_end_byte = rope.char_to_byte(start_byte + with.len());
         let new_end_line = rope.byte_to_line(new_end_byte);
-        let new_end_position =
-            Point { row: new_end_line, column: new_end_byte - rope.line_to_byte(new_end_line) };
+        let new_end_position = Point {
+            row: new_end_line,
+            column: new_end_byte - rope.line_to_byte(new_end_line),
+        };
         tree_sitter::InputEdit {
             start_byte,
             old_end_byte,

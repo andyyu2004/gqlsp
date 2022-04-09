@@ -5,11 +5,9 @@ use parking_lot::Mutex;
 use std::path::PathBuf;
 use tower_lsp::jsonrpc;
 use tower_lsp::{Client, LanguageServer};
-use vfs::Vfs;
 
 pub struct Gqls {
     client: Client,
-    vfs: Mutex<Vfs>,
     ide: Mutex<Ide>,
 }
 
@@ -18,7 +16,6 @@ impl Gqls {
         Self {
             client,
             ide: Default::default(),
-            vfs: Default::default(),
         }
     }
 }
@@ -80,9 +77,8 @@ impl LanguageServer for Gqls {
                 jsonrpc::Error::internal_error()
             })?;
         let mut ide = self.ide.lock();
-        let mut vfs = self.vfs.lock();
         for (path, content) in paths {
-            ide.apply(&Change::new(vfs.intern(path), ChangeKind::Set(content)));
+            ide.change(path, ChangeKind::Set(content));
         }
 
         Ok(InitializeResult {
@@ -129,7 +125,6 @@ impl Gqls {
         }
 
         let mut ide = self.ide.lock();
-        let mut vfs = self.vfs.lock();
         for change in params.content_changes {
             let change_kind = match change.range {
                 Some(range) => ChangeKind::Patch(Patch {
@@ -138,12 +133,8 @@ impl Gqls {
                 }),
                 None => ChangeKind::Set(change.text),
             };
-            let file_id = vfs
-                .get(params.text_document.uri.to_path()?)
-                .ok_or_else(|| {
-                    anyhow::anyhow!("got change for unknown file `{}`", params.text_document.uri)
-                })?;
-            ide.apply(&Change::new(file_id, change_kind));
+            let path = params.text_document.uri.to_path()?;
+            ide.change(path, change_kind);
         }
         Ok(())
     }
