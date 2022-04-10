@@ -4,8 +4,7 @@ module.exports = grammar({
   extras: ($) => [/[\s\uFEFF\u0009\u0020\u000A\u000D]/, $.comma, $.comment],
 
   rules: {
-    source_file: ($) => $.document,
-    document: ($) => repeat1($.definition),
+    document: ($) => repeat($.definition),
     definition: ($) =>
       choice(
         $.executable_definition,

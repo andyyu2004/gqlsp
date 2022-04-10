@@ -22,12 +22,12 @@ fn test_ide() {
     let summary = change!(ide: foo => "query foo { bar }");
     assert_eq!(summary, ChangeSummary::empty(foo));
     assert_eq!(ide.file_ropes[&foo].to_string(), "query foo { bar }");
-    expect![[r#"(source_file (document (definition (executable_definition (operation_definition (operation_type) (name) (selection_set (selection (field (name)))))))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
+    expect![[r#"(document (definition (executable_definition (operation_definition (operation_type) (name) (selection_set (selection (field (name))))))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
 
     let summary = change!(ide: foo:0:15..0:15 => " baz");
     assert_eq!(summary, ChangeSummary::empty(foo));
     assert_eq!(ide.file_ropes[&foo].to_string(), "query foo { bar baz }");
-    expect![[r#"(source_file (document (definition (executable_definition (operation_definition (operation_type) (name) (selection_set (selection (field (name))) (selection (field (name)))))))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
+    expect![[r#"(document (definition (executable_definition (operation_definition (operation_type) (name) (selection_set (selection (field (name))) (selection (field (name))))))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
 }
 
 #[test]
