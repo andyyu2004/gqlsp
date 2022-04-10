@@ -121,7 +121,6 @@ impl UrlExt for Url {
 
 #[tower_lsp::async_trait]
 impl LanguageServer for Gqls {
-    #[tracing::instrument(skip(self))]
     async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
         // TODO should probably check client capabilities, but going to assume they have everything we need for now
         fn find_graphql_files(
@@ -172,12 +171,10 @@ impl LanguageServer for Gqls {
         Ok(())
     }
 
-    #[tracing::instrument(skip(self))]
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         let _ = params;
     }
 
-    #[tracing::instrument(skip(self))]
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         if let Err(err) = self.handle_did_change(params).await {
             tracing::error!(%err);
