@@ -201,9 +201,6 @@ impl Gqls {
     #[tracing::instrument(skip(self))]
     async fn diagnostics(&self, summary: ChangeSummary) {
         tracing::info!("emitting diagnostics");
-        if summary.diagnostics.is_empty() {
-            return;
-        }
         let diagnostics = summary.diagnostics.into_iter().map(Convert::convert).collect::<Vec<_>>();
         self.client
             .send_notification::<PublishDiagnostics>(PublishDiagnosticsParams {
