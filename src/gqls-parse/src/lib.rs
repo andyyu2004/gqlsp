@@ -40,6 +40,10 @@ pub fn language() -> Language {
     unsafe { tree_sitter_graphql() }
 }
 
+pub fn parse_fresh(text: &str) -> Tree {
+    parse(text, None)
+}
+
 pub fn parse(text: &str, old_tree: Option<&Tree>) -> Tree {
     let mut parser = make_parser();
     parser.parse(text, old_tree).unwrap()

@@ -6,13 +6,7 @@ module.exports = grammar({
   rules: {
     document: ($) => repeat($.definition),
     definition: ($) =>
-      choice(
-        $.executable_definition,
-        $.type_system_definition,
-        $.type_system_extension
-      ),
-    executable_definition: ($) =>
-      choice($.operation_definition, $.fragment_definition),
+      choice($.type_system_definition, $.type_system_extension),
     type_system_definition: ($) =>
       choice($.schema_definition, $.type_definition, $.directive_definition),
     type_system_extension: ($) => choice($.schema_extension, $.type_extension),
@@ -163,18 +157,7 @@ module.exports = grammar({
       ),
     root_operation_type_definition: ($) =>
       seq($.operation_type, ":", $.named_type),
-    operation_definition: ($) =>
-      choice(
-        $.selection_set,
-        seq(
-          $.operation_type,
-          optional($.name),
-          optional($.variable_definitions),
-          optional($.directives),
-          $.selection_set
-        )
-      ),
-    operation_type: ($) => choice("query", "mutation", "subscription"),
+    operation_type: (_) => choice("query", "mutation", "subscription"),
     type_definition: ($) =>
       choice(
         $.scalar_type_definition,
@@ -250,16 +233,6 @@ module.exports = grammar({
         optional($.directives),
         optional($.comma)
       ),
-    selection_set: ($) => seq("{", repeat1($.selection), "}"),
-    selection: ($) => choice($.field, $.inline_fragment, $.fragment_spread),
-    field: ($) =>
-      seq(
-        optional($.alias),
-        $.name,
-        optional($.arguments),
-        optional($.directive),
-        optional($.selection_set)
-      ),
     alias: ($) => seq($.name, ":"),
     arguments: ($) => seq("(", repeat1($.argument), ")"),
     argument: ($) => seq($.name, ":", $.value),
@@ -293,29 +266,12 @@ module.exports = grammar({
           )
         )
       ),
-    boolean_value: ($) => choice("true", "false"),
+    boolean_value: (_) => choice("true", "false"),
     null_value: ($) => "null",
     enum_value: ($) => $.name,
     list_value: ($) => seq("[", repeat($.value), "]"),
     object_value: ($) => seq("{", repeat($.object_field), "}"),
     object_field: ($) => seq($.name, ":", $.value, optional($.comma)),
-    fragment_spread: ($) => seq("...", $.fragment_name, optional($.directives)),
-    fragment_definition: ($) =>
-      seq(
-        "fragment",
-        $.fragment_name,
-        $.type_condition,
-        optional($.directives),
-        $.selection_set
-      ),
-    fragment_name: ($) => $.name,
-    inline_fragment: ($) =>
-      seq(
-        "...",
-        optional($.type_condition),
-        optional($.directives),
-        $.selection_set
-      ),
     type_condition: ($) => seq("on", $.named_type),
     directives: ($) => repeat1($.directive),
     directive: ($) => seq("@", $.name, optional($.arguments)),

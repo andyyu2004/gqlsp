@@ -19,15 +19,15 @@ macro_rules! change {
 fn test_ide() {
     let mut ide = Ide::default();
     let foo = ide.vfs.intern("foo.gql");
-    let summary = change!(ide: foo => "query foo { bar }");
+    let summary = change!(ide: foo => "scalar Foo");
     assert_eq!(summary, ChangeSummary::empty(foo));
-    assert_eq!(ide.file_ropes[&foo].to_string(), "query foo { bar }");
-    expect![[r#"(document (definition (executable_definition (operation_definition (operation_type) (name) (selection_set (selection (field (name))))))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
+    assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Foo");
+    expect![[r#"(document (definition (type_system_definition (type_definition (scalar_type_definition (name))))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
 
-    let summary = change!(ide: foo:0:15..0:15 => " baz");
+    let summary = change!(ide: foo:0:7..0:10 => "Baz");
     assert_eq!(summary, ChangeSummary::empty(foo));
-    assert_eq!(ide.file_ropes[&foo].to_string(), "query foo { bar baz }");
-    expect![[r#"(document (definition (executable_definition (operation_definition (operation_type) (name) (selection_set (selection (field (name))) (selection (field (name))))))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
+    assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Baz");
+    expect![[r#"(document (definition (type_system_definition (type_definition (scalar_type_definition (name))))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
 }
 
 #[test]
@@ -42,11 +42,11 @@ fn test_ide_syntax_diagnostics() {
         }
     );
 
-    let summary = change!(ide: foo:0:0..0:3 => "{}");
+    let summary = change!(ide: foo:0:0..0:3 => "type Empty {}");
     assert_eq!(
         summary.diagnostics,
         hashset! {
-            Diagnostic::syntax(range!(0:1..0:1))
+            Diagnostic::syntax(range!(0:11..0:13))
         }
     );
 }

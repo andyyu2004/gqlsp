@@ -263,6 +263,7 @@ name = "gqls-db"
 version = "0.1.0"
 dependencies = [
  "gqls-base-db",
+ "gqls-ir",
  "salsa",
 ]
 
@@ -284,6 +285,13 @@ dependencies = [
 [[package]]
 name = "gqls-ir"
 version = "0.1.0"
+dependencies = [
+ "gqls-base-db",
+ "gqls-parse",
+ "la-arena",
+ "salsa",
+ "vfs",
+]
 
 [[package]]
 name = "gqls-parse"
@@ -359,6 +367,12 @@ name = "itoa"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aab8fc367588b89dcee83ab0fd66b72b50b72fa1904d7095045ace2b0c81c35"
+
+[[package]]
+name = "la-arena"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d43db9f547ba2787bdeac81ef97ccc80784f385b3b39b4d50344270629a2bee3"
 
 [[package]]
 name = "lazy_static"

@@ -3,6 +3,15 @@ name = "gqls-ir"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+la-arena = "0.2"
+salsa = "0.17.0-pre.2"
+
+[dependencies.gqls-base-db]
+path = "../gqls-base-db"
+
+[dependencies.gqls-parse]
+path = "../gqls-parse"
+
+[dependencies.vfs]
+path = "../vfs"

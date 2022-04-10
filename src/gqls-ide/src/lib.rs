@@ -10,8 +10,9 @@ pub use vfs::{Vfs, VfsPath};
 
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
+use std::sync::Arc;
 
-use gqls_db::{GqlsDatabase, ParallelDatabase, SourceDatabase};
+use gqls_db::{FileData, GqlsDatabase, ParallelDatabase, SourceDatabase};
 use gqls_parse::query;
 use once_cell::sync::Lazy;
 use ropey::Rope;
@@ -136,7 +137,7 @@ impl Ide {
     }
 
     fn patch_tree(&mut self, file: VfsPath, change: &Change) {
-        let tree = match &change {
+        let data = match &change {
             Change::Patch(patch) => {
                 let mut rope = self.file_ropes.get(&file).cloned().expect("patch on initial edit");
                 let edit = patch.apply(&mut rope);
@@ -144,15 +145,16 @@ impl Ide {
                 let mut old =
                     self.file_ropes.insert(file, rope).map(|_| self.db.file_tree(file)).unwrap();
                 old.edit(&edit);
-                gqls_parse::parse(&text, Some(&old))
+                let tree = gqls_parse::parse(&text, Some(&old));
+                FileData::new(text, tree)
             }
             Change::Set(text) => {
                 let rope = Rope::from_str(text);
                 self.file_ropes.insert(file, rope);
-                gqls_parse::parse(text, None)
+                FileData::new(text, gqls_parse::parse_fresh(text))
             }
         };
-        self.db.set_file_tree(file, tree.clone());
+        self.db.set_file_data(file, data);
     }
 }
 

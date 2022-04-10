@@ -1,11 +1,11 @@
 #![deny(rust_2018_idioms)]
 
-pub use gqls_base_db::SourceDatabase;
+pub use gqls_base_db::{FileData, SourceDatabase};
 pub use salsa::{self, Database, ParallelDatabase, Snapshot};
 
 use std::mem::ManuallyDrop;
 
-#[salsa::database(gqls_base_db::SourceDatabaseStorage)]
+#[salsa::database(gqls_base_db::SourceDatabaseStorage, gqls_ir::DefDatabaseStorage)]
 #[derive(Default)]
 pub struct GqlsDatabase {
     storage: ManuallyDrop<salsa::Storage<Self>>,
