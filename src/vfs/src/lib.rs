@@ -6,8 +6,7 @@ use self::interner::PathInterner;
 
 mod interner;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FileId(u32);
+pub type VfsPath = &'static Path;
 
 #[derive(Default)]
 pub struct Vfs {
@@ -15,15 +14,11 @@ pub struct Vfs {
 }
 
 impl Vfs {
-    pub fn intern(&mut self, path: impl AsRef<Path>) -> FileId {
+    pub fn intern(&mut self, path: impl AsRef<Path>) -> VfsPath {
         self.interner.intern(path.as_ref().to_path_buf())
     }
 
-    pub fn get(&self, path: impl AsRef<Path>) -> Option<FileId> {
+    pub fn get(&self, path: impl AsRef<Path>) -> Option<VfsPath> {
         self.interner.get(path.as_ref())
-    }
-
-    pub fn lookup(&self, file: FileId) -> &Path {
-        self.interner.lookup(file)
     }
 }

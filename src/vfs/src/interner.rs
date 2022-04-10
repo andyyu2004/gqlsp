@@ -1,26 +1,26 @@
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use indexmap::IndexSet;
+use crate::VfsPath;
 
-use crate::FileId;
-
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct PathInterner {
-    map: IndexSet<PathBuf>,
+    map: HashSet<&'static Path>,
 }
 
 impl PathInterner {
-    pub(crate) fn get(&self, path: &Path) -> Option<FileId> {
-        self.map.get_index_of(path).map(|i| FileId(i as u32))
+    pub(crate) fn get(&self, path: &Path) -> Option<VfsPath> {
+        self.map.get(path).copied()
     }
 
-    pub(crate) fn intern(&mut self, path: PathBuf) -> FileId {
-        let (id, _added) = self.map.insert_full(path);
-        assert!(id < u32::MAX as usize);
-        FileId(id as u32)
-    }
-
-    pub(crate) fn lookup(&self, id: FileId) -> &Path {
-        self.map.get_index(id.0 as usize).unwrap()
+    pub(crate) fn intern(&mut self, path: PathBuf) -> VfsPath {
+        match self.map.get(path.as_path()) {
+            Some(interned) => interned,
+            None => {
+                let path = Box::leak(path.into_boxed_path());
+                self.map.insert(path);
+                path
+            }
+        }
     }
 }

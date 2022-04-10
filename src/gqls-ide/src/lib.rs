@@ -13,18 +13,18 @@ use once_cell::sync::Lazy;
 use ropey::Rope;
 use std::fmt::{self, Display};
 use tree_sitter::{Query, QueryCursor, TextProvider};
-use vfs::{FileId, Vfs};
+use vfs::{Vfs, VfsPath};
 
 #[derive(Default)]
 pub struct Ide {
     db: GqlsDatabase,
     vfs: Vfs,
-    file_ropes: HashMap<FileId, Rope>,
+    file_ropes: HashMap<VfsPath, Rope>,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ChangeSummary {
-    pub file: FileId,
+    pub path: VfsPath,
     pub diagnostics: HashSet<Diagnostic>,
 }
 
@@ -58,8 +58,8 @@ impl Display for DiagnosticKind {
 }
 
 impl ChangeSummary {
-    pub fn empty(file: FileId) -> Self {
-        Self { file, diagnostics: Default::default() }
+    pub fn empty(path: VfsPath) -> Self {
+        Self { path, diagnostics: Default::default() }
     }
 }
 
@@ -68,10 +68,18 @@ impl Ide {
         &self.vfs
     }
 
+    #[must_use]
+    pub fn changeset<'a>(&mut self, path: &Path, changes: Vec<Change>) -> ChangeSummary {
+        let changeset = self.make_changeset(path, changes);
+        self.apply_changeset(changeset)
+    }
+
+    #[must_use]
     pub fn make_changeset<'a>(&mut self, path: &Path, changes: Vec<Change>) -> Changeset {
         Changeset::new(self.vfs.intern(path), changes)
     }
 
+    #[must_use]
     pub fn apply_changesets<'a>(
         &mut self,
         changesets: impl IntoIterator<Item = Changeset>,
@@ -81,20 +89,20 @@ impl Ide {
 
     #[must_use]
     pub fn apply_changeset<'a>(&mut self, changeset: Changeset) -> ChangeSummary {
-        let file = changeset.file;
+        let path = changeset.path;
         for change in changeset.changes {
-            self.apply(file, &change);
+            self.apply(path, &change);
         }
-        let diagnostics = self.diagnostics(file);
-        ChangeSummary { file, diagnostics }
+        let diagnostics = self.diagnostics(path);
+        ChangeSummary { path, diagnostics }
     }
 
-    fn apply(&mut self, file: FileId, change: &Change) {
+    fn apply(&mut self, file: VfsPath, change: &Change) {
         self.db.request_cancellation();
         self.patch_tree(file, change);
     }
 
-    fn diagnostics(&self, file: FileId) -> HashSet<Diagnostic> {
+    fn diagnostics(&self, file: VfsPath) -> HashSet<Diagnostic> {
         static QUERY: Lazy<Query> = Lazy::new(|| query("(ERROR) @error"));
         let text = RopeText::new(&self.file_ropes[&file]);
         let mut cursor = QueryCursor::new();
@@ -107,7 +115,7 @@ impl Ide {
             .collect()
     }
 
-    fn patch_tree(&mut self, file: FileId, change: &Change) {
+    fn patch_tree(&mut self, file: VfsPath, change: &Change) {
         let tree = match &change {
             Change::Patch(patch) => {
                 let mut rope = self.file_ropes.get(&file).cloned().expect("patch on initial edit");

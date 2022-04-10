@@ -158,9 +158,7 @@ impl Gqls {
                 None => Change::Set(change.text),
             })
             .collect();
-        let mut ide = self.ide.lock();
-        let changeset = ide.make_changeset(&path, changes);
-        let summary = ide.apply_changeset(changeset);
+        let summary = self.ide.lock().changeset(&path, changes);
         self.diagnostics(&summary).await;
         Ok(())
     }
@@ -180,10 +178,9 @@ impl Gqls {
         if diagnostics.is_empty() {
             return;
         }
-        let uri = self.ide.lock().vfs().lookup(summary.file).to_url();
         self.client
             .send_notification::<lsp_types::notification::PublishDiagnostics>(
-                PublishDiagnosticsParams { uri, diagnostics, version: None },
+                PublishDiagnosticsParams { uri: summary.path.to_url(), diagnostics, version: None },
             )
             .await;
     }

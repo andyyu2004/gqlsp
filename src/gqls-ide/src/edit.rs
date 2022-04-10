@@ -1,6 +1,6 @@
 use ropey::Rope;
 pub use tree_sitter::Point;
-use vfs::FileId;
+use vfs::VfsPath;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash, Default)]
 pub struct Range {
@@ -45,13 +45,13 @@ impl Patch {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Changeset {
-    pub file: FileId,
+    pub path: VfsPath,
     pub changes: Vec<Change>,
 }
 
 impl Changeset {
-    pub fn new(file: FileId, changes: Vec<Change>) -> Self {
-        Self { file, changes }
+    pub fn new(file: VfsPath, changes: Vec<Change>) -> Self {
+        Self { path: file, changes }
     }
 }
 

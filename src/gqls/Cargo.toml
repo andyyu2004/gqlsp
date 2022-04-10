@@ -29,6 +29,7 @@ path = "../vfs"
 
 [dev-dependencies]
 tower = "0.4"
+futures = "0.3"
 serde = "1"
 serde_json = "1"
 tracing-test = "0.2"

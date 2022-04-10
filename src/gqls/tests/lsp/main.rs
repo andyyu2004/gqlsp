@@ -1,4 +1,5 @@
 use anyhow::Result;
+use futures::StreamExt;
 use gqls::Gqls;
 use lsp_types::notification::Notification as _;
 use lsp_types::request::Request as _;
@@ -12,10 +13,10 @@ use tower_lsp::jsonrpc::{Request, Response};
 use tower_lsp::LspService;
 
 macro_rules! make_service {
-    ($ident:ident) => {
-        let (mut service, _) = LspService::new(Gqls::new);
-        let $ident = service.ready().await.unwrap();
-    };
+    () => {{
+        let (service, socket) = LspService::new(Gqls::new);
+        (Box::leak(Box::new(service)).ready().await.unwrap(), socket)
+    }};
 }
 
 fn next_id() -> i64 {
@@ -64,28 +65,6 @@ macro_rules! build_request {
     }};
 }
 
-trait ResponseExt {
-    fn json<T: DeserializeOwned>(self) -> Result<T>;
-}
-
-impl ResponseExt for Response {
-    fn json<T: DeserializeOwned>(self) -> Result<T> {
-        match self.into_parts().1 {
-            Ok(res) => Ok(serde_json::from_value(res)?),
-            Err(err) => return Err(err.into()),
-        }
-    }
-}
-
-#[tokio::test]
-#[tracing_test::traced_test]
-async fn test_lsp_init() -> Result<()> {
-    make_service!(service);
-    let response = request!(service: "initialize", json!({ "capabilities": {} }));
-    assert_eq!(response.capabilities, gqls::capabilities());
-    Ok(())
-}
-
 macro_rules! fixture_path {
     ($name:literal) => {{
         let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -100,6 +79,41 @@ macro_rules! fixture {
     ($name:literal) => {{ url::Url::from_file_path(fixture_path!($name)).unwrap() }};
 }
 
+macro_rules! url {
+    ($name:literal.$file:literal) => {{ fixture!($name).join($file).unwrap() }};
+}
+
+macro_rules! workspaces {
+    ($workspace:literal) => {
+        json!([{
+            "uri": fixture!($workspace),
+            "name": $workspace,
+        }])
+    };
+}
+
+macro_rules! request_init {
+    ($service:ident: $workspace:literal) => {{
+        request!($service: "initialize", json!({
+            "capabilities": {},
+            "workspaceFolders": workspaces!($workspace),
+        }))
+    }}
+}
+
+trait ResponseExt {
+    fn json<T: DeserializeOwned>(self) -> Result<T>;
+}
+
+impl ResponseExt for Response {
+    fn json<T: DeserializeOwned>(self) -> Result<T> {
+        match self.into_parts().1 {
+            Ok(res) => Ok(serde_json::from_value(res)?),
+            Err(err) => return Err(err.into()),
+        }
+    }
+}
+
 #[test]
 fn test_fixture_path_macro() {
     assert!(fixture_path!("simple").ends_with("tests/lsp/fixtures/simple"));
@@ -107,15 +121,18 @@ fn test_fixture_path_macro() {
 
 #[tokio::test]
 #[tracing_test::traced_test]
+async fn test_lsp_init() -> Result<()> {
+    let (service, socket) = make_service!();
+    let response = request!(service: "initialize", json!({ "capabilities": {} }));
+    assert_eq!(response.capabilities, gqls::capabilities());
+    Ok(())
+}
+
+#[tokio::test]
+#[tracing_test::traced_test]
 async fn test_lsp_init_with_graphql_files() -> Result<()> {
-    make_service!(service);
-    let response = request!(service: "initialize", json!({
-        "capabilities": {},
-        "workspaceFolders": [{
-            "uri": fixture!("simple"),
-            "name": "simple",
-        }]
-    }));
+    let (service, _socket) = make_service!();
+    let response = request_init!(service: "simple");
     assert_eq!(response.capabilities, gqls::capabilities());
     Ok(())
 }
@@ -123,17 +140,11 @@ async fn test_lsp_init_with_graphql_files() -> Result<()> {
 #[tokio::test]
 #[tracing_test::traced_test]
 async fn test_lsp_document_change() -> Result<()> {
-    make_service!(service);
-    request!(service: "initialize", json!({
-        "capabilities": {},
-        "workspaceFolders": [{
-            "uri": fixture!("empty"),
-            "name": "empty",
-        }]
-    }));
+    let (service, _socket) = make_service!();
+    request_init!(service: "empty");
     let params = lsp_types::DidChangeTextDocumentParams {
         text_document: VersionedTextDocumentIdentifier {
-            uri: fixture!("empty").join("empty.graphql").unwrap(),
+            uri: url!("empty"."empty.graphql"),
             version: next_id() as i32,
         },
         content_changes: vec![TextDocumentContentChangeEvent {
@@ -142,6 +153,32 @@ async fn test_lsp_document_change() -> Result<()> {
             text: "{}".to_owned(),
         }],
     };
+    notify!(service: "textDocument/didChange", params);
+    Ok(())
+}
+
+#[tokio::test]
+#[tracing_test::traced_test]
+async fn test_lsp_diagnostics() -> Result<()> {
+    let (service, mut socket) = make_service!();
+    request_init!(service: "empty");
+    let params = lsp_types::DidChangeTextDocumentParams {
+        text_document: VersionedTextDocumentIdentifier {
+            uri: url!("empty"."empty.graphql"),
+            version: next_id() as i32,
+        },
+        content_changes: vec![TextDocumentContentChangeEvent {
+            range: Default::default(),
+            range_length: None,
+            text: "malformed gql".to_owned(),
+        }],
+    };
+    tokio::spawn(async move {
+        loop {
+            let x = socket.next().await.unwrap();
+            dbg!(x);
+        }
+    });
     notify!(service: "textDocument/didChange", params);
     Ok(())
 }
