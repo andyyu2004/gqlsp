@@ -282,6 +282,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "gqls-ir"
+version = "0.1.0"
+
+[[package]]
 name = "gqls-parse"
 version = "0.1.0"
 dependencies = [

@@ -5,6 +5,7 @@ mod macros;
 
 pub use self::edit::{Change, Changeset, Patch, Point, Range};
 pub use tree_sitter;
+pub use vfs::{Vfs, VfsPath};
 
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -15,7 +16,6 @@ use once_cell::sync::Lazy;
 use ropey::Rope;
 use std::fmt::{self, Display};
 use tree_sitter::{Query, QueryCursor, TextProvider};
-use vfs::{Vfs, VfsPath};
 
 #[derive(Default)]
 pub struct Ide {
@@ -72,6 +72,10 @@ pub struct Analysis {
 impl Analysis {
     pub fn syntax_tree(&self, path: VfsPath) -> String {
         self.snapshot.file_tree(path).root_node().to_sexp()
+    }
+
+    pub fn goto_definition(&self, path: VfsPath, at: Point) {
+        let tree = self.snapshot.file_tree(path);
     }
 }
 

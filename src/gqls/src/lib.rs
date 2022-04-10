@@ -1,3 +1,5 @@
+mod convert;
 mod lsp;
 
-pub use lsp::{capabilities, Convert, Gqls};
+pub use convert::{Convert, UrlExt};
+pub use lsp::{capabilities, Gqls};

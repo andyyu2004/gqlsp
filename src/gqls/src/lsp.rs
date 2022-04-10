@@ -1,5 +1,6 @@
+use crate::{Convert, UrlExt};
 use anyhow::Result;
-use gqls_ide::{Change, ChangeSummary, Ide, Patch, Point, Range};
+use gqls_ide::{Change, ChangeSummary, Ide, Patch, VfsPath};
 use lsp_types::notification::PublishDiagnostics;
 use lsp_types::*;
 use parking_lot::Mutex;
@@ -26,6 +27,7 @@ pub fn capabilities() -> ServerCapabilities {
         text_document_sync: Some(TextDocumentSyncCapability::Kind(
             TextDocumentSyncKind::INCREMENTAL,
         )),
+        definition_provider: Some(OneOf::Left(true)),
         // hover_provider: Some(HoverProviderCapability::Simple(true)),
         // completion_provider: Some(CompletionOptions::default()),
         ..Default::default()
@@ -42,84 +44,15 @@ impl PathExt for Path {
     }
 }
 
-// Conversions to and from lsp types
-pub trait Convert {
-    type Converted;
-    fn convert(self) -> Self::Converted;
+pub trait IdeExt {
+    fn path(&self, url: &Url) -> jsonrpc::Result<VfsPath>;
 }
 
-impl<T> Convert for Vec<T>
-where
-    T: Convert,
-{
-    type Converted = Vec<T::Converted>;
-
-    fn convert(self) -> Self::Converted {
-        self.into_iter().map(|x| x.convert()).collect()
-    }
-}
-
-impl<const N: usize, T> Convert for [T; N]
-where
-    T: Convert,
-{
-    type Converted = [T::Converted; N];
-
-    fn convert(self) -> Self::Converted {
-        self.map(Convert::convert)
-    }
-}
-
-impl Convert for gqls_ide::Diagnostic {
-    type Converted = Diagnostic;
-
-    fn convert(self) -> Self::Converted {
-        Diagnostic {
-            range: self.range.convert(),
-            message: self.kind.to_string(),
-            source: Some("gqls".to_owned()),
-            ..Default::default()
-        }
-    }
-}
-
-impl Convert for lsp_types::Range {
-    type Converted = Range;
-
-    fn convert(self) -> Range {
-        fn convert_pos(pos: Position) -> Point {
-            Point::new(pos.line as usize, pos.character as usize)
-        }
-
-        Range { start: convert_pos(self.start), end: convert_pos(self.end) }
-    }
-}
-
-impl Convert for Range {
-    type Converted = lsp_types::Range;
-
-    fn convert(self) -> lsp_types::Range {
-        fn convert_pos(pos: Point) -> Position {
-            Position::new(pos.row as u32, pos.column as u32)
-        }
-
-        lsp_types::Range { start: convert_pos(self.start), end: convert_pos(self.end) }
-    }
-}
-
-trait UrlExt {
-    fn to_path(&self) -> jsonrpc::Result<PathBuf>;
-}
-
-impl UrlExt for Url {
-    fn to_path(&self) -> jsonrpc::Result<PathBuf> {
-        if self.scheme() != "file" {
-            return Err(jsonrpc::Error::invalid_params(
-                "Only file URIs are supported for workspace folders: `{uri}`",
-            ));
-        }
-        self.to_file_path()
-            .map_err(|()| jsonrpc::Error::invalid_params(format!("Invalid file path: `{self}`")))
+impl IdeExt for Ide {
+    fn path(&self, url: &Url) -> jsonrpc::Result<VfsPath> {
+        self.vfs()
+            .get(url.to_path()?)
+            .ok_or_else(|| jsonrpc::Error::invalid_params(format!("unknown file: `{url}`")))
     }
 }
 
@@ -184,6 +117,18 @@ impl LanguageServer for Gqls {
             tracing::error!(%err);
         }
     }
+
+    async fn goto_definition(
+        &self,
+        params: GotoDefinitionParams,
+    ) -> jsonrpc::Result<Option<GotoDefinitionResponse>> {
+        let ide = self.ide.lock();
+        let position = params.text_document_position_params;
+        let path = ide.path(&position.text_document.uri)?;
+        let analysis = ide.analysis();
+        analysis.goto_definition(path, position.position.convert());
+        todo!()
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
@@ -195,10 +140,7 @@ struct SyntaxTreeParams {
 impl Gqls {
     async fn syntax_tree(&self, params: SyntaxTreeParams) -> jsonrpc::Result<String> {
         let ide = self.ide.lock();
-        let path = ide
-            .vfs()
-            .get(params.text_document.uri.to_path()?)
-            .ok_or_else(|| jsonrpc::Error::invalid_params("unknown file"))?;
+        let path = ide.path(&params.text_document.uri)?;
         let analysis = ide.analysis();
         Ok(analysis.syntax_tree(path))
     }
