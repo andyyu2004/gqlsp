@@ -1,5 +1,6 @@
 use anyhow::Result;
 use gqls_ide::{Change, ChangeSummary, Ide, Patch, Point, Range};
+use lsp_types::notification::PublishDiagnostics;
 use lsp_types::*;
 use parking_lot::Mutex;
 use std::path::{Path, PathBuf};
@@ -37,11 +38,50 @@ impl PathExt for Path {
     }
 }
 
-trait LspRangeExt {
-    fn convert(self) -> Range;
+// Conversions to and from lsp types
+pub trait Convert {
+    type Converted;
+    fn convert(self) -> Self::Converted;
 }
 
-impl LspRangeExt for lsp_types::Range {
+impl<T> Convert for Vec<T>
+where
+    T: Convert,
+{
+    type Converted = Vec<T::Converted>;
+
+    fn convert(self) -> Self::Converted {
+        self.into_iter().map(|x| x.convert()).collect()
+    }
+}
+
+impl<const N: usize, T> Convert for [T; N]
+where
+    T: Convert,
+{
+    type Converted = [T::Converted; N];
+
+    fn convert(self) -> Self::Converted {
+        self.map(Convert::convert)
+    }
+}
+
+impl Convert for gqls_ide::Diagnostic {
+    type Converted = Diagnostic;
+
+    fn convert(self) -> Self::Converted {
+        Diagnostic {
+            range: self.range.convert(),
+            message: self.kind.to_string(),
+            source: Some("gqls".to_owned()),
+            ..Default::default()
+        }
+    }
+}
+
+impl Convert for lsp_types::Range {
+    type Converted = Range;
+
     fn convert(self) -> Range {
         fn convert_pos(pos: Position) -> Point {
             Point::new(pos.line as usize, pos.character as usize)
@@ -51,11 +91,9 @@ impl LspRangeExt for lsp_types::Range {
     }
 }
 
-trait RangeExt {
-    fn convert(self) -> lsp_types::Range;
-}
+impl Convert for Range {
+    type Converted = lsp_types::Range;
 
-impl RangeExt for Range {
     fn convert(self) -> lsp_types::Range {
         fn convert_pos(pos: Point) -> Position {
             Position::new(pos.row as u32, pos.column as u32)
@@ -117,7 +155,7 @@ impl LanguageServer for Gqls {
             .map(|(path, content)| ide.make_changeset(&path, vec![Change::Set(content)]))
             .collect::<Vec<_>>();
         for summary in ide.apply_changesets(changesets) {
-            self.diagnostics(&summary).await;
+            self.diagnostics(summary).await;
         }
 
         Ok(InitializeResult {
@@ -159,29 +197,23 @@ impl Gqls {
             })
             .collect();
         let summary = self.ide.lock().changeset(&path, changes);
-        self.diagnostics(&summary).await;
+        self.diagnostics(summary).await;
         Ok(())
     }
 
     #[tracing::instrument(skip(self))]
-    async fn diagnostics(&self, summary: &ChangeSummary) {
+    async fn diagnostics(&self, summary: ChangeSummary) {
         tracing::info!("emitting diagnostics");
-        let mut diagnostics = vec![];
-        for diagnostic in &summary.diagnostics {
-            diagnostics.push(Diagnostic {
-                range: diagnostic.range.convert(),
-                message: diagnostic.kind.to_string(),
-                ..Default::default()
-            });
-        }
-
-        if diagnostics.is_empty() {
+        if summary.diagnostics.is_empty() {
             return;
         }
+        let diagnostics = summary.diagnostics.into_iter().map(Convert::convert).collect::<Vec<_>>();
         self.client
-            .send_notification::<lsp_types::notification::PublishDiagnostics>(
-                PublishDiagnosticsParams { uri: summary.path.to_url(), diagnostics, version: None },
-            )
+            .send_notification::<PublishDiagnostics>(PublishDiagnosticsParams {
+                uri: summary.path.to_url(),
+                diagnostics,
+                version: None,
+            })
             .await;
     }
 }

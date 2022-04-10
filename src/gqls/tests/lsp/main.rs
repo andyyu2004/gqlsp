@@ -1,9 +1,10 @@
 use anyhow::Result;
 use futures::StreamExt;
-use gqls::Gqls;
+use gqls::{Convert, Gqls};
+use gqls_ide::DiagnosticKind;
 use lsp_types::notification::Notification as _;
 use lsp_types::request::Request as _;
-use lsp_types::{lsp_request, TextDocumentContentChangeEvent, VersionedTextDocumentIdentifier};
+use lsp_types::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -162,23 +163,33 @@ async fn test_lsp_document_change() -> Result<()> {
 async fn test_lsp_diagnostics() -> Result<()> {
     let (service, mut socket) = make_service!();
     request_init!(service: "empty");
+    let uri = url!("empty"."empty.graphql");
     let params = lsp_types::DidChangeTextDocumentParams {
         text_document: VersionedTextDocumentIdentifier {
-            uri: url!("empty"."empty.graphql"),
+            uri: uri.clone(),
             version: next_id() as i32,
         },
         content_changes: vec![TextDocumentContentChangeEvent {
             range: Default::default(),
             range_length: None,
-            text: "malformed gql".to_owned(),
+            text: "bad gql".to_owned(),
         }],
     };
-    tokio::spawn(async move {
-        loop {
-            let x = socket.next().await.unwrap();
-            dbg!(x);
-        }
-    });
+
     notify!(service: "textDocument/didChange", params);
+    let req = socket.next().await.unwrap();
+
+    assert_eq!(
+        req,
+        build_notification!(
+            "textDocument/publishDiagnostics",
+            json!({
+                "uri": uri,
+                "diagnostics": [
+                    gqls_ide::Diagnostic { range: gqls_ide::range!(0:0..0:7), kind: DiagnosticKind::Syntax }.convert()
+                ]
+            })
+        )
+    );
     Ok(())
 }

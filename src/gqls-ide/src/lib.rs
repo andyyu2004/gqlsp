@@ -1,8 +1,10 @@
 #![deny(rust_2018_idioms)]
 
 mod edit;
+mod macros;
 
 pub use self::edit::{Change, Changeset, Patch, Point, Range};
+pub use tree_sitter;
 
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
