@@ -123,7 +123,7 @@ fn test_fixture_path_macro() {
 #[tokio::test]
 #[tracing_test::traced_test]
 async fn test_lsp_init() -> Result<()> {
-    let (service, socket) = make_service!();
+    let (service, _) = make_service!();
     let response = request!(service: "initialize", json!({ "capabilities": {} }));
     assert_eq!(response.capabilities, gqls::capabilities());
     Ok(())
@@ -132,7 +132,7 @@ async fn test_lsp_init() -> Result<()> {
 #[tokio::test]
 #[tracing_test::traced_test]
 async fn test_lsp_init_with_graphql_files() -> Result<()> {
-    let (service, _socket) = make_service!();
+    let (service, _) = make_service!();
     let response = request_init!(service: "simple");
     assert_eq!(response.capabilities, gqls::capabilities());
     Ok(())

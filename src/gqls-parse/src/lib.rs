@@ -1,6 +1,10 @@
 #![deny(rust_2018_idioms)]
 
-use tree_sitter::{Language, Parser, Query, Tree};
+use tree_sitter::{Language, Node, Parser, Query, Tree};
+
+pub fn traverse(tree: &Tree) -> impl Iterator<Item = Node<'_>> {
+    tree_sitter_traversal::traverse_tree(tree, tree_sitter_traversal::Order::Pre)
+}
 
 extern "C" {
     fn tree_sitter_graphql() -> Language;

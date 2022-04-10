@@ -119,6 +119,7 @@ impl Ide {
     }
 
     fn diagnostics(&self, file: VfsPath) -> HashSet<Diagnostic> {
+        // can't query for missing nodes atm, so just traversing the entire tree to find any missing nodes
         static QUERY: Lazy<Query> = Lazy::new(|| query("(ERROR) @error"));
         let text = RopeText::new(&self.file_ropes[&file]);
         let mut cursor = QueryCursor::new();
@@ -127,7 +128,9 @@ impl Ide {
         cursor
             .captures(&QUERY, tree.root_node(), text)
             .flat_map(|(captures, _)| captures.captures)
-            .map(|capture| Diagnostic::syntax(capture.node.range().into()))
+            .map(|capture| capture.node)
+            .chain(gqls_parse::traverse(&tree).filter(|node| node.is_missing()))
+            .map(|node| Diagnostic::syntax(node.range().into()))
             .collect()
     }
 

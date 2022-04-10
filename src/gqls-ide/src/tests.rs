@@ -41,4 +41,12 @@ fn test_ide_syntax_diagnostics() {
             Diagnostic::syntax(range!(0:0..0:3))
         }
     );
+
+    let summary = change!(ide: foo:0:0..0:3 => "{}");
+    assert_eq!(
+        summary.diagnostics,
+        hashset! {
+            Diagnostic::syntax(range!(0:1..0:1))
+        }
+    );
 }
