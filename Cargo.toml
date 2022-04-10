@@ -5,6 +5,5 @@ members = [
     "src/gqls-db",
     "src/gqls-ide",
     "src/gqls-parse",
-    "src/gqls-syntax",
     "src/vfs",
 ]
