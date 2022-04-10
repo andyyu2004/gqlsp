@@ -4,7 +4,7 @@ use lsp_types::notification::PublishDiagnostics;
 use lsp_types::*;
 use parking_lot::Mutex;
 use std::path::{Path, PathBuf};
-use tower_lsp::{jsonrpc, Client, LanguageServer};
+use tower_lsp::{jsonrpc, Client, ClientSocket, LanguageServer, LspService};
 
 pub struct Gqls {
     client: Client,
@@ -14,6 +14,10 @@ pub struct Gqls {
 impl Gqls {
     pub fn new(client: Client) -> Self {
         Self { client, ide: Default::default() }
+    }
+
+    pub fn service() -> (LspService<Gqls>, ClientSocket) {
+        LspService::build(Self::new).custom_method("gqls/syntaxTree", Gqls::syntax_tree).finish()
     }
 }
 
@@ -182,7 +186,23 @@ impl LanguageServer for Gqls {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SyntaxTreeParams {
+    pub text_document: VersionedTextDocumentIdentifier,
+}
+
 impl Gqls {
+    async fn syntax_tree(&self, params: SyntaxTreeParams) -> jsonrpc::Result<String> {
+        let ide = self.ide.lock();
+        let path = ide
+            .vfs()
+            .get(params.text_document.uri.to_path()?)
+            .ok_or_else(|| jsonrpc::Error::invalid_params("unknown file"))?;
+        let analysis = ide.analysis();
+        Ok(analysis.syntax_tree(path))
+    }
+
     async fn handle_did_change(&self, params: DidChangeTextDocumentParams) -> Result<()> {
         let path = params.text_document.uri.to_path().unwrap();
         let changes = params

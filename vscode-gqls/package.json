@@ -18,7 +18,13 @@
     "commands": [
       {
         "command": "gqls.restart-server",
-        "title": "Gqls: Restart Server"
+        "title": "Restart Server",
+        "category": "Gqls"
+      },
+      {
+        "command": "gqls.syntax-tree",
+        "title": "Show Syntax Tree",
+        "category": "Gqls"
       }
     ]
   },

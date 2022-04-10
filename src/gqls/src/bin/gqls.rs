@@ -1,6 +1,6 @@
 use anyhow::Result;
 use gqls::Gqls;
-use tower_lsp::{LspService, Server};
+use tower_lsp::Server;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -10,7 +10,7 @@ async fn main() -> Result<()> {
     }
     builder.init();
     let (stdin, stdout) = (tokio::io::stdin(), tokio::io::stdout());
-    let (service, socket) = LspService::new(Gqls::new);
+    let (service, socket) = Gqls::service();
     Server::new(stdin, stdout, socket).serve(service).await;
     Ok(())
 }

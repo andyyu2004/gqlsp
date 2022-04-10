@@ -9,7 +9,7 @@ pub use tree_sitter;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-use gqls_db::{GqlsDatabase, SourceDatabase};
+use gqls_db::{GqlsDatabase, ParallelDatabase, SourceDatabase};
 use gqls_parse::query;
 use once_cell::sync::Lazy;
 use ropey::Rope;
@@ -65,7 +65,21 @@ impl ChangeSummary {
     }
 }
 
+pub struct Analysis {
+    snapshot: gqls_db::Snapshot<GqlsDatabase>,
+}
+
+impl Analysis {
+    pub fn syntax_tree(&self, path: VfsPath) -> String {
+        self.snapshot.file_tree(path).root_node().to_sexp()
+    }
+}
+
 impl Ide {
+    pub fn analysis(&self) -> Analysis {
+        Analysis { snapshot: self.db.snapshot() }
+    }
+
     pub fn vfs(&self) -> &Vfs {
         &self.vfs
     }
