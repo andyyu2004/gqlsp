@@ -1,9 +1,35 @@
 #![deny(rust_2018_idioms)]
 
+mod node;
+
+pub use self::node::NodeKind;
+
 use tree_sitter::{Language, Node, Parser, Query, Tree};
 
 pub fn traverse(tree: &Tree) -> impl Iterator<Item = Node<'_>> {
     tree_sitter_traversal::traverse_tree(tree, tree_sitter_traversal::Order::Pre)
+}
+
+pub struct Parents<'a, 'tree> {
+    node: &'a Node<'tree>,
+}
+
+impl<'tree> Iterator for Parents<'_, 'tree> {
+    type Item = Node<'tree>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.node.parent()
+    }
+}
+
+pub trait NodeExt<'tree> {
+    fn parents(&self) -> Parents<'_, 'tree>;
+}
+
+impl<'tree> NodeExt<'tree> for Node<'tree> {
+    fn parents(&self) -> Parents<'_, 'tree> {
+        Parents { node: self }
+    }
 }
 
 extern "C" {

@@ -126,8 +126,12 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position_params;
         let path = ide.path(&position.text_document.uri)?;
         let analysis = ide.analysis();
-        analysis.goto_definition(path, position.position.convert());
-        todo!()
+        Ok(analysis.find_definition(path, position.position.convert()).map(|def| {
+            GotoDefinitionResponse::Scalar(Location {
+                uri: def.path.to_url(),
+                range: def.range.convert(),
+            })
+        }))
     }
 }
 

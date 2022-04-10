@@ -1,7 +1,9 @@
-use ropey::Rope;
 pub use tree_sitter::Point;
+
+use ropey::Rope;
 use vfs::VfsPath;
 
+/// Similar to [`tree_sitter::Range`] but only containing points (but no byte offsets)
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash, Default)]
 pub struct Range {
     pub start: Point,

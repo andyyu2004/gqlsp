@@ -1,5 +1,6 @@
 #![deny(rust_2018_idioms)]
 
+mod def;
 mod edit;
 mod macros;
 
@@ -72,10 +73,6 @@ pub struct Analysis {
 impl Analysis {
     pub fn syntax_tree(&self, path: VfsPath) -> String {
         self.snapshot.file_tree(path).root_node().to_sexp()
-    }
-
-    pub fn goto_definition(&self, path: VfsPath, at: Point) {
-        let tree = self.snapshot.file_tree(path);
     }
 }
 
