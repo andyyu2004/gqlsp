@@ -22,13 +22,7 @@ impl Analysis {
         let data = self.file_data(path);
         let root = data.tree.root_node();
         let node = root.named_descendant_for_point_range(at, at)?;
-        // if the only node that matches the given range is the root node, then we ignore it
-        if node == root {
-            None
-        } else {
-            let name = node.find_descendent(|node| node.kind() == NodeKind::NAME)?.text(&data.text);
-            Some(Name::new(name))
-        }
+        (node.kind() == NodeKind::NAME).then(|| Name::new(node.text(&data.text)))
     }
 }
 

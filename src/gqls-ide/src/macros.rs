@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! point {
-    ($row:literal:$col:literal) => {
+    ($row:literal:$col:expr) => {
         $crate::tree_sitter::Point { row: $row, column: $col }
     };
 }
