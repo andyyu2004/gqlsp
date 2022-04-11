@@ -2,9 +2,9 @@ use std::path::Path;
 use std::sync::Arc;
 
 use crate::{DefDatabase, DefDatabaseStorage, Item, Items, Name, Res, TypeDefinition};
+use expect_test::expect;
 use gqls_base_db::{FileData, SourceDatabase, SourceDatabaseStorage};
-use la_arena::Arena;
-use maplit::hashmap;
+use maplit::{hashmap, hashset};
 use smallvec::smallvec;
 use vfs::Vfs;
 
@@ -53,21 +53,84 @@ fn test_definitions() {
             foo: Foo
         }
     "#;
-    db.set_files(Arc::new(vec![foo, bar]));
+    db.set_files(Arc::new(hashset![foo, bar]));
     db.set_file_data(foo, FileData::new(foogql, gqls_parse::parse_fresh(foogql)));
     db.set_file_data(bar, FileData::new(bargql, gqls_parse::parse_fresh(bargql)));
 
     let items = db.items(foo);
-    assert_eq!(
-        *items,
+    expect![[r#"
         Items {
-            items: Arena::from_iter([
-                Item::TypeDefinition(TypeDefinition { name: Name::new("Foo") }),
-                Item::TypeDefinition(TypeDefinition { name: Name::new("Foo") }),
-                Item::TypeDefinition(TypeDefinition { name: Name::new("Bar") })
-            ])
+            items: Arena {
+                len: 3,
+                data: [
+                    Item {
+                        range: Range {
+                            start_byte: 9,
+                            end_byte: 49,
+                            start_point: Point {
+                                row: 1,
+                                column: 8,
+                            },
+                            end_point: Point {
+                                row: 3,
+                                column: 9,
+                            },
+                        },
+                        kind: TypeDefinition(
+                            TypeDefinition {
+                                name: Name(
+                                    "Foo",
+                                ),
+                            },
+                        ),
+                    },
+                    Item {
+                        range: Range {
+                            start_byte: 59,
+                            end_byte: 100,
+                            start_point: Point {
+                                row: 5,
+                                column: 8,
+                            },
+                            end_point: Point {
+                                row: 7,
+                                column: 9,
+                            },
+                        },
+                        kind: TypeDefinition(
+                            TypeDefinition {
+                                name: Name(
+                                    "Foo",
+                                ),
+                            },
+                        ),
+                    },
+                    Item {
+                        range: Range {
+                            start_byte: 110,
+                            end_byte: 151,
+                            start_point: Point {
+                                row: 9,
+                                column: 8,
+                            },
+                            end_point: Point {
+                                row: 11,
+                                column: 9,
+                            },
+                        },
+                        kind: TypeDefinition(
+                            TypeDefinition {
+                                name: Name(
+                                    "Bar",
+                                ),
+                            },
+                        ),
+                    },
+                ],
+            },
         }
-    );
+    "#]]
+    .assert_debug_eq(&items);
 
     let item_map = db.item_map(foo);
     assert_eq!(
@@ -87,12 +150,13 @@ fn test_definitions() {
         ]
     );
 
-    let resolutions = db.resolve(Name::new("Bar"));
+    let mut resolutions = db.resolve(Name::new("Bar"));
+    resolutions.sort();
     assert_eq!(
         resolutions.as_slice(),
         [
+            Res { path: Path::new("bar"), idx: idx!(0) },
             Res { path: Path::new("foo"), idx: idx!(2) },
-            Res { path: Path::new("bar"), idx: idx!(0) }
         ]
     );
 }

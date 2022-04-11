@@ -5,17 +5,22 @@ use gqls_parse::{Node, NodeExt, NodeKind};
 use smallvec::smallvec;
 use vfs::VfsPath;
 
-use crate::{Item, ItemMap, Items, Name, Res, Resolutions, TypeDefinition};
+use crate::{Item, ItemKind, ItemMap, Items, Name, Res, Resolutions, TypeDefinition};
 
 #[salsa::query_group(DefDatabaseStorage)]
 pub trait DefDatabase: SourceDatabase {
     fn items(&self, path: VfsPath) -> Arc<Items>;
+    fn item(&self, res: Res) -> Item;
     fn item_map(&self, path: VfsPath) -> Arc<ItemMap>;
     fn resolve(&self, name: Name) -> Resolutions;
 }
 
 fn items(db: &dyn DefDatabase, path: VfsPath) -> Arc<Items> {
     LowerCtxt { data: db.file_data(path) }.lower()
+}
+
+fn item(db: &dyn DefDatabase, res: Res) -> Item {
+    db.items(res.path).items[res.idx].clone()
 }
 
 fn item_map(db: &dyn DefDatabase, path: VfsPath) -> Arc<ItemMap> {
@@ -56,24 +61,27 @@ impl LowerCtxt {
 
     fn lower_item(&self, node: Node<'_>) -> Option<Item> {
         assert_eq!(node.kind(), NodeKind::ITEM);
-        let node = node.sole_named_child();
-        let item = match node.kind() {
+        let def = node.sole_named_child();
+        let kind = match def.kind() {
             NodeKind::TYPE_DEFINITION => {
-                let node = node.sole_named_child();
-                let name = match node.kind() {
+                let typedef = def.sole_named_child();
+                let name = match typedef.kind() {
                     NodeKind::OBJECT_TYPE_DEFINITION
                     | NodeKind::INTERFACE_TYPE_DEFINITION
                     | NodeKind::SCALAR_TYPE_DEFINITION
                     | NodeKind::UNION_TYPE_DEFINITION
-                    | NodeKind::INPUT_OBJECT_TYPE_DEFINITION => node
-                        .named_children(&mut node.walk())
+                    | NodeKind::INPUT_OBJECT_TYPE_DEFINITION => typedef
+                        .named_children(&mut typedef.walk())
                         .find(|node| node.kind() == NodeKind::NAME),
-                    _ => unreachable!("invalid node kind for type definition: {:?}", node.kind()),
+                    _ =>
+                        unreachable!("invalid node kind for type definition: {:?}", typedef.kind()),
                 }?;
-                Item::TypeDefinition(TypeDefinition { name: Name::new(name.text(&self.data.text)) })
+                ItemKind::TypeDefinition(TypeDefinition {
+                    name: Name::new(name.text(&self.data.text)),
+                })
             }
-            _ => todo!(),
+            kind => todo!("{}", kind),
         };
-        Some(item)
+        Some(Item { range: def.range(), kind })
     }
 }

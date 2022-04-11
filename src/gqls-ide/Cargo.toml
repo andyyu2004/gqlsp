@@ -12,6 +12,9 @@ tree-sitter = "0.20"
 [dependencies.gqls-db]
 path = "../gqls-db"
 
+[dependencies.gqls-ir]
+path = "../gqls-ir"
+
 [dependencies.gqls-parse]
 path = "../gqls-parse"
 

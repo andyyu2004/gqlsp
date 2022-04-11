@@ -1,4 +1,8 @@
+use std::path::Path;
+use std::sync::Arc;
+
 use expect_test::expect;
+use gqls_db::SourceDatabase;
 use maplit::hashset;
 
 use crate::{range, ChangeSummary, Diagnostic, Ide};
@@ -22,12 +26,14 @@ fn test_ide() {
     let summary = change!(ide: foo => "scalar Foo");
     assert_eq!(summary, ChangeSummary::empty(foo));
     assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Foo");
-    expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
+    expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]]
+        .assert_eq(&ide.analysis().syntax_tree(foo));
 
     let summary = change!(ide: foo:0:7..0:10 => "Baz");
     assert_eq!(summary, ChangeSummary::empty(foo));
     assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Baz");
-    expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
+    expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]]
+        .assert_eq(&ide.analysis().syntax_tree(foo));
 }
 
 #[test]

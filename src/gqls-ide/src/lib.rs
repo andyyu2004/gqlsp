@@ -9,7 +9,9 @@ pub use tree_sitter;
 pub use vfs::{Vfs, VfsPath};
 
 use std::collections::{HashMap, HashSet};
+use std::ops::Deref;
 use std::path::Path;
+use std::sync::Arc;
 
 use gqls_db::{FileData, GqlsDatabase, ParallelDatabase, SourceDatabase};
 use gqls_parse::query;
@@ -70,9 +72,17 @@ pub struct Analysis {
     snapshot: gqls_db::Snapshot<GqlsDatabase>,
 }
 
+impl Deref for Analysis {
+    type Target = gqls_db::Snapshot<GqlsDatabase>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.snapshot
+    }
+}
+
 impl Analysis {
     pub fn syntax_tree(&self, path: VfsPath) -> String {
-        self.snapshot.file_tree(path).root_node().to_sexp()
+        self.file_tree(path).root_node().to_sexp()
     }
 }
 
@@ -114,9 +124,13 @@ impl Ide {
         ChangeSummary { path, diagnostics }
     }
 
-    fn apply(&mut self, file: VfsPath, change: &Change) {
+    fn apply(&mut self, path: VfsPath, change: &Change) {
         self.db.request_cancellation();
-        self.patch_tree(file, change);
+        let files = self.db.files();
+        if !files.contains(path) {
+            self.db.set_files(Arc::new(files.as_ref() | &HashSet::from([path])));
+        }
+        self.patch_tree(path, change);
     }
 
     fn diagnostics(&self, file: VfsPath) -> HashSet<Diagnostic> {
@@ -153,6 +167,7 @@ impl Ide {
                 FileData::new(text, gqls_parse::parse_fresh(text))
             }
         };
+        debug_assert!(self.db.files().contains(&file));
         self.db.set_file_data(file, data);
     }
 }
@@ -170,6 +185,18 @@ impl<'a> TextProvider<'a> for RopeText<'a> {
 
     fn text(&mut self, node: tree_sitter::Node<'_>) -> Self::I {
         self.0.byte_slice(node.byte_range()).chunks().map(str::as_bytes)
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
+pub struct Location {
+    pub path: VfsPath,
+    pub range: Range,
+}
+
+impl Location {
+    pub fn new(path: VfsPath, range: Range) -> Self {
+        Self { path, range }
     }
 }
 

@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::sync::Arc;
 use tree_sitter::Tree;
 use vfs::VfsPath;
@@ -18,7 +19,7 @@ impl FileData {
 #[salsa::query_group(SourceDatabaseStorage)]
 pub trait SourceDatabase {
     #[salsa::input]
-    fn files(&self) -> Arc<Vec<VfsPath>>;
+    fn files(&self) -> Arc<HashSet<VfsPath>>;
 
     #[salsa::input]
     fn file_data(&self, path: VfsPath) -> FileData;

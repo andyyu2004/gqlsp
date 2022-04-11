@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 pub use db::{DefDatabase, DefDatabaseStorage};
 
+use gqls_parse::Range;
 use la_arena::{Arena, Idx};
 use smallvec::SmallVec;
 use smol_str::SmolStr;
@@ -15,14 +16,20 @@ pub struct Items {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Item {
+pub struct Item {
+    pub range: Range,
+    pub kind: ItemKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ItemKind {
     TypeDefinition(TypeDefinition),
 }
 
 impl Item {
     fn name(&self) -> Name {
-        match self {
-            Item::TypeDefinition(typedef) => typedef.name.clone(),
+        match &self.kind {
+            ItemKind::TypeDefinition(typedef) => typedef.name.clone(),
         }
     }
 }
@@ -44,10 +51,22 @@ impl Name {
 pub type ItemMap = HashMap<Name, SmallVec<[Idx<Item>; 1]>>;
 pub type Resolutions = SmallVec<[Res; 1]>;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Res {
-    path: VfsPath,
-    idx: Idx<Item>,
+    pub path: VfsPath,
+    pub idx: Idx<Item>,
+}
+
+impl PartialOrd for Res {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Res {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.path.cmp(&other.path).then_with(|| self.idx.into_raw().cmp(&other.idx.into_raw()))
+    }
 }
 
 #[cfg(test)]

@@ -4,7 +4,7 @@ mod node;
 
 pub use self::node::NodeKind;
 
-pub use tree_sitter::{Language, Node, Parser, Query, Tree};
+pub use tree_sitter::{Language, Node, Parser, Query, Range, Tree};
 
 pub fn traverse(tree: &Tree) -> impl Iterator<Item = Node<'_>> {
     tree_sitter_traversal::traverse_tree(tree, tree_sitter_traversal::Order::Pre)
@@ -26,6 +26,7 @@ pub trait NodeExt<'tree> {
     fn parents(self) -> Parents<'tree>;
     fn sole_named_child(self) -> Node<'tree>;
     fn text(self, text: &str) -> &str;
+    fn find_descendent(self, f: impl FnMut(&Node<'tree>) -> bool) -> Option<Node<'tree>>;
 }
 
 impl<'tree> NodeExt<'tree> for Node<'tree> {
@@ -40,6 +41,10 @@ impl<'tree> NodeExt<'tree> for Node<'tree> {
 
     fn text(self, source: &str) -> &str {
         self.utf8_text(source.as_bytes()).unwrap()
+    }
+
+    fn find_descendent(self, f: impl FnMut(&Node<'tree>) -> bool) -> Option<Node<'tree>> {
+        tree_sitter_traversal::traverse(self.walk(), tree_sitter_traversal::Order::Pre).find(f)
     }
 }
 

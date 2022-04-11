@@ -7,9 +7,16 @@ pub use salsa::{self, Database, ParallelDatabase, Snapshot};
 use std::mem::ManuallyDrop;
 
 #[salsa::database(gqls_base_db::SourceDatabaseStorage, gqls_ir::DefDatabaseStorage)]
-#[derive(Default)]
 pub struct GqlsDatabase {
     storage: ManuallyDrop<salsa::Storage<Self>>,
+}
+
+impl Default for GqlsDatabase {
+    fn default() -> Self {
+        let mut this = Self { storage: Default::default() };
+        this.set_files(Default::default());
+        this
+    }
 }
 
 impl GqlsDatabase {

@@ -1,3 +1,4 @@
+use crate::convert::PathExt;
 use crate::{Convert, UrlExt};
 use anyhow::Result;
 use gqls_ide::{Change, ChangeSummary, Ide, Patch, VfsPath};
@@ -31,16 +32,6 @@ pub fn capabilities() -> ServerCapabilities {
         // hover_provider: Some(HoverProviderCapability::Simple(true)),
         // completion_provider: Some(CompletionOptions::default()),
         ..Default::default()
-    }
-}
-
-trait PathExt {
-    fn to_url(&self) -> Url;
-}
-
-impl PathExt for Path {
-    fn to_url(&self) -> Url {
-        Url::from_file_path(self).unwrap()
     }
 }
 
@@ -126,12 +117,12 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position_params;
         let path = ide.path(&position.text_document.uri)?;
         let analysis = ide.analysis();
-        Ok(analysis.find_definition(path, position.position.convert()).map(|def| {
-            GotoDefinitionResponse::Scalar(Location {
-                uri: def.path.to_url(),
-                range: def.range.convert(),
-            })
-        }))
+        let locations = analysis.goto_definition(path, position.position.convert());
+        match &locations[..] {
+            [] => Ok(None),
+            [location] => Ok(Some(GotoDefinitionResponse::Scalar(location.convert()))),
+            locations => Ok(Some(GotoDefinitionResponse::Array(locations.convert()))),
+        }
     }
 }
 
@@ -167,7 +158,7 @@ impl Gqls {
     #[tracing::instrument(skip(self))]
     async fn diagnostics(&self, summary: ChangeSummary) {
         tracing::info!("emitting diagnostics");
-        let diagnostics = summary.diagnostics.into_iter().map(Convert::convert).collect::<Vec<_>>();
+        let diagnostics = summary.diagnostics.iter().map(Convert::convert).collect::<Vec<_>>();
         self.client
             .send_notification::<PublishDiagnostics>(PublishDiagnosticsParams {
                 uri: summary.path.to_url(),
