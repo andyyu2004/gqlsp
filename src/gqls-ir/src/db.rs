@@ -2,17 +2,42 @@ use std::sync::Arc;
 
 use gqls_base_db::{FileData, SourceDatabase};
 use gqls_parse::{Node, NodeExt, NodeKind};
+use smallvec::smallvec;
 use vfs::VfsPath;
 
-use crate::{Item, Items, Name, TypeDefinition};
+use crate::{Item, ItemMap, Items, Name, Res, Resolutions, TypeDefinition};
 
 #[salsa::query_group(DefDatabaseStorage)]
 pub trait DefDatabase: SourceDatabase {
     fn items(&self, path: VfsPath) -> Arc<Items>;
+    fn item_map(&self, path: VfsPath) -> Arc<ItemMap>;
+    fn resolve(&self, name: Name) -> Resolutions;
 }
 
 fn items(db: &dyn DefDatabase, path: VfsPath) -> Arc<Items> {
     LowerCtxt { data: db.file_data(path) }.lower()
+}
+
+fn item_map(db: &dyn DefDatabase, path: VfsPath) -> Arc<ItemMap> {
+    let items = db.items(path);
+    let mut map = ItemMap::with_capacity(items.items.len());
+    for (idx, item) in items.items.iter() {
+        map.entry(item.name()).or_default().push(idx);
+    }
+    Arc::new(map)
+}
+
+fn resolve(db: &dyn DefDatabase, name: Name) -> Resolutions {
+    let mut resolutions = smallvec![];
+    for path in db.files().iter() {
+        let map = db.item_map(path);
+        if let Some(items) = map.get(&name) {
+            for &idx in items {
+                resolutions.push(Res { path, idx });
+            }
+        }
+    }
+    resolutions
 }
 
 struct LowerCtxt {
