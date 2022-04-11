@@ -1,6 +1,7 @@
 #![deny(rust_2018_idioms)]
 
 pub use gqls_base_db::{FileData, SourceDatabase};
+pub use gqls_ir::DefDatabase;
 pub use salsa::{self, Database, ParallelDatabase, Snapshot};
 
 use std::mem::ManuallyDrop;

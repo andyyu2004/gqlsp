@@ -4,17 +4,17 @@ mod node;
 
 pub use self::node::NodeKind;
 
-use tree_sitter::{Language, Node, Parser, Query, Tree};
+pub use tree_sitter::{Language, Node, Parser, Query, Tree};
 
 pub fn traverse(tree: &Tree) -> impl Iterator<Item = Node<'_>> {
     tree_sitter_traversal::traverse_tree(tree, tree_sitter_traversal::Order::Pre)
 }
 
-pub struct Parents<'a, 'tree> {
-    node: &'a Node<'tree>,
+pub struct Parents<'tree> {
+    node: Node<'tree>,
 }
 
-impl<'tree> Iterator for Parents<'_, 'tree> {
+impl<'tree> Iterator for Parents<'tree> {
     type Item = Node<'tree>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -23,12 +23,23 @@ impl<'tree> Iterator for Parents<'_, 'tree> {
 }
 
 pub trait NodeExt<'tree> {
-    fn parents(&self) -> Parents<'_, 'tree>;
+    fn parents(self) -> Parents<'tree>;
+    fn sole_named_child(self) -> Node<'tree>;
+    fn text(self, text: &str) -> &str;
 }
 
 impl<'tree> NodeExt<'tree> for Node<'tree> {
-    fn parents(&self) -> Parents<'_, 'tree> {
+    fn parents(self) -> Parents<'tree> {
         Parents { node: self }
+    }
+
+    fn sole_named_child(self) -> Node<'tree> {
+        assert_eq!(self.child_count(), 1);
+        self.child(0).unwrap()
+    }
+
+    fn text(self, source: &str) -> &str {
+        self.utf8_text(source.as_bytes()).unwrap()
     }
 }
 

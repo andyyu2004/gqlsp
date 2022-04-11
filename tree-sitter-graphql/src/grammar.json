@@ -5,23 +5,10 @@
       "type": "REPEAT",
       "content": {
         "type": "SYMBOL",
-        "name": "definition"
+        "name": "item"
       }
     },
-    "definition": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "type_system_definition"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "type_system_extension"
-        }
-      ]
-    },
-    "type_system_definition": {
+    "item": {
       "type": "CHOICE",
       "members": [
         {
@@ -35,12 +22,7 @@
         {
           "type": "SYMBOL",
           "name": "directive_definition"
-        }
-      ]
-    },
-    "type_system_extension": {
-      "type": "CHOICE",
-      "members": [
+        },
         {
           "type": "SYMBOL",
           "name": "schema_extension"

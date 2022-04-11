@@ -22,12 +22,12 @@ fn test_ide() {
     let summary = change!(ide: foo => "scalar Foo");
     assert_eq!(summary, ChangeSummary::empty(foo));
     assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Foo");
-    expect![[r#"(document (definition (type_system_definition (type_definition (scalar_type_definition (name))))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
+    expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
 
     let summary = change!(ide: foo:0:7..0:10 => "Baz");
     assert_eq!(summary, ChangeSummary::empty(foo));
     assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Baz");
-    expect![[r#"(document (definition (type_system_definition (type_definition (scalar_type_definition (name))))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
+    expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]].assert_eq(&ide.analysis().syntax_tree(foo));
 }
 
 #[test]

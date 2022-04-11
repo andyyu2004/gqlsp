@@ -11,5 +11,12 @@ macro_rules! node_kinds {
 
 node_kinds! {
     NAME => "name"
+    ITEM => "item"
     TYPE_DEFINITION => "type_definition"
+    OBJECT_TYPE_DEFINITION => "object_type_definition"
+    INTERFACE_TYPE_DEFINITION => "interface_type_definition"
+    UNION_TYPE_DEFINITION => "union_type_definition"
+    ENUM_TYPE_DEFINITION => "enum_type_definition"
+    SCALAR_TYPE_DEFINITION => "scalar_type_definition"
+    INPUT_OBJECT_TYPE_DEFINITION => "input_object_type_definition"
 }

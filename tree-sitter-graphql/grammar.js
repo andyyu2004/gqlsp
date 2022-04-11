@@ -4,12 +4,15 @@ module.exports = grammar({
   extras: ($) => [/[\s\uFEFF\u0009\u0020\u000A\u000D]/, $.comma, $.comment],
 
   rules: {
-    document: ($) => repeat($.definition),
-    definition: ($) =>
-      choice($.type_system_definition, $.type_system_extension),
-    type_system_definition: ($) =>
-      choice($.schema_definition, $.type_definition, $.directive_definition),
-    type_system_extension: ($) => choice($.schema_extension, $.type_extension),
+    document: ($) => repeat($.item),
+    item: ($) =>
+      choice(
+        $.schema_definition,
+        $.type_definition,
+        $.directive_definition,
+        $.schema_extension,
+        $.type_extension
+      ),
     schema_definition: ($) =>
       seq(
         optional($.description),

@@ -1,5 +1,5 @@
-use gqls_db::SourceDatabase;
-use gqls_parse::{NodeExt, NodeKind};
+use gqls_db::DefDatabase;
+use gqls_parse::NodeKind;
 use tree_sitter::Point;
 use vfs::VfsPath;
 
@@ -13,12 +13,13 @@ pub struct DefinitionRange {
 
 impl Analysis {
     pub fn find_definition(&self, path: VfsPath, at: Point) -> Option<DefinitionRange> {
-        let tree = self.snapshot.file_tree(path);
-        let node = tree.root_node().named_descendant_for_point_range(at, at)?;
-        match node.kind() {
-            NodeKind::NAME => todo!(),
-            _ => return None,
-        }
+        let tree = self.snapshot.items(path);
+        todo!()
+        // let node = tree.root_node().named_descendant_for_point_range(at, at)?;
+        // match node.kind() {
+        //     NodeKind::NAME => todo!(),
+        //     _ => return None,
+        // }
     }
 }
 

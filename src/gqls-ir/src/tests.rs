@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{DefDatabase, DefDatabaseStorage, Definitions, Name, TypeDefinition};
+use crate::{DefDatabase, DefDatabaseStorage, Item, Items, Name, TypeDefinition};
 use gqls_base_db::{FileData, SourceDatabase, SourceDatabaseStorage};
 use la_arena::Arena;
 use vfs::Vfs;
@@ -30,13 +30,13 @@ fn test_definitions() {
         }
     "#;
     db.set_file_data(path, FileData::new(gql, gqls_parse::parse_fresh(gql)));
-    let defs = db.defs(path);
+    let items = db.items(path);
     assert_eq!(
-        *defs,
-        Definitions {
-            defs: Arena::from_iter([
-                TypeDefinition { name: Name {} },
-                TypeDefinition { name: Name {} }
+        *items,
+        Items {
+            items: Arena::from_iter([
+                Item::TypeDefinition(TypeDefinition { name: Name::new("Foo") }),
+                Item::TypeDefinition(TypeDefinition { name: Name::new("Bar") })
             ])
         }
     );

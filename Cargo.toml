@@ -7,4 +7,5 @@ members = [
     "src/gqls-ir",
     "src/gqls-parse",
     "src/vfs",
+    "tree-sitter-graphql",
 ]

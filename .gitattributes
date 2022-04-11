@@ -1,0 +1,4 @@
+tree-sitter-graphql/src/parser.c -diff
+tree-sitter-graphql/src/node-types.json -diff
+Cargo.lock -diff
+
