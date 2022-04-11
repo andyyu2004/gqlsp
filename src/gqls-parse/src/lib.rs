@@ -27,6 +27,7 @@ pub trait NodeExt<'tree> {
     fn sole_named_child(self) -> Node<'tree>;
     fn text(self, text: &str) -> &str;
     fn find_descendent(self, f: impl FnMut(&Node<'tree>) -> bool) -> Option<Node<'tree>>;
+    fn relevant_children(self) -> bool;
 }
 
 impl<'tree> NodeExt<'tree> for Node<'tree> {

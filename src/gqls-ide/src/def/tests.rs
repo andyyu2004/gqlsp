@@ -1,6 +1,6 @@
 use gqls_ir::Name;
 
-use crate::{change, point, Ide};
+use crate::{change, point, range, Ide, Location};
 
 #[test]
 fn test_goto_definition() {
@@ -34,6 +34,8 @@ type Bar {
     assert!(analysis.name_at(foo, point!(2:12)).is_none());
 
     assert!(analysis.goto_definition(foo, point!(0:0)).is_empty());
-    assert!(analysis.goto_definition(foo, point!(0:0)).is_empty());
-    // dbg!(ide.analysis().goto_definition(foo, point!(1:5)).is_empty();
+    assert_eq!(
+        analysis.goto_definition(foo, point!(1:6)),
+        vec![Location { path: foo, range: range!(1:0..3:1) }]
+    );
 }

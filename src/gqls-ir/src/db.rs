@@ -54,6 +54,7 @@ impl LowerCtxt {
         let node = self.data.tree.root_node();
         let items = node
             .named_children(&mut node.walk())
+            .filter(|node| !node.is_extra())
             .filter_map(|node| self.lower_item(node))
             .collect();
         Arc::new(Items { items })
@@ -69,6 +70,7 @@ impl LowerCtxt {
                     NodeKind::OBJECT_TYPE_DEFINITION
                     | NodeKind::INTERFACE_TYPE_DEFINITION
                     | NodeKind::SCALAR_TYPE_DEFINITION
+                    | NodeKind::ENUM_TYPE_DEFINITION
                     | NodeKind::UNION_TYPE_DEFINITION
                     | NodeKind::INPUT_OBJECT_TYPE_DEFINITION => typedef
                         .named_children(&mut typedef.walk())
@@ -80,7 +82,8 @@ impl LowerCtxt {
                     name: Name::new(name.text(&self.data.text)),
                 })
             }
-            kind => todo!("{}", kind),
+            // TODO
+            kind => return None,
         };
         Some(Item { range: def.range(), kind })
     }
