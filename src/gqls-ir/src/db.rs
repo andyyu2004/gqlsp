@@ -6,7 +6,7 @@ use smallvec::smallvec;
 use vfs::VfsPath;
 
 use crate::{
-    Item, ItemKind, ItemMap, Items, Name, Res, Resolutions, TypeDefinition, TypeExtension
+    DirectiveDefinition, Item, ItemKind, ItemMap, Items, Name, Res, Resolutions, TypeDefinition, TypeExtension
 };
 
 #[salsa::query_group(DefDatabaseStorage)]
@@ -74,12 +74,10 @@ impl LowerCtxt {
                     | NodeKind::SCALAR_TYPE_DEFINITION
                     | NodeKind::ENUM_TYPE_DEFINITION
                     | NodeKind::UNION_TYPE_DEFINITION
-                    | NodeKind::INPUT_OBJECT_TYPE_DEFINITION => typedef
-                        .named_children(&mut typedef.walk())
-                        .find(|node| node.kind() == NodeKind::NAME),
+                    | NodeKind::INPUT_OBJECT_TYPE_DEFINITION => typedef.find_name_node()?,
                     _ =>
                         unreachable!("invalid node kind for type definition: {:?}", typedef.kind()),
-                }?;
+                };
                 ItemKind::TypeDefinition(TypeDefinition {
                     name: Name::new(name.text(&self.data.text)),
                 })
@@ -87,12 +85,16 @@ impl LowerCtxt {
             NodeKind::TYPE_EXTENSION => {
                 let type_ext = def.sole_named_child();
                 let name = match type_ext.kind() {
-                    NodeKind::OBJECT_TYPE_EXTENSION => type_ext
-                        .named_children(&mut type_ext.walk())
-                        .find(|node| node.kind() == NodeKind::NAME)?,
+                    NodeKind::OBJECT_TYPE_EXTENSION => type_ext.find_name_node()?,
                     _ => return None,
                 };
                 ItemKind::TypeExtension(TypeExtension {
+                    name: Name::new(name.text(&self.data.text)),
+                })
+            }
+            NodeKind::DIRECTIVE_DEFINITION => {
+                let name = def.find_name_node()?;
+                ItemKind::DirectiveDefinition(DirectiveDefinition {
                     name: Name::new(name.text(&self.data.text)),
                 })
             }

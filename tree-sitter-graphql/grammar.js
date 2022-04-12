@@ -279,18 +279,15 @@ module.exports = grammar({
     directives: ($) => repeat1($.directive),
     directive: ($) => seq("@", $.name, optional($.arguments)),
     directive_definition: ($) =>
-      prec.right(
-        1,
-        seq(
-          optional($.description),
-          "directive",
-          "@",
-          $.name,
-          optional($.arguments_definition),
-          optional("repeatable"),
-          "on",
-          $.directive_locations
-        )
+      seq(
+        optional($.description),
+        "directive",
+        "@",
+        $.name,
+        optional($.arguments_definition),
+        optional("repeatable"),
+        "on",
+        $.directive_locations
       ),
     directive_locations: ($) =>
       choice(

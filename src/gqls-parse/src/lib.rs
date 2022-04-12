@@ -22,11 +22,12 @@ impl<'tree> Iterator for Parents<'tree> {
     }
 }
 
-pub trait NodeExt<'tree> {
+pub trait NodeExt<'tree>: Sized {
     fn parents(self) -> Parents<'tree>;
     fn sole_named_child(self) -> Node<'tree>;
     fn text(self, text: &str) -> &str;
-    fn find_descendent(self, f: impl FnMut(&Node<'tree>) -> bool) -> Option<Node<'tree>>;
+    fn find_descendent(self, f: impl FnMut(&Self) -> bool) -> Option<Self>;
+    fn find_name_node(self) -> Option<Self>;
 }
 
 impl<'tree> NodeExt<'tree> for Node<'tree> {
@@ -45,6 +46,10 @@ impl<'tree> NodeExt<'tree> for Node<'tree> {
 
     fn find_descendent(self, f: impl FnMut(&Node<'tree>) -> bool) -> Option<Node<'tree>> {
         tree_sitter_traversal::traverse(self.walk(), tree_sitter_traversal::Order::Pre).find(f)
+    }
+
+    fn find_name_node(self) -> Option<Self> {
+        self.named_children(&mut self.walk()).find(|node| node.kind() == NodeKind::NAME)
     }
 }
 

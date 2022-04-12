@@ -24,6 +24,7 @@ pub struct Item {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemKind {
     TypeDefinition(TypeDefinition),
+    DirectiveDefinition(DirectiveDefinition),
     TypeExtension(TypeExtension),
 }
 
@@ -31,6 +32,7 @@ impl Item {
     fn name(&self) -> Name {
         match &self.kind {
             ItemKind::TypeDefinition(typedef) => typedef.name.clone(),
+            ItemKind::DirectiveDefinition(directive) => directive.name.clone(),
             ItemKind::TypeExtension(ext) => ext.name.clone(),
         }
     }
@@ -38,6 +40,11 @@ impl Item {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeDefinition {
+    pub name: Name,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DirectiveDefinition {
     pub name: Name,
 }
 

@@ -1,8 +1,4 @@
-use std::path::Path;
-use std::sync::Arc;
-
 use expect_test::expect;
-use gqls_db::SourceDatabase;
 use maplit::hashset;
 
 use crate::{range, ChangeSummary, Diagnostic, Ide};

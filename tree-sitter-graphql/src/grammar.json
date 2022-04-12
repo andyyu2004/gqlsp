@@ -1687,69 +1687,65 @@
       ]
     },
     "directive_definition": {
-      "type": "PREC_RIGHT",
-      "value": 1,
-      "content": {
-        "type": "SEQ",
-        "members": [
-          {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "SYMBOL",
-                "name": "description"
-              },
-              {
-                "type": "BLANK"
-              }
-            ]
-          },
-          {
-            "type": "STRING",
-            "value": "directive"
-          },
-          {
-            "type": "STRING",
-            "value": "@"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "name"
-          },
-          {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "SYMBOL",
-                "name": "arguments_definition"
-              },
-              {
-                "type": "BLANK"
-              }
-            ]
-          },
-          {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "STRING",
-                "value": "repeatable"
-              },
-              {
-                "type": "BLANK"
-              }
-            ]
-          },
-          {
-            "type": "STRING",
-            "value": "on"
-          },
-          {
-            "type": "SYMBOL",
-            "name": "directive_locations"
-          }
-        ]
-      }
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "description"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": "directive"
+        },
+        {
+          "type": "STRING",
+          "value": "@"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "name"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "arguments_definition"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "repeatable"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": "on"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "directive_locations"
+        }
+      ]
     },
     "directive_locations": {
       "type": "CHOICE",
