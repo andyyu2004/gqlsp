@@ -1,0 +1,63 @@
+#![allow(dead_code)]
+pub enum NodeKind {}
+
+impl NodeKind {
+    pub const INT_VALUE: &'static str = "int_value";
+    pub const FLOAT_VALUE: &'static str = "float_value";
+    pub const NULL_VALUE: &'static str = "null_value";
+    pub const NAME: &'static str = "name";
+    pub const COMMENT: &'static str = "comment";
+    pub const COMMA: &'static str = "comma";
+    pub const DOCUMENT: &'static str = "document";
+    pub const ITEM: &'static str = "item";
+    pub const SCHEMA_DEFINITION: &'static str = "schema_definition";
+    pub const SCHEMA_EXTENSION: &'static str = "schema_extension";
+    pub const TYPE_EXTENSION: &'static str = "type_extension";
+    pub const SCALAR_TYPE_EXTENSION: &'static str = "scalar_type_extension";
+    pub const OBJECT_TYPE_EXTENSION: &'static str = "object_type_extension";
+    pub const INTERFACE_TYPE_EXTENSION: &'static str = "interface_type_extension";
+    pub const UNION_TYPE_EXTENSION: &'static str = "union_type_extension";
+    pub const ENUM_TYPE_EXTENSION: &'static str = "enum_type_extension";
+    pub const INPUT_OBJECT_TYPE_EXTENSION: &'static str = "input_object_type_extension";
+    pub const INPUT_FIELDS_DEFINITION: &'static str = "input_fields_definition";
+    pub const ENUM_VALUES_DEFINITION: &'static str = "enum_values_definition";
+    pub const ENUM_VALUE_DEFINITION: &'static str = "enum_value_definition";
+    pub const IMPLEMENTS_INTERFACES: &'static str = "implements_interfaces";
+    pub const FIELDS_DEFINITION: &'static str = "fields_definition";
+    pub const FIELD_DEFINITION: &'static str = "field_definition";
+    pub const ARGUMENTS_DEFINITION: &'static str = "arguments_definition";
+    pub const INPUT_VALUE_DEFINITION: &'static str = "input_value_definition";
+    pub const DEFAULT_VALUE: &'static str = "default_value";
+    pub const UNION_MEMBER_TYPES: &'static str = "union_member_types";
+    pub const ROOT_OPERATION_TYPE_DEFINITION: &'static str = "root_operation_type_definition";
+    pub const OPERATION_TYPE: &'static str = "operation_type";
+    pub const TYPE_DEFINITION: &'static str = "type_definition";
+    pub const SCALAR_TYPE_DEFINITION: &'static str = "scalar_type_definition";
+    pub const OBJECT_TYPE_DEFINITION: &'static str = "object_type_definition";
+    pub const INTERFACE_TYPE_DEFINITION: &'static str = "interface_type_definition";
+    pub const UNION_TYPE_DEFINITION: &'static str = "union_type_definition";
+    pub const ENUM_TYPE_DEFINITION: &'static str = "enum_type_definition";
+    pub const INPUT_OBJECT_TYPE_DEFINITION: &'static str = "input_object_type_definition";
+    pub const ARGUMENTS: &'static str = "arguments";
+    pub const ARGUMENT: &'static str = "argument";
+    pub const VALUE: &'static str = "value";
+    pub const VARIABLE: &'static str = "variable";
+    pub const STRING_VALUE: &'static str = "string_value";
+    pub const BOOLEAN_VALUE: &'static str = "boolean_value";
+    pub const ENUM_VALUE: &'static str = "enum_value";
+    pub const LIST_VALUE: &'static str = "list_value";
+    pub const OBJECT_VALUE: &'static str = "object_value";
+    pub const OBJECT_FIELD: &'static str = "object_field";
+    pub const DIRECTIVES: &'static str = "directives";
+    pub const DIRECTIVE: &'static str = "directive";
+    pub const DIRECTIVE_DEFINITION: &'static str = "directive_definition";
+    pub const DIRECTIVE_LOCATIONS: &'static str = "directive_locations";
+    pub const DIRECTIVE_LOCATION: &'static str = "directive_location";
+    pub const EXECUTABLE_DIRECTIVE_LOCATION: &'static str = "executable_directive_location";
+    pub const TYPE_SYSTEM_DIRECTIVE_LOCATION: &'static str = "type_system_directive_location";
+    pub const TYPE: &'static str = "type";
+    pub const NAMED_TYPE: &'static str = "named_type";
+    pub const LIST_TYPE: &'static str = "list_type";
+    pub const NON_NULL_TYPE: &'static str = "non_null_type";
+    pub const DESCRIPTION: &'static str = "description";
+}

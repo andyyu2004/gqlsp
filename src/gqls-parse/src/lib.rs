@@ -1,8 +1,8 @@
 #![deny(rust_2018_idioms)]
 
-mod node;
+mod nodes;
 
-pub use self::node::NodeKind;
+pub use self::nodes::NodeKind;
 
 pub use tree_sitter::{Language, Node, Parser, Query, Range, Tree};
 
@@ -91,3 +91,6 @@ mod tests {
         assert_eq!(tree.root_node().to_sexp(), "(document)");
     }
 }
+
+#[cfg(test)]
+mod node_generator;
