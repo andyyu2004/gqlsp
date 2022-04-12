@@ -19,4 +19,7 @@ node_kinds! {
     ENUM_TYPE_DEFINITION => "enum_type_definition"
     SCALAR_TYPE_DEFINITION => "scalar_type_definition"
     INPUT_OBJECT_TYPE_DEFINITION => "input_object_type_definition"
+
+    TYPE_EXTENSION => "type_extension"
+    OBJECT_TYPE_EXTENSION => "object_type_extension"
 }

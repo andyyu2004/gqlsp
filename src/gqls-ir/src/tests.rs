@@ -41,6 +41,10 @@ fn test_definitions() {
         type Bar {
             foo: Foo
         }
+
+        extend type Bar {
+            i: Int!
+        }
     "#;
 
     let bar = vfs.intern("bar");
@@ -54,14 +58,14 @@ fn test_definitions() {
         }
     "#;
     db.set_files(Arc::new(hashset![foo, bar]));
-    db.set_file_data(foo, FileData::new(foogql, gqls_parse::parse_fresh(foogql)));
+    db.set_file_data(foo, FileData::new(foogql, dbg!(gqls_parse::parse_fresh(foogql))));
     db.set_file_data(bar, FileData::new(bargql, gqls_parse::parse_fresh(bargql)));
 
     let items = db.items(foo);
     expect![[r#"
         Items {
             items: Arena {
-                len: 3,
+                len: 4,
                 data: [
                     Item {
                         range: Range {
@@ -126,6 +130,27 @@ fn test_definitions() {
                             },
                         ),
                     },
+                    Item {
+                        range: Range {
+                            start_byte: 161,
+                            end_byte: 208,
+                            start_point: Point {
+                                row: 13,
+                                column: 8,
+                            },
+                            end_point: Point {
+                                row: 15,
+                                column: 9,
+                            },
+                        },
+                        kind: TypeExtension(
+                            TypeExtension {
+                                name: Name(
+                                    "Bar",
+                                ),
+                            },
+                        ),
+                    },
                 ],
             },
         }
@@ -137,7 +162,7 @@ fn test_definitions() {
         *item_map,
         hashmap! {
             Name::new("Foo") => smallvec![idx!(0), idx!(1)],
-            Name::new("Bar") => smallvec![idx!(2)],
+            Name::new("Bar") => smallvec![idx!(2), idx!(3)],
         }
     );
 
@@ -157,6 +182,7 @@ fn test_definitions() {
         [
             Res { path: Path::new("bar"), idx: idx!(0) },
             Res { path: Path::new("foo"), idx: idx!(2) },
+            Res { path: Path::new("foo"), idx: idx!(3) },
         ]
     );
 }

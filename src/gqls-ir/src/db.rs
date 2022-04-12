@@ -5,7 +5,9 @@ use gqls_parse::{Node, NodeExt, NodeKind};
 use smallvec::smallvec;
 use vfs::VfsPath;
 
-use crate::{Item, ItemKind, ItemMap, Items, Name, Res, Resolutions, TypeDefinition};
+use crate::{
+    Item, ItemKind, ItemMap, Items, Name, Res, Resolutions, TypeDefinition, TypeExtension
+};
 
 #[salsa::query_group(DefDatabaseStorage)]
 pub trait DefDatabase: SourceDatabase {
@@ -82,8 +84,20 @@ impl LowerCtxt {
                     name: Name::new(name.text(&self.data.text)),
                 })
             }
+            NodeKind::TYPE_EXTENSION => {
+                let type_ext = def.sole_named_child();
+                let name = match type_ext.kind() {
+                    NodeKind::OBJECT_TYPE_EXTENSION => type_ext
+                        .named_children(&mut type_ext.walk())
+                        .find(|node| node.kind() == NodeKind::NAME)?,
+                    _ => return None,
+                };
+                ItemKind::TypeExtension(TypeExtension {
+                    name: Name::new(name.text(&self.data.text)),
+                })
+            }
             // TODO
-            kind => return None,
+            _ => return None,
         };
         Some(Item { range: def.range(), kind })
     }

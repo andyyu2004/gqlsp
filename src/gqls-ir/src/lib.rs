@@ -24,18 +24,25 @@ pub struct Item {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemKind {
     TypeDefinition(TypeDefinition),
+    TypeExtension(TypeExtension),
 }
 
 impl Item {
     fn name(&self) -> Name {
         match &self.kind {
             ItemKind::TypeDefinition(typedef) => typedef.name.clone(),
+            ItemKind::TypeExtension(ext) => ext.name.clone(),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeDefinition {
+    pub name: Name,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TypeExtension {
     pub name: Name,
 }
 
