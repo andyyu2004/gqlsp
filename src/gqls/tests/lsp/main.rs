@@ -193,3 +193,13 @@ async fn test_lsp_diagnostics() -> Result<()> {
     );
     Ok(())
 }
+
+#[tokio::test]
+#[tracing_test::traced_test]
+async fn test_lsp_configuration() -> Result<()> {
+    let (service, _) = make_service!();
+    request_init!(service: "config");
+    let foo = url!("config"."foo.graphql");
+
+    Ok(())
+}

@@ -1,23 +1,36 @@
+use std::borrow::Borrow;
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::hash::Hash;
+use std::ops::Deref;
+use std::path::Path;
 
-use crate::VfsPath;
+pub type PathInterner = Interner<Path>;
 
-#[derive(Debug, Default)]
-pub struct PathInterner {
-    map: HashSet<&'static Path>,
+#[derive(Debug)]
+pub struct Interner<T: ?Sized + 'static> {
+    map: HashSet<&'static T>,
 }
 
-impl PathInterner {
-    pub(crate) fn get(&self, path: &Path) -> Option<VfsPath> {
+impl<T: ?Sized> Default for Interner<T> {
+    fn default() -> Self {
+        Self { map: Default::default() }
+    }
+}
+
+impl<T> Interner<T>
+where
+    T: ToOwned + Hash + Eq + ?Sized,
+    T::Owned: Hash + Eq + Deref<Target = T>,
+{
+    pub(crate) fn get(&self, path: &T) -> Option<&'static T> {
         self.map.get(path).copied()
     }
 
-    pub(crate) fn intern(&mut self, path: PathBuf) -> VfsPath {
-        match self.map.get(path.as_path()) {
+    pub(crate) fn intern(&mut self, item: T::Owned) -> &'static T {
+        match self.map.get(&*item) {
             Some(interned) => interned,
             None => {
-                let path = Box::leak(path.into_boxed_path());
+                let path = Box::leak(Box::new(item));
                 self.map.insert(path);
                 path
             }

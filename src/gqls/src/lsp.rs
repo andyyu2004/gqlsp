@@ -1,3 +1,4 @@
+use crate::config::{Config, DEFAULT_PROJECT};
 use crate::convert::PathExt;
 use crate::{Convert, UrlExt};
 use anyhow::Result;
@@ -5,6 +6,7 @@ use gqls_ide::{Change, ChangeSummary, Ide, Patch, VfsPath};
 use lsp_types::notification::PublishDiagnostics;
 use lsp_types::*;
 use parking_lot::Mutex;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tower_lsp::{jsonrpc, Client, ClientSocket, LanguageServer, LspService};
 
@@ -51,17 +53,43 @@ impl IdeExt for Ide {
 impl LanguageServer for Gqls {
     async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
         // TODO should probably check client capabilities, but going to assume they have everything we need for now
+
+        fn read_config(path: &Path) -> anyhow::Result<Option<Config>> {
+            assert!(path.is_dir());
+            for entry in std::fs::read_dir(path)? {
+                let entry = entry?;
+                let path = entry.path();
+                if entry.file_type()?.is_file()
+                    && path.file_name() == Some(".graphqlrc".as_ref())
+                    && (path.extension() == Some("yaml".as_ref())
+                        || path.extension() == Some("toml".as_ref()))
+                {
+                    return Ok(Some(Config::read(&path)?));
+                }
+            }
+            Ok(None)
+        }
+
         fn find_graphql_files(
-            folders: impl IntoIterator<Item = WorkspaceFolder>,
-        ) -> anyhow::Result<Vec<(PathBuf, String)>> {
+            workspaces: impl IntoIterator<Item = WorkspaceFolder>,
+        ) -> anyhow::Result<HashMap<String, HashSet<PathBuf>>, Vec<(PathBuf, String)>> {
             let mut paths = vec![];
-            for folder in folders {
-                let path = folder.uri.to_path()?;
-                for entry in walkdir::WalkDir::new(&path).into_iter() {
+            for workspace in workspaces {
+                let path = workspace.uri.to_path()?;
+                let config = read_config(&path)?;
+                for entry in walkdir::WalkDir::new(&path)
+                    .into_iter()
+                    .filter_entry(|entry| entry.file_type().is_file())
+                {
                     let entry = entry?;
-                    if entry.path().extension() != Some("graphql".as_ref()) {
-                        continue;
-                    }
+                    let projects = match &config {
+                        Some(config) => config.project_matches(entry.path()),
+                        // If configuration file is found, then all `*.graphql` files are assigned to the default project
+                        None => (entry.path().extension() == Some("graphql".as_ref()))
+                            .then(|| DEFAULT_PROJECT)
+                            .into_iter()
+                            .collect(),
+                    };
                     let path = entry.path().to_path_buf();
                     let content = std::fs::read_to_string(&path)?;
                     paths.push((path, content));

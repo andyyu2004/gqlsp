@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tree_sitter::Tree;
 use vfs::VfsPath;
@@ -19,7 +19,7 @@ impl FileData {
 #[salsa::query_group(SourceDatabaseStorage)]
 pub trait SourceDatabase {
     #[salsa::input]
-    fn files(&self) -> Arc<HashSet<VfsPath>>;
+    fn projects(&self) -> Arc<HashMap<String, Arc<HashSet<VfsPath>>>>;
 
     #[salsa::input]
     fn file_data(&self, path: VfsPath) -> FileData;
@@ -28,6 +28,8 @@ pub trait SourceDatabase {
     fn file_tree(&self, path: VfsPath) -> Tree;
 
     fn file_text(&self, path: VfsPath) -> Arc<str>;
+
+    fn project_files(&self, project: VfsPath) -> Arc<HashSet<VfsPath>>;
 }
 
 fn file_tree(db: &dyn SourceDatabase, path: VfsPath) -> Tree {
@@ -36,4 +38,8 @@ fn file_tree(db: &dyn SourceDatabase, path: VfsPath) -> Tree {
 
 fn file_text(db: &dyn SourceDatabase, path: VfsPath) -> Arc<str> {
     db.file_data(path).text
+}
+
+fn project_files(db: &dyn SourceDatabase, project: VfsPath) -> Arc<HashSet<VfsPath>> {
+    todo!()
 }
