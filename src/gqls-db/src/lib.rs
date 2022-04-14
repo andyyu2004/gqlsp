@@ -13,9 +13,7 @@ pub struct GqlsDatabase {
 
 impl Default for GqlsDatabase {
     fn default() -> Self {
-        let mut this = Self { storage: Default::default() };
-        this.set_projects(Default::default());
-        this
+        Self { storage: Default::default() }
     }
 }
 

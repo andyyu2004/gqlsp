@@ -37,8 +37,8 @@ fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
 fn resolve(db: &dyn DefDatabase, file: FileId, name: Name) -> Resolutions {
     let mut resolutions = smallvec![];
     for project in db.projects_of(file) {
-        for path in db.project_files(project).iter() {
-            let map = db.item_map(path);
+        for file in db.project_files(project).iter() {
+            let map = db.item_map(file);
             if let Some(items) = map.get(&name) {
                 for &idx in items {
                     resolutions.push(Res { file, idx });

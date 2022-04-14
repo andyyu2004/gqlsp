@@ -75,10 +75,7 @@ fn test_definitions() {
     let resolutions = db.resolve(bar, Name::new("Foo"));
     assert_eq!(
         resolutions.as_slice(),
-        [
-            Res { file: Path::new("foo"), idx: idx!(0) },
-            Res { file: Path::new("foo"), idx: idx!(1) }
-        ]
+        [Res { file: foo, idx: idx!(0) }, Res { file: foo, idx: idx!(1) }]
     );
 
     let mut resolutions = db.resolve(foo, Name::new("Bar"));
@@ -86,9 +83,9 @@ fn test_definitions() {
     assert_eq!(
         resolutions.as_slice(),
         [
-            Res { file: Path::new("bar"), idx: idx!(0) },
-            Res { file: Path::new("foo"), idx: idx!(2) },
-            Res { file: Path::new("foo"), idx: idx!(3) },
+            Res { file: bar, idx: idx!(0) },
+            Res { file: foo, idx: idx!(2) },
+            Res { file: foo, idx: idx!(3) },
         ]
     );
 

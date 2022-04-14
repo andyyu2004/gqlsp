@@ -1,4 +1,8 @@
+use std::sync::Arc;
+
+use gqls_db::SourceDatabase;
 use gqls_ir::Name;
+use maplit::{hashmap, hashset};
 
 use crate::{apply_changeset, point, range, Ide, Location};
 
@@ -6,6 +10,9 @@ use crate::{apply_changeset, point, range, Ide, Location};
 fn test_goto_definition() {
     let mut ide = Ide::default();
     let foo = ide.vfs.intern("foo.gql");
+    ide.db.set_projects(Arc::new(hashmap! {
+        "default" => hashset! { foo }
+    }));
     let summary = apply_changeset!(ide: foo => r#"
 type Foo {
     bar: Bar
