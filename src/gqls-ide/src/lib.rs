@@ -6,7 +6,7 @@ mod macros;
 
 pub use self::edit::{Change, ChangeKind, Changeset, Patch, Point, Range};
 pub use tree_sitter;
-pub use vfs::{Vfs, VfsPath};
+pub use vfs::{FileId, Vfs};
 
 use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
@@ -24,10 +24,10 @@ use tree_sitter::{Query, QueryCursor, TextProvider};
 pub struct Ide {
     db: GqlsDatabase,
     vfs: Vfs,
-    file_ropes: HashMap<VfsPath, Rope>,
+    file_ropes: HashMap<FileId, Rope>,
 }
 
-pub type ChangesetSummary = HashMap<VfsPath, ChangeSummary>;
+pub type ChangesetSummary = HashMap<FileId, ChangeSummary>;
 
 #[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub struct ChangeSummary {
@@ -76,8 +76,8 @@ impl Deref for Analysis {
 }
 
 impl Analysis {
-    pub fn syntax_tree(&self, path: VfsPath) -> String {
-        self.file_tree(path).root_node().to_sexp()
+    pub fn syntax_tree(&self, file: FileId) -> String {
+        self.file_tree(file).root_node().to_sexp()
     }
 }
 
@@ -86,7 +86,7 @@ impl Ide {
         Analysis { snapshot: self.db.snapshot() }
     }
 
-    pub fn intern_path(&mut self, path: PathBuf) -> VfsPath {
+    pub fn intern_path(&mut self, path: PathBuf) -> FileId {
         self.vfs.intern(path)
     }
 
@@ -110,13 +110,10 @@ impl Ide {
         });
 
         let files_changed =
-            changeset.changes.iter().map(|change| change.path).collect::<HashSet<_>>();
+            changeset.changes.iter().map(|change| change.file).collect::<HashSet<_>>();
         files_changed
             .into_iter()
-            .map(|path| {
-                let diagnostics = self.diagnostics(path);
-                (path, ChangeSummary { diagnostics: self.diagnostics(path) })
-            })
+            .map(|path| (path, ChangeSummary { diagnostics: self.diagnostics(path) }))
             .collect()
     }
 
@@ -124,7 +121,7 @@ impl Ide {
         self.patch_tree(change);
     }
 
-    fn diagnostics(&self, file: VfsPath) -> HashSet<Diagnostic> {
+    fn diagnostics(&self, file: FileId) -> HashSet<Diagnostic> {
         // can't query for missing nodes atm, so just traversing the entire tree to find any missing nodes
         static QUERY: Lazy<Query> = Lazy::new(|| query("(ERROR) @error"));
         let text = RopeText::new(&self.file_ropes[&file]);
@@ -141,25 +138,25 @@ impl Ide {
     }
 
     fn patch_tree(&mut self, change: &Change) {
-        let path = change.path;
+        let file = change.file;
         let data = match &change.kind {
             ChangeKind::Patch(patch) => {
-                let mut rope = self.file_ropes.get(&path).cloned().expect("patch on initial edit");
+                let mut rope = self.file_ropes.get(&file).cloned().expect("patch on initial edit");
                 let edit = patch.apply(&mut rope);
                 let text = rope.to_string();
                 let mut old =
-                    self.file_ropes.insert(path, rope).map(|_| self.db.file_tree(path)).unwrap();
+                    self.file_ropes.insert(file, rope).map(|_| self.db.file_tree(file)).unwrap();
                 old.edit(&edit);
                 let tree = gqls_parse::parse(&text, Some(&old));
                 FileData::new(text, tree)
             }
             ChangeKind::Set(text) => {
                 let rope = Rope::from_str(text);
-                self.file_ropes.insert(path, rope);
+                self.file_ropes.insert(file, rope);
                 FileData::new(text, gqls_parse::parse_fresh(text))
             }
         };
-        self.db.set_file_data(path, data);
+        self.db.set_file_data(file, data);
     }
 }
 
@@ -181,13 +178,13 @@ impl<'a> TextProvider<'a> for RopeText<'a> {
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
 pub struct Location {
-    pub path: VfsPath,
+    pub file: FileId,
     pub range: Range,
 }
 
 impl Location {
-    pub fn new(path: VfsPath, range: Range) -> Self {
-        Self { path, range }
+    pub fn new(file: FileId, range: Range) -> Self {
+        Self { file, range }
     }
 }
 

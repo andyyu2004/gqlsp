@@ -4,7 +4,7 @@ use gqls_db::Project;
 pub use tree_sitter::Point;
 
 use ropey::Rope;
-use vfs::VfsPath;
+use vfs::FileId;
 
 /// Similar to [`tree_sitter::Range`] but only containing points (but no byte offsets)
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash, Default)]
@@ -50,7 +50,7 @@ impl Patch {
 
 #[derive(Default, Debug, Eq, PartialEq, Clone)]
 pub struct Changeset {
-    pub(crate) projects: Option<HashMap<Project, HashSet<VfsPath>>>,
+    pub(crate) projects: Option<HashMap<Project, HashSet<FileId>>>,
     pub(crate) changes: Vec<Change>,
 }
 
@@ -63,7 +63,7 @@ impl Changeset {
         Self::new(vec![change])
     }
 
-    pub fn with_projects(mut self, projects: HashMap<Project, HashSet<VfsPath>>) -> Self {
+    pub fn with_projects(mut self, projects: HashMap<Project, HashSet<FileId>>) -> Self {
         self.projects = Some(projects);
         self
     }
@@ -76,21 +76,21 @@ impl Changeset {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Change {
-    pub path: VfsPath,
+    pub file: FileId,
     pub kind: ChangeKind,
 }
 
 impl Change {
-    pub fn new(path: VfsPath, kind: ChangeKind) -> Self {
-        Self { path, kind }
+    pub fn new(file: FileId, kind: ChangeKind) -> Self {
+        Self { file, kind }
     }
 
-    pub fn set(path: VfsPath, text: String) -> Self {
-        Self::new(path, ChangeKind::Set(text))
+    pub fn set(file: FileId, text: String) -> Self {
+        Self::new(file, ChangeKind::Set(text))
     }
 
-    pub fn patch(path: VfsPath, patch: Patch) -> Self {
-        Self::new(path, ChangeKind::Patch(patch))
+    pub fn patch(file: FileId, patch: Patch) -> Self {
+        Self::new(file, ChangeKind::Patch(patch))
     }
 }
 

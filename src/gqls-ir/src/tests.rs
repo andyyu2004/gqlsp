@@ -72,28 +72,28 @@ fn test_definitions() {
         }
     );
 
-    let resolutions = db.resolve(Name::new("Foo"));
+    let resolutions = db.resolve(bar, Name::new("Foo"));
     assert_eq!(
         resolutions.as_slice(),
         [
-            Res { path: Path::new("foo"), idx: idx!(0) },
-            Res { path: Path::new("foo"), idx: idx!(1) }
+            Res { file: Path::new("foo"), idx: idx!(0) },
+            Res { file: Path::new("foo"), idx: idx!(1) }
         ]
     );
 
-    let mut resolutions = db.resolve(Name::new("Bar"));
+    let mut resolutions = db.resolve(foo, Name::new("Bar"));
     resolutions.sort();
     assert_eq!(
         resolutions.as_slice(),
         [
-            Res { path: Path::new("bar"), idx: idx!(0) },
-            Res { path: Path::new("foo"), idx: idx!(2) },
-            Res { path: Path::new("foo"), idx: idx!(3) },
+            Res { file: Path::new("bar"), idx: idx!(0) },
+            Res { file: Path::new("foo"), idx: idx!(2) },
+            Res { file: Path::new("foo"), idx: idx!(3) },
         ]
     );
 
-    let resolutions = db.resolve(Name::new("d"));
-    assert_eq!(resolutions.as_slice(), [Res { path: Path::new("bar"), idx: idx!(2) },]);
+    let resolutions = db.resolve(bar, Name::new("d"));
+    assert_eq!(resolutions.as_slice(), [Res { file: Path::new("bar"), idx: idx!(2) },]);
 
     let items = db.items(foo);
     expect![[r#"

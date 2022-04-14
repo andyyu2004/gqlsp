@@ -3,7 +3,7 @@ use std::sync::Arc;
 use gqls_base_db::{FileData, SourceDatabase};
 use gqls_parse::{Node, NodeExt, NodeKind};
 use smallvec::smallvec;
-use vfs::VfsPath;
+use vfs::FileId;
 
 use crate::{
     DirectiveDefinition, Item, ItemKind, ItemMap, Items, Name, Res, Resolutions, TypeDefinition, TypeExtension
@@ -11,22 +11,22 @@ use crate::{
 
 #[salsa::query_group(DefDatabaseStorage)]
 pub trait DefDatabase: SourceDatabase {
-    fn items(&self, path: VfsPath) -> Arc<Items>;
+    fn items(&self, file: FileId) -> Arc<Items>;
     fn item(&self, res: Res) -> Item;
-    fn item_map(&self, path: VfsPath) -> Arc<ItemMap>;
-    fn resolve(&self, name: Name) -> Resolutions;
+    fn item_map(&self, file: FileId) -> Arc<ItemMap>;
+    fn resolve(&self, file: FileId, name: Name) -> Resolutions;
 }
 
-fn items(db: &dyn DefDatabase, path: VfsPath) -> Arc<Items> {
-    LowerCtxt { data: db.file_data(path) }.lower()
+fn items(db: &dyn DefDatabase, file: FileId) -> Arc<Items> {
+    LowerCtxt { data: db.file_data(file) }.lower()
 }
 
 fn item(db: &dyn DefDatabase, res: Res) -> Item {
-    db.items(res.path).items[res.idx].clone()
+    db.items(res.file).items[res.idx].clone()
 }
 
-fn item_map(db: &dyn DefDatabase, path: VfsPath) -> Arc<ItemMap> {
-    let items = db.items(path);
+fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
+    let items = db.items(file);
     let mut map = ItemMap::with_capacity(items.items.len());
     for (idx, item) in items.items.iter() {
         map.entry(item.name()).or_default().push(idx);
@@ -34,17 +34,18 @@ fn item_map(db: &dyn DefDatabase, path: VfsPath) -> Arc<ItemMap> {
     Arc::new(map)
 }
 
-fn resolve(db: &dyn DefDatabase, name: Name) -> Resolutions {
+fn resolve(db: &dyn DefDatabase, file: FileId, name: Name) -> Resolutions {
     let mut resolutions = smallvec![];
-    todo!();
-    // for path in db.files().iter() {
-    //     let map = db.item_map(path);
-    //     if let Some(items) = map.get(&name) {
-    //         for &idx in items {
-    //             resolutions.push(Res { path, idx });
-    //         }
-    //     }
-    // }
+    for project in db.projects_of(file) {
+        for path in db.project_files(project).iter() {
+            let map = db.item_map(path);
+            if let Some(items) = map.get(&name) {
+                for &idx in items {
+                    resolutions.push(Res { file, idx });
+                }
+            }
+        }
+    }
     resolutions
 }
 

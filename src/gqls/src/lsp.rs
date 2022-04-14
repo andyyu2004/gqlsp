@@ -3,7 +3,7 @@ use crate::convert::PathExt;
 use crate::{Convert, UrlExt};
 use anyhow::{anyhow, Result};
 use gqls_ide::{
-    Change, ChangeKind, ChangeSummary, Changeset, ChangesetSummary, Ide, Patch, VfsPath
+    Change, ChangeKind, ChangeSummary, Changeset, ChangesetSummary, FileId, Ide, Patch
 };
 use lsp_types::notification::PublishDiagnostics;
 use lsp_types::*;
@@ -40,11 +40,11 @@ pub fn capabilities() -> ServerCapabilities {
 }
 
 pub trait IdeExt {
-    fn path(&self, url: &Url) -> jsonrpc::Result<VfsPath>;
+    fn path(&self, url: &Url) -> jsonrpc::Result<FileId>;
 }
 
 impl IdeExt for Ide {
-    fn path(&self, url: &Url) -> jsonrpc::Result<VfsPath> {
+    fn path(&self, url: &Url) -> jsonrpc::Result<FileId> {
         self.vfs()
             .get(url.to_path()?)
             .ok_or_else(|| jsonrpc::Error::invalid_params(format!("unknown file: `{url}`")))

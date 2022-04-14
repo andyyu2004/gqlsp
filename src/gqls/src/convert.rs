@@ -54,7 +54,7 @@ impl Convert for gqls_ide::Location {
     type Converted = lsp_types::Location;
 
     fn convert(&self) -> Self::Converted {
-        lsp_types::Location { range: self.range.convert(), uri: self.path.to_url() }
+        lsp_types::Location { range: self.range.convert(), uri: self.file.to_url() }
     }
 }
 

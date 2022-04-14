@@ -8,7 +8,7 @@ use gqls_parse::Range;
 use la_arena::{Arena, Idx};
 use smallvec::SmallVec;
 use smol_str::SmolStr;
-use vfs::VfsPath;
+use vfs::FileId;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Items {
@@ -67,7 +67,7 @@ pub type Resolutions = SmallVec<[Res; 1]>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Res {
-    pub path: VfsPath,
+    pub file: FileId,
     pub idx: Idx<Item>,
 }
 
@@ -79,7 +79,7 @@ impl PartialOrd for Res {
 
 impl Ord for Res {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.path.cmp(&other.path).then_with(|| self.idx.into_raw().cmp(&other.idx.into_raw()))
+        self.file.cmp(&other.file).then_with(|| self.idx.into_raw().cmp(&other.idx.into_raw()))
     }
 }
 

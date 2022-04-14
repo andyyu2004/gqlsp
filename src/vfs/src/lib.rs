@@ -9,7 +9,7 @@ use self::interner::PathInterner;
 
 mod interner;
 
-pub type VfsPath = &'static Path;
+pub type FileId = &'static Path;
 
 #[derive(Default)]
 pub struct Vfs {
@@ -17,11 +17,11 @@ pub struct Vfs {
 }
 
 impl Vfs {
-    pub fn intern(&mut self, path: impl AsRef<Path>) -> VfsPath {
+    pub fn intern(&mut self, path: impl AsRef<Path>) -> FileId {
         self.interner.intern(path.as_ref().to_path_buf())
     }
 
-    pub fn get(&self, path: impl AsRef<Path>) -> Option<VfsPath> {
+    pub fn get(&self, path: impl AsRef<Path>) -> Option<FileId> {
         self.interner.get(path.as_ref())
     }
 }

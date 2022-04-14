@@ -36,6 +36,6 @@ type Bar {
     assert!(analysis.goto_definition(foo, point!(0:0)).is_empty());
     assert_eq!(
         analysis.goto_definition(foo, point!(1:6)),
-        vec![Location { path: foo, range: range!(1:0..3:1) }]
+        vec![Location { file: foo, range: range!(1:0..3:1) }]
     );
 }
