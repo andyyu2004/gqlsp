@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 salsa = "0.17.0-pre.2"
+smallvec = "1"
 tree-sitter = "0.20"
 
 [dependencies.vfs]

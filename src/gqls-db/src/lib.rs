@@ -1,6 +1,6 @@
 #![deny(rust_2018_idioms)]
 
-pub use gqls_base_db::{FileData, SourceDatabase};
+pub use gqls_base_db::{FileData, Project, SourceDatabase};
 pub use gqls_ir::DefDatabase;
 pub use salsa::{self, Database, ParallelDatabase, Snapshot};
 
@@ -14,7 +14,7 @@ pub struct GqlsDatabase {
 impl Default for GqlsDatabase {
     fn default() -> Self {
         let mut this = Self { storage: Default::default() };
-        this.set_files(Default::default());
+        this.set_projects(Default::default());
         this
     }
 }

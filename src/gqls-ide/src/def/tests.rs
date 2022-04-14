@@ -1,12 +1,12 @@
 use gqls_ir::Name;
 
-use crate::{change, point, range, Ide, Location};
+use crate::{apply_changeset, point, range, Ide, Location};
 
 #[test]
 fn test_goto_definition() {
     let mut ide = Ide::default();
     let foo = ide.vfs.intern("foo.gql");
-    let summary = change!(ide: foo => r#"
+    let summary = apply_changeset!(ide: foo => r#"
 type Foo {
     bar: Bar
 }
@@ -14,7 +14,7 @@ type Foo {
 type Bar {
     foo: Foo
 }"#);
-    assert!(summary.diagnostics.is_empty());
+    assert!(summary[foo].diagnostics.is_empty());
 
     let analysis = ide.analysis();
     assert!(analysis.name_at(foo, point!(0:0)).is_none());

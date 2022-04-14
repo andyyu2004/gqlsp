@@ -36,14 +36,15 @@ fn item_map(db: &dyn DefDatabase, path: VfsPath) -> Arc<ItemMap> {
 
 fn resolve(db: &dyn DefDatabase, name: Name) -> Resolutions {
     let mut resolutions = smallvec![];
-    for path in db.files().iter() {
-        let map = db.item_map(path);
-        if let Some(items) = map.get(&name) {
-            for &idx in items {
-                resolutions.push(Res { path, idx });
-            }
-        }
-    }
+    todo!();
+    // for path in db.files().iter() {
+    //     let map = db.item_map(path);
+    //     if let Some(items) = map.get(&name) {
+    //         for &idx in items {
+    //             resolutions.push(Res { path, idx });
+    //         }
+    //     }
+    // }
     resolutions
 }
 

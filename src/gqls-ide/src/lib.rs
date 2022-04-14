@@ -4,16 +4,16 @@ mod def;
 mod edit;
 mod macros;
 
-pub use self::edit::{Change, Changeset, Patch, Point, Range};
+pub use self::edit::{Change, ChangeKind, Changeset, Patch, Point, Range};
 pub use tree_sitter;
 pub use vfs::{Vfs, VfsPath};
 
 use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
-use std::path::Path;
+use std::path::PathBuf;
 use std::sync::Arc;
 
-use gqls_db::{FileData, GqlsDatabase, ParallelDatabase, SourceDatabase};
+use gqls_db::{FileData, GqlsDatabase, ParallelDatabase, Project, SourceDatabase};
 use gqls_parse::query;
 use once_cell::sync::Lazy;
 use ropey::Rope;
@@ -27,9 +27,10 @@ pub struct Ide {
     file_ropes: HashMap<VfsPath, Rope>,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+pub type ChangesetSummary = HashMap<VfsPath, ChangeSummary>;
+
+#[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub struct ChangeSummary {
-    pub path: VfsPath,
     pub diagnostics: HashSet<Diagnostic>,
 }
 
@@ -62,12 +63,6 @@ impl Display for DiagnosticKind {
     }
 }
 
-impl ChangeSummary {
-    pub fn empty(path: VfsPath) -> Self {
-        Self { path, diagnostics: Default::default() }
-    }
-}
-
 pub struct Analysis {
     snapshot: gqls_db::Snapshot<GqlsDatabase>,
 }
@@ -91,46 +86,42 @@ impl Ide {
         Analysis { snapshot: self.db.snapshot() }
     }
 
+    pub fn intern_path(&mut self, path: PathBuf) -> VfsPath {
+        self.vfs.intern(path)
+    }
+
+    pub fn intern_project(&self, project: String) -> Project {
+        self.db.intern_project(project)
+    }
+
     pub fn vfs(&self) -> &Vfs {
         &self.vfs
     }
 
     #[must_use]
-    pub fn changeset<'a>(&mut self, path: &Path, changes: Vec<Change>) -> ChangeSummary {
-        let changeset = self.make_changeset(path, changes);
-        self.apply_changeset(changeset)
-    }
-
-    #[must_use]
-    pub fn make_changeset<'a>(&mut self, path: &Path, changes: Vec<Change>) -> Changeset {
-        Changeset::new(self.vfs.intern(path), changes)
-    }
-
-    #[must_use]
-    pub fn apply_changesets<'a>(
-        &mut self,
-        changesets: impl IntoIterator<Item = Changeset>,
-    ) -> Vec<ChangeSummary> {
-        changesets.into_iter().map(|changeset| self.apply_changeset(changeset)).collect()
-    }
-
-    #[must_use]
-    pub fn apply_changeset<'a>(&mut self, changeset: Changeset) -> ChangeSummary {
-        let path = changeset.path;
-        for change in changeset.changes {
-            self.apply(path, &change);
-        }
-        let diagnostics = self.diagnostics(path);
-        ChangeSummary { path, diagnostics }
-    }
-
-    fn apply(&mut self, path: VfsPath, change: &Change) {
+    pub fn apply_changeset<'a>(&mut self, changeset: Changeset) -> ChangesetSummary {
         self.db.request_cancellation();
-        let files = self.db.files();
-        if !files.contains(path) {
-            self.db.set_files(Arc::new(files.as_ref() | &HashSet::from([path])));
+        if let Some(projects) = changeset.projects {
+            self.db.set_projects(Arc::new(projects));
         }
-        self.patch_tree(path, change);
+
+        changeset.changes.iter().for_each(|change| {
+            self.apply(&change);
+        });
+
+        let files_changed =
+            changeset.changes.iter().map(|change| change.path).collect::<HashSet<_>>();
+        files_changed
+            .into_iter()
+            .map(|path| {
+                let diagnostics = self.diagnostics(path);
+                (path, ChangeSummary { diagnostics: self.diagnostics(path) })
+            })
+            .collect()
+    }
+
+    fn apply(&mut self, change: &Change) {
+        self.patch_tree(change);
     }
 
     fn diagnostics(&self, file: VfsPath) -> HashSet<Diagnostic> {
@@ -149,26 +140,26 @@ impl Ide {
             .collect()
     }
 
-    fn patch_tree(&mut self, file: VfsPath, change: &Change) {
-        let data = match &change {
-            Change::Patch(patch) => {
-                let mut rope = self.file_ropes.get(&file).cloned().expect("patch on initial edit");
+    fn patch_tree(&mut self, change: &Change) {
+        let path = change.path;
+        let data = match &change.kind {
+            ChangeKind::Patch(patch) => {
+                let mut rope = self.file_ropes.get(&path).cloned().expect("patch on initial edit");
                 let edit = patch.apply(&mut rope);
                 let text = rope.to_string();
                 let mut old =
-                    self.file_ropes.insert(file, rope).map(|_| self.db.file_tree(file)).unwrap();
+                    self.file_ropes.insert(path, rope).map(|_| self.db.file_tree(path)).unwrap();
                 old.edit(&edit);
                 let tree = gqls_parse::parse(&text, Some(&old));
                 FileData::new(text, tree)
             }
-            Change::Set(text) => {
+            ChangeKind::Set(text) => {
                 let rope = Rope::from_str(text);
-                self.file_ropes.insert(file, rope);
+                self.file_ropes.insert(path, rope);
                 FileData::new(text, gqls_parse::parse_fresh(text))
             }
         };
-        debug_assert!(self.db.files().contains(&file));
-        self.db.set_file_data(file, data);
+        self.db.set_file_data(path, data);
     }
 }
 

@@ -1,12 +1,14 @@
 use crate::config::{Config, DEFAULT_PROJECT};
 use crate::convert::PathExt;
 use crate::{Convert, UrlExt};
-use anyhow::Result;
-use gqls_ide::{Change, ChangeSummary, Ide, Patch, VfsPath};
+use anyhow::{anyhow, Result};
+use gqls_ide::{
+    Change, ChangeKind, ChangeSummary, Changeset, ChangesetSummary, Ide, Patch, VfsPath
+};
 use lsp_types::notification::PublishDiagnostics;
 use lsp_types::*;
 use parking_lot::Mutex;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use tower_lsp::{jsonrpc, Client, ClientSocket, LanguageServer, LspService};
 
@@ -72,8 +74,8 @@ impl LanguageServer for Gqls {
 
         fn find_graphql_files(
             workspaces: impl IntoIterator<Item = WorkspaceFolder>,
-        ) -> anyhow::Result<HashMap<String, HashSet<PathBuf>>, Vec<(PathBuf, String)>> {
-            let mut paths = vec![];
+        ) -> anyhow::Result<HashMap<String, Vec<(PathBuf, String)>>> {
+            let mut projects = HashMap::default();
             for workspace in workspaces {
                 let path = workspace.uri.to_path()?;
                 let config = read_config(&path)?;
@@ -82,7 +84,7 @@ impl LanguageServer for Gqls {
                     .filter_entry(|entry| entry.file_type().is_file())
                 {
                     let entry = entry?;
-                    let projects = match &config {
+                    let file_projects = match &config {
                         Some(config) => config.project_matches(entry.path()),
                         // If configuration file is found, then all `*.graphql` files are assigned to the default project
                         None => (entry.path().extension() == Some("graphql".as_ref()))
@@ -92,26 +94,45 @@ impl LanguageServer for Gqls {
                     };
                     let path = entry.path().to_path_buf();
                     let content = std::fs::read_to_string(&path)?;
-                    paths.push((path, content));
+                    // FIXME shouldn't have to clone everything
+                    for file_project in file_projects {
+                        projects
+                            .entry(file_project.to_owned())
+                            .or_insert_with(Vec::new)
+                            .push((path.clone(), content.clone()));
+                    }
                 }
             }
-            Ok(paths)
+            Ok(projects)
         }
 
-        let paths =
+        let projects =
             find_graphql_files(params.workspace_folders.into_iter().flatten()).map_err(|err| {
                 tracing::error!(%err);
                 jsonrpc::Error::internal_error()
             })?;
 
         let mut ide = self.ide.lock();
-        let changesets = paths
-            .into_iter()
-            .map(|(path, content)| ide.make_changeset(&path, vec![Change::Set(content)]))
-            .collect::<Vec<_>>();
-        for summary in ide.apply_changesets(changesets) {
-            self.diagnostics(summary).await;
+        let mut changeset = Changeset::default().with_projects(
+            projects
+                .iter()
+                .map(|(k, v)| {
+                    (
+                        ide.intern_project(k.to_owned()),
+                        v.iter().map(|(path, _)| ide.intern_path(path.clone())).collect(),
+                    )
+                })
+                .collect(),
+        );
+
+        for (_, files) in projects {
+            for (path, content) in files {
+                changeset = changeset.with_change(Change::set(ide.intern_path(path), content))
+            }
         }
+
+        let summary = ide.apply_changeset(changeset);
+        self.diagnostics(summary).await;
 
         Ok(InitializeResult {
             capabilities: capabilities(),
@@ -169,30 +190,38 @@ impl Gqls {
     }
 
     async fn handle_did_change(&self, params: DidChangeTextDocumentParams) -> Result<()> {
-        let path = params.text_document.uri.to_path().unwrap();
+        let path = params.text_document.uri.to_path()?;
+        let mut ide = self.ide.lock();
+        let path = ide.intern_path(path);
         let changes = params
             .content_changes
             .into_iter()
             .map(|change| match change.range {
-                Some(range) => Change::Patch(Patch { range: range.convert(), with: change.text }),
-                None => Change::Set(change.text),
+                Some(range) =>
+                    ChangeKind::Patch(Patch { range: range.convert(), with: change.text }),
+                None => ChangeKind::Set(change.text),
             })
+            .map(|kind| Change::new(path, kind))
             .collect();
-        let summary = self.ide.lock().changeset(&path, changes);
-        self.diagnostics(summary).await;
+        let changeset = Changeset::new(changes);
+        let changeset_summary = ide.apply_changeset(changeset);
+        self.diagnostics(changeset_summary).await;
         Ok(())
     }
 
     #[tracing::instrument(skip(self))]
-    async fn diagnostics(&self, summary: ChangeSummary) {
+    async fn diagnostics(&self, summary: ChangesetSummary) {
         tracing::info!("emitting diagnostics");
-        let diagnostics = summary.diagnostics.iter().map(Convert::convert).collect::<Vec<_>>();
-        self.client
-            .send_notification::<PublishDiagnostics>(PublishDiagnosticsParams {
-                uri: summary.path.to_url(),
-                diagnostics,
-                version: None,
-            })
-            .await;
+        for (path, change_summary) in summary {
+            let diagnostics =
+                change_summary.diagnostics.iter().map(Convert::convert).collect::<Vec<_>>();
+            self.client
+                .send_notification::<PublishDiagnostics>(PublishDiagnosticsParams {
+                    uri: path.to_url(),
+                    diagnostics,
+                    version: None,
+                })
+                .await;
+        }
     }
 }

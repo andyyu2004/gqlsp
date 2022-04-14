@@ -59,7 +59,7 @@ fn test_definitions() {
 
         directive @d on FIELD
     "#;
-    db.set_files(Arc::new(hashset![foo, bar]));
+    db.set_projects(Arc::new(hashmap! { "project" => hashset!{ foo, bar } }));
     db.set_file_data(foo, FileData::new(foogql, gqls_parse::parse_fresh(foogql)));
     db.set_file_data(bar, FileData::new(bargql, gqls_parse::parse_fresh(bargql)));
 

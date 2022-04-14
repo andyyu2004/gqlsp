@@ -287,6 +287,7 @@ name = "gqls-base-db"
 version = "0.1.0"
 dependencies = [
  "salsa",
+ "smallvec",
  "tree-sitter",
  "vfs",
 ]

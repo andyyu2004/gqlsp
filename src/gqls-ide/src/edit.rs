@@ -1,3 +1,6 @@
+use std::collections::{HashMap, HashSet};
+
+use gqls_db::Project;
 pub use tree_sitter::Point;
 
 use ropey::Rope;
@@ -45,20 +48,54 @@ impl Patch {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Default, Debug, Eq, PartialEq, Clone)]
 pub struct Changeset {
-    pub path: VfsPath,
-    pub changes: Vec<Change>,
+    pub(crate) projects: Option<HashMap<Project, HashSet<VfsPath>>>,
+    pub(crate) changes: Vec<Change>,
 }
 
 impl Changeset {
-    pub fn new(file: VfsPath, changes: Vec<Change>) -> Self {
-        Self { path: file, changes }
+    pub fn new(changes: Vec<Change>) -> Self {
+        Self { changes, projects: None }
+    }
+
+    pub fn single(change: Change) -> Self {
+        Self::new(vec![change])
+    }
+
+    pub fn with_projects(mut self, projects: HashMap<Project, HashSet<VfsPath>>) -> Self {
+        self.projects = Some(projects);
+        self
+    }
+
+    pub fn with_change(mut self, change: Change) -> Self {
+        self.changes.push(change);
+        self
     }
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum Change {
+pub struct Change {
+    pub path: VfsPath,
+    pub kind: ChangeKind,
+}
+
+impl Change {
+    pub fn new(path: VfsPath, kind: ChangeKind) -> Self {
+        Self { path, kind }
+    }
+
+    pub fn set(path: VfsPath, text: String) -> Self {
+        Self::new(path, ChangeKind::Set(text))
+    }
+
+    pub fn patch(path: VfsPath, patch: Patch) -> Self {
+        Self::new(path, ChangeKind::Patch(patch))
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum ChangeKind {
     Patch(Patch),
     Set(String),
 }

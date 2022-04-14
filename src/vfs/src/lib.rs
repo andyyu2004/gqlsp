@@ -2,6 +2,9 @@
 
 use std::path::Path;
 
+// FIXME interner doesn't really belong in this crate
+pub use interner::Interner;
+
 use self::interner::PathInterner;
 
 mod interner;
