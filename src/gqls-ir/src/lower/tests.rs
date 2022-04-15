@@ -1,3 +1,4 @@
+use expect_test::expect;
 use vfs::Vfs;
 
 use crate::tests::{idx, setup, TestDB};
@@ -20,5 +21,42 @@ fn test_lower_item_body() {
     });
 
     let body = db.item_body(foo, idx!(0));
-    dbg!(body);
+    expect![[r#"
+        TypeDefinition(
+            TypeDefinitionBody {
+                fields: Fields {
+                    fields: Arena {
+                        len: 6,
+                        data: [
+                            Field {
+                                name: foo,
+                                ty: Int,
+                            },
+                            Field {
+                                name: list,
+                                ty: [Int],
+                            },
+                            Field {
+                                name: nonNull,
+                                ty: Int!,
+                            },
+                            Field {
+                                name: nonNullList,
+                                ty: [Int!]!,
+                            },
+                            Field {
+                                name: a,
+                                ty: [Int!],
+                            },
+                            Field {
+                                name: b,
+                                ty: [Int]!,
+                            },
+                        ],
+                    },
+                },
+            },
+        )
+    "#]]
+    .assert_debug_eq(&body);
 }
