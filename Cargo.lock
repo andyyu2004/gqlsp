@@ -301,6 +301,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "gqls-fixture"
+version = "0.1.0"
+dependencies = [
+ "gqls-parse",
+]
+
+[[package]]
 name = "gqls-ide"
 version = "0.1.0"
 dependencies = [

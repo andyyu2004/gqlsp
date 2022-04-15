@@ -4,8 +4,7 @@ mod nodes;
 
 pub use self::nodes::NodeKind;
 
-use tree_sitter::TreeCursor;
-pub use tree_sitter::{Language, Node, Parser, Query, Range, Tree};
+pub use tree_sitter::{Language, Node, Parser, Point, Query, Range, Tree, TreeCursor};
 
 pub fn traverse(tree: &Tree) -> impl Iterator<Item = Node<'_>> {
     tree_sitter_traversal::traverse_tree(tree, tree_sitter_traversal::Order::Pre)
