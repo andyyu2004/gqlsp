@@ -1,13 +1,19 @@
+mod body;
 mod db;
+mod lower;
+mod ty;
 
 use std::collections::HashMap;
 
+pub use self::body::*;
+pub use self::ty::*;
 pub use db::{DefDatabase, DefDatabaseStorage};
 
 use gqls_parse::Range;
 use la_arena::{Arena, Idx};
 use smallvec::SmallVec;
 use smol_str::SmolStr;
+use std::fmt::{self, Debug};
 use vfs::FileId;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,8 +62,14 @@ pub struct TypeExtension {
     pub name: Name,
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Name(SmolStr);
+
+impl Debug for Name {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
+    }
+}
 
 impl Name {
     pub fn new(s: &str) -> Self {
@@ -83,7 +95,7 @@ impl PartialOrd for Res {
 
 impl Ord for Res {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.file.cmp(&other.file).then_with(|| self.idx.into_raw().cmp(&other.idx.into_raw()))
+        self.file.cmp(other.file).then_with(|| self.idx.into_raw().cmp(&other.idx.into_raw()))
     }
 }
 

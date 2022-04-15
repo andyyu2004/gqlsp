@@ -175,15 +175,13 @@ module.exports = grammar({
         seq(optional($.description), "scalar", $.name, optional($.directives))
       ),
     object_type_definition: ($) =>
-      prec.right(
-        seq(
-          optional($.description),
-          "type",
-          $.name,
-          optional($.implements_interfaces),
-          optional($.directives),
-          optional($.fields_definition)
-        )
+      seq(
+        optional($.description),
+        "type",
+        $.name,
+        optional($.implements_interfaces),
+        optional($.directives),
+        $.fields_definition
       ),
     interface_type_definition: ($) =>
       prec.right(

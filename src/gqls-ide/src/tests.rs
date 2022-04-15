@@ -56,7 +56,7 @@ fn test_ide_syntax_diagnostics() {
     assert_eq!(
         summary[foo].diagnostics,
         hashset! {
-            Diagnostic::syntax(range!(0:11..0:13))
+            Diagnostic::syntax(range!(0:0..0:13))
         }
     );
 }

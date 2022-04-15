@@ -1,10 +1,9 @@
 use std::path::Path;
-use std::sync::Arc;
 
 use crate::{DefDatabase, DefDatabaseStorage, Name, Res};
 use expect_test::expect;
-use gqls_base_db::{FileData, SourceDatabase, SourceDatabaseStorage};
-use maplit::{hashmap, hashset};
+use gqls_base_db::SourceDatabaseStorage;
+use maplit::hashmap;
 use smallvec::smallvec;
 use vfs::Vfs;
 
@@ -22,6 +21,24 @@ macro_rules! idx {
         la_arena::Idx::from_raw(la_arena::RawIdx::from($idx))
     };
 }
+
+pub(crate) use idx;
+
+macro_rules! setup {
+    ($db:ident: {
+        $($file:ident: $text:expr,)*
+     }) => {
+        use gqls_base_db::{FileData, SourceDatabase};
+        $db.set_projects(std::sync::Arc::new(
+            maplit::hashmap! { "default" => maplit::hashset! { $($file),* } },
+        ));
+        $(
+            $db.set_file_data($file, FileData::new($text, gqls_parse::parse_fresh($text)));
+        )*
+    };
+}
+
+pub(crate) use setup;
 
 #[test]
 fn test_definitions() {
@@ -59,9 +76,11 @@ fn test_definitions() {
 
         directive @d on FIELD
     "#;
-    db.set_projects(Arc::new(hashmap! { "project" => hashset!{ foo, bar } }));
-    db.set_file_data(foo, FileData::new(foogql, gqls_parse::parse_fresh(foogql)));
-    db.set_file_data(bar, FileData::new(bargql, gqls_parse::parse_fresh(bargql)));
+
+    setup!(db: {
+        foo: foogql,
+        bar: bargql,
+    });
 
     let item_map = db.item_map(foo);
     assert_eq!(
@@ -172,19 +191,13 @@ fn test_definitions() {
                 len: 3,
                 data: [
                     TypeDefinition {
-                        name: Name(
-                            "Foo",
-                        ),
+                        name: Foo,
                     },
                     TypeDefinition {
-                        name: Name(
-                            "Foo",
-                        ),
+                        name: Foo,
                     },
                     TypeDefinition {
-                        name: Name(
-                            "Bar",
-                        ),
+                        name: Bar,
                     },
                 ],
             },
@@ -196,9 +209,7 @@ fn test_definitions() {
                 len: 1,
                 data: [
                     TypeExtension {
-                        name: Name(
-                            "Bar",
-                        ),
+                        name: Bar,
                     },
                 ],
             },
@@ -269,14 +280,10 @@ fn test_definitions() {
                 len: 2,
                 data: [
                     TypeDefinition {
-                        name: Name(
-                            "Bar",
-                        ),
+                        name: Bar,
                     },
                     TypeDefinition {
-                        name: Name(
-                            "Baz",
-                        ),
+                        name: Baz,
                     },
                 ],
             },
@@ -284,9 +291,7 @@ fn test_definitions() {
                 len: 1,
                 data: [
                     DirectiveDefinition {
-                        name: Name(
-                            "d",
-                        ),
+                        name: d,
                     },
                 ],
             },

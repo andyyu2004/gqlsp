@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
-use gqls_base_db::{FileData, SourceDatabase};
+use gqls_base_db::SourceDatabase;
 use gqls_parse::{Node, NodeExt, NodeKind, Tree};
 use smallvec::smallvec;
 use vfs::FileId;
 
+use crate::lower::BodyCtxt;
 use crate::*;
 
 #[salsa::query_group(DefDatabaseStorage)]
@@ -12,6 +13,7 @@ pub trait DefDatabase: SourceDatabase {
     fn items(&self, file: FileId) -> Arc<Items>;
     fn item(&self, res: Res) -> Item;
     fn item_map(&self, file: FileId) -> Arc<ItemMap>;
+    fn item_body(&self, file: FileId, item: Idx<Item>) -> Arc<ItemBody>;
     fn resolve(&self, file: FileId, name: Name) -> Resolutions;
     fn references(&self, file: FileId, name: Name) -> References;
 }
@@ -28,7 +30,7 @@ fn items(db: &dyn DefDatabase, file: FileId) -> Arc<Items> {
 }
 
 fn item(db: &dyn DefDatabase, res: Res) -> Item {
-    db.items(res.file).items[res.idx].clone()
+    db.items(res.file).items[res.idx]
 }
 
 fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
@@ -38,6 +40,20 @@ fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
         map.entry(items.name(item)).or_default().push(idx);
     }
     Arc::new(map)
+}
+
+fn item_body(db: &dyn DefDatabase, file: FileId, idx: Idx<Item>) -> Arc<ItemBody> {
+    let items = db.items(file);
+    let tree = db.file_tree(file);
+    let item = items.items[idx];
+    let item_node = tree.root_node().named_descendant_for_range(item.range).unwrap();
+    let bcx = BodyCtxt::new(db.file_text(file));
+    let body = match item.kind {
+        ItemKind::TypeDefinition(_) => bcx.lower_typedef(item_node),
+        ItemKind::DirectiveDefinition(_) => todo!(),
+        ItemKind::TypeExtension(_) => todo!(),
+    };
+    Arc::new(body)
 }
 
 fn resolve(db: &dyn DefDatabase, file: FileId, name: Name) -> Resolutions {
@@ -58,8 +74,8 @@ fn resolve(db: &dyn DefDatabase, file: FileId, name: Name) -> Resolutions {
 fn references(db: &dyn DefDatabase, file: FileId, name: Name) -> References {
     for project in db.projects_of(file) {
         for file in db.project_files(project).iter() {
-            for (idx, item) in db.items(file).items.iter() {
-                // db.item_body(idx)
+            for (idx, _) in db.items(file).items.iter() {
+                let body = db.item_body(file, idx);
             }
         }
     }
@@ -77,8 +93,7 @@ impl LowerCtxt {
     fn lower(mut self, tree: Tree) -> Arc<Items> {
         let node = tree.root_node();
         let items = node
-            .named_children(&mut node.walk())
-            .filter(|node| !node.is_extra())
+            .relevant_children(&mut node.walk())
             .filter_map(|node| self.lower_item(node))
             .collect();
         Arc::new(Items {
@@ -101,7 +116,7 @@ impl LowerCtxt {
                     | NodeKind::SCALAR_TYPE_DEFINITION
                     | NodeKind::ENUM_TYPE_DEFINITION
                     | NodeKind::UNION_TYPE_DEFINITION
-                    | NodeKind::INPUT_OBJECT_TYPE_DEFINITION => typedef.find_name_node()?,
+                    | NodeKind::INPUT_OBJECT_TYPE_DEFINITION => typedef.name_node()?,
                     _ =>
                         unreachable!("invalid node kind for type definition: {:?}", typedef.kind()),
                 };
@@ -112,7 +127,7 @@ impl LowerCtxt {
             NodeKind::TYPE_EXTENSION => {
                 let type_ext = def.sole_named_child();
                 let name = match type_ext.kind() {
-                    NodeKind::OBJECT_TYPE_EXTENSION => type_ext.find_name_node()?,
+                    NodeKind::OBJECT_TYPE_EXTENSION => type_ext.name_node()?,
                     _ => return None,
                 };
                 ItemKind::TypeExtension(
@@ -120,7 +135,7 @@ impl LowerCtxt {
                 )
             }
             NodeKind::DIRECTIVE_DEFINITION => {
-                let name = def.find_name_node()?;
+                let name = def.name_node()?;
                 ItemKind::DirectiveDefinition(
                     self.directives
                         .alloc(DirectiveDefinition { name: Name::new(name.text(&self.text)) }),

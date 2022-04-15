@@ -4,6 +4,7 @@ mod nodes;
 
 pub use self::nodes::NodeKind;
 
+use tree_sitter::TreeCursor;
 pub use tree_sitter::{Language, Node, Parser, Query, Range, Tree};
 
 pub fn traverse(tree: &Tree) -> impl Iterator<Item = Node<'_>> {
@@ -22,12 +23,23 @@ impl<'tree> Iterator for Parents<'tree> {
     }
 }
 
+pub type NodeIterator<'a, 'tree> = Box<dyn Iterator<Item = Node<'tree>> + 'a>;
+
+// FIXME avoid boxed iterators once impl trait type alias etc is stable
 pub trait NodeExt<'tree>: Sized {
     fn parents(self) -> Parents<'tree>;
     fn sole_named_child(self) -> Node<'tree>;
     fn text(self, text: &str) -> &str;
-    fn find_descendent(self, f: impl FnMut(&Self) -> bool) -> Option<Self>;
-    fn find_name_node(self) -> Option<Self>;
+    fn find_descendant(self, f: impl FnMut(&Self) -> bool) -> Option<Self>;
+    fn name_node(self) -> Option<Self>;
+    fn child_of_kind(self, kind: &'static str) -> Option<Self>;
+    fn named_descendant_for_range(self, range: Range) -> Option<Self>;
+    fn relevant_children<'a>(self, cursor: &'a mut TreeCursor<'tree>) -> NodeIterator<'a, 'tree>;
+    fn children_of_kind<'a>(
+        self,
+        cursor: &'a mut TreeCursor<'tree>,
+        kind: &'static str,
+    ) -> NodeIterator<'a, 'tree>;
 }
 
 impl<'tree> NodeExt<'tree> for Node<'tree> {
@@ -35,21 +47,42 @@ impl<'tree> NodeExt<'tree> for Node<'tree> {
         Parents { node: self }
     }
 
+    #[track_caller]
     fn sole_named_child(self) -> Node<'tree> {
-        assert_eq!(self.child_count(), 1);
-        self.child(0).unwrap()
+        assert_eq!(self.named_child_count(), 1);
+        self.named_child(0).unwrap()
     }
 
     fn text(self, source: &str) -> &str {
         self.utf8_text(source.as_bytes()).expect("text was not valid utf8")
     }
 
-    fn find_descendent(self, f: impl FnMut(&Node<'tree>) -> bool) -> Option<Node<'tree>> {
+    fn find_descendant(self, f: impl FnMut(&Node<'tree>) -> bool) -> Option<Node<'tree>> {
         tree_sitter_traversal::traverse(self.walk(), tree_sitter_traversal::Order::Pre).find(f)
     }
 
-    fn find_name_node(self) -> Option<Self> {
-        self.named_children(&mut self.walk()).find(|node| node.kind() == NodeKind::NAME)
+    fn name_node(self) -> Option<Self> {
+        self.child_of_kind(NodeKind::NAME)
+    }
+
+    fn named_descendant_for_range(self, range: Range) -> Option<Self> {
+        self.named_descendant_for_point_range(range.start_point, range.end_point)
+    }
+
+    fn child_of_kind(self, kind: &'static str) -> Option<Self> {
+        self.named_children(&mut self.walk()).find(|node| node.kind() == kind)
+    }
+
+    fn relevant_children<'a>(self, cursor: &'a mut TreeCursor<'tree>) -> NodeIterator<'a, 'tree> {
+        Box::new(self.named_children(cursor).filter(|node| !node.is_extra()))
+    }
+
+    fn children_of_kind<'a>(
+        self,
+        cursor: &'a mut TreeCursor<'tree>,
+        kind: &'static str,
+    ) -> NodeIterator<'a, 'tree> {
+        Box::new(self.relevant_children(cursor).filter(move |node| node.kind() == kind))
     }
 }
 
