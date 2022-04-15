@@ -3,7 +3,6 @@ use maplit::{hashmap, hashset};
 
 use crate::{range, ChangeSummary, Diagnostic, Ide};
 
-#[macro_export]
 macro_rules! apply_changeset {
     ($ide:ident: $file:ident:$a:literal:$b:literal..$x:literal:$y:literal => $text:expr) => {
         $ide.apply_changeset($crate::Changeset::single($crate::change!($file:$a:$b..$x:$y => $text)))
@@ -12,6 +11,8 @@ macro_rules! apply_changeset {
         $ide.apply_changeset($crate::Changeset::single($crate::change!($file => $text)))
     };
 }
+
+pub(crate) use apply_changeset;
 
 #[macro_export]
 macro_rules! change {
@@ -22,6 +23,19 @@ macro_rules! change {
         $crate::Change::set($file, $text.to_owned())
     };
 }
+
+macro_rules! setup {
+    ($ide:ident: {
+        $($file:ident: $text:expr,)*
+     }) => {{
+        let mut changeset = $crate::Changeset::default()
+            .with_projects(maplit::hashmap! { "default" => maplit::hashset! { $($file),* } });
+        $( changeset = changeset.with_change($crate::change!($file => $text)); )*
+        $ide.apply_changeset(changeset)
+    }};
+}
+
+pub(crate) use setup;
 
 #[test]
 fn test_ide() {
