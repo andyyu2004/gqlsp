@@ -6,8 +6,14 @@ use crate::{Analysis, Location};
 
 impl Analysis {
     pub fn find_references(&self, file: FileId, at: Point) -> Vec<Location> {
-        let name = self.name_at(file, at);
-        todo!()
+        let name = match self.name_at(file, at) {
+            Some(name) => name,
+            None => return vec![],
+        };
+        self.references(file, name)
+            .into_iter()
+            .map(|(file, range)| Location::new(file, range.into()))
+            .collect()
     }
 }
 

@@ -5,6 +5,7 @@ use crate::{Name, Ty};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemBody {
     TypeDefinition(TypeDefinitionBody),
+    Todo,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

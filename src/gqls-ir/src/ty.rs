@@ -1,3 +1,5 @@
+use gqls_parse::Range;
+
 use crate::Name;
 use std::fmt::{self, Debug};
 
@@ -5,7 +7,17 @@ pub type Ty = Box<Type>;
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct Type {
+    pub range: Range,
     pub kind: TyKind,
+}
+
+impl Type {
+    pub fn name(&self) -> Name {
+        match &self.kind {
+            TyKind::Named(name) => name.clone(),
+            TyKind::NonNull(ty) | TyKind::List(ty) => ty.name(),
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Eq)]

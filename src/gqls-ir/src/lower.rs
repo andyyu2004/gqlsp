@@ -17,7 +17,7 @@ impl BodyCtxt {
         match node.kind() {
             NodeKind::OBJECT_TYPE_DEFINITION =>
                 ItemBody::TypeDefinition(self.lower_object_typedef(node)),
-            _ => todo!(),
+            _ => ItemBody::Todo,
         }
     }
 
@@ -57,24 +57,24 @@ impl BodyCtxt {
                 match inner.kind() {
                     NodeKind::NAMED_TYPE => TyKind::NonNull(self.lower_named_type(inner)?),
                     NodeKind::LIST_TYPE => TyKind::NonNull(self.lower_list_type(inner)?),
-                    _ => todo!(),
+                    _ => unreachable!(),
                 }
             }
             _ => unreachable!(),
         };
-        Some(Box::new(Type { kind }))
+        Some(Box::new(Type { range: ty.range(), kind }))
     }
 
     fn lower_named_type(&mut self, node: Node<'_>) -> Option<Ty> {
         assert_eq!(node.kind(), NodeKind::NAMED_TYPE);
         let kind = TyKind::Named(Name::new(node.text(&self.text)));
-        Some(Box::new(Type { kind }))
+        Some(Box::new(Type { range: node.range(), kind }))
     }
 
     fn lower_list_type(&mut self, node: Node<'_>) -> Option<Ty> {
         assert_eq!(node.kind(), NodeKind::LIST_TYPE);
         let kind = TyKind::List(self.lower_type(node.sole_named_child())?);
-        Some(Box::new(Type { kind }))
+        Some(Box::new(Type { range: node.range(), kind }))
     }
 }
 

@@ -13,7 +13,7 @@ pub trait DefDatabase: SourceDatabase {
     fn items(&self, file: FileId) -> Arc<Items>;
     fn item(&self, res: Res) -> Item;
     fn item_map(&self, file: FileId) -> Arc<ItemMap>;
-    fn item_body(&self, file: FileId, item: Idx<Item>) -> Arc<ItemBody>;
+    fn item_body(&self, file: FileId, idx: Idx<Item>) -> Option<Arc<ItemBody>>;
     fn resolve(&self, file: FileId, name: Name) -> Resolutions;
     fn references(&self, file: FileId, name: Name) -> References;
 }
@@ -42,18 +42,18 @@ fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
     Arc::new(map)
 }
 
-fn item_body(db: &dyn DefDatabase, file: FileId, idx: Idx<Item>) -> Arc<ItemBody> {
+fn item_body(db: &dyn DefDatabase, file: FileId, idx: Idx<Item>) -> Option<Arc<ItemBody>> {
     let items = db.items(file);
     let tree = db.file_tree(file);
     let item = items.items[idx];
     let item_node = tree.root_node().named_descendant_for_range(item.range).unwrap();
     let bcx = BodyCtxt::new(db.file_text(file));
-    let body = match item.kind {
-        ItemKind::TypeDefinition(_) => bcx.lower_typedef(item_node),
-        ItemKind::DirectiveDefinition(_) => todo!(),
-        ItemKind::TypeExtension(_) => todo!(),
-    };
-    Arc::new(body)
+    match item.kind {
+        ItemKind::TypeDefinition(_) => Some(Arc::new(bcx.lower_typedef(item_node))),
+        // TODO
+        ItemKind::TypeExtension(_) => None,
+        ItemKind::DirectiveDefinition(_) => None,
+    }
 }
 
 fn resolve(db: &dyn DefDatabase, file: FileId, name: Name) -> Resolutions {
@@ -72,14 +72,28 @@ fn resolve(db: &dyn DefDatabase, file: FileId, name: Name) -> Resolutions {
 }
 
 fn references(db: &dyn DefDatabase, file: FileId, name: Name) -> References {
+    let mut references = vec![];
     for project in db.projects_of(file) {
-        for file in db.project_files(project).iter() {
+        for &file in db.project_files(project).iter() {
             for (idx, _) in db.items(file).items.iter() {
                 let body = db.item_body(file, idx);
+                match body {
+                    Some(body) => match body.as_ref() {
+                        ItemBody::Todo => continue,
+                        ItemBody::TypeDefinition(typedef) => typedef
+                            .fields
+                            .fields
+                            .iter()
+                            .map(|(_, field)| field)
+                            .filter(|field| field.ty.name() == name)
+                            .for_each(|field| references.push((file, field.ty.range))),
+                    },
+                    None => continue,
+                }
             }
         }
     }
-    todo!()
+    references
 }
 
 struct LowerCtxt {
