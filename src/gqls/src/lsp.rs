@@ -31,6 +31,7 @@ pub fn capabilities() -> ServerCapabilities {
             TextDocumentSyncKind::INCREMENTAL,
         )),
         definition_provider: Some(OneOf::Left(true)),
+        references_provider: Some(OneOf::Left(true)),
         // hover_provider: Some(HoverProviderCapability::Simple(true)),
         // completion_provider: Some(CompletionOptions::default()),
         ..Default::default()
@@ -119,6 +120,15 @@ impl LanguageServer for Gqls {
             [location] => Ok(Some(GotoDefinitionResponse::Scalar(location.convert()))),
             locations => Ok(Some(GotoDefinitionResponse::Array(locations.convert()))),
         }
+    }
+
+    async fn references(&self, params: ReferenceParams) -> jsonrpc::Result<Option<Vec<Location>>> {
+        let ide = self.ide.lock();
+        let position = params.text_document_position;
+        let path = ide.path(&position.text_document.uri)?;
+        let analysis = ide.analysis();
+        let locations = analysis.find_references(path, position.position.convert());
+        todo!()
     }
 }
 

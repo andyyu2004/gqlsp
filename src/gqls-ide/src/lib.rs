@@ -3,6 +3,8 @@
 mod def;
 mod edit;
 mod macros;
+mod references;
+mod resolve;
 
 pub use self::edit::{Change, ChangeKind, Changeset, Patch, Point, Range};
 pub use tree_sitter;
