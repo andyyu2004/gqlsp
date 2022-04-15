@@ -64,7 +64,8 @@ fn deserialize_schema<'de, D>(deserializer: D) -> Result<OneOrMany<Glob>, D::Err
 where
     D: Deserializer<'de>,
 {
-    match OneOrMany::<String>::deserialize(deserializer)? {
+    let strings = OneOrMany::<String>::deserialize(deserializer)?;
+    match strings.as_ref().map(|s| s.trim_start_matches("./")) {
         OneOrMany::One(glob) =>
             Glob::new(&glob).map_err(serde::de::Error::custom).map(OneOrMany::One),
         OneOrMany::Many(globs) => globs
@@ -79,6 +80,7 @@ where
 
 impl ProjectConfig {
     fn matches(&self, path: &Path) -> bool {
+        // FIXME don't keep recompiling the glob
         self.schema.iter().any(|glob| glob.compile_matcher().is_match(path))
     }
 }
@@ -90,9 +92,30 @@ pub enum OneOrMany<T> {
     Many(Vec<T>),
 }
 
+pub enum OneOrManyRef<'a, T> {
+    One(&'a T),
+    Many(&'a [T]),
+}
+
+impl<'a, T> OneOrManyRef<'a, T> {
+    pub fn map<U>(self, mut f: impl FnMut(&'a T) -> U) -> OneOrMany<U> {
+        match self {
+            Self::One(x) => OneOrMany::One(f(x)),
+            Self::Many(xs) => OneOrMany::Many(xs.into_iter().map(f).collect()),
+        }
+    }
+}
+
 impl<T> OneOrMany<T> {
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.into_iter()
+    }
+
+    pub fn as_ref(&self) -> OneOrManyRef<'_, T> {
+        match self {
+            OneOrMany::One(x) => OneOrManyRef::One(x),
+            OneOrMany::Many(xs) => OneOrManyRef::Many(xs),
+        }
     }
 }
 
