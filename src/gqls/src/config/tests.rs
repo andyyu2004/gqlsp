@@ -2,7 +2,7 @@ use anyhow::Result;
 use globset::Glob;
 use maplit::btreemap;
 
-use crate::config::OneOrMany;
+use crate::config::{OneOrMany, Projects};
 
 use super::{Config, ProjectConfig};
 
@@ -35,17 +35,17 @@ fn test_parse_config() -> Result<()> {
     assert_eq!(config, Config::Project(expected_project_config));
 
     let config = toml::toml! {
-        [project1]
+        [projects.project1]
         schema = ["foo.graphql", "bar.graphql"]
 
-        [project2]
+        [projects.project2]
         schema = "**/*.graphql"
     }
     .try_into::<Config>()?;
 
     assert_eq!(
         config,
-        Config::Projects(btreemap! {
+        Config::Projects(Projects::new(btreemap! {
            "project1".to_owned() => ProjectConfig {
                schema: OneOrMany::Many(vec![Glob::new("foo.graphql")?,
                Glob::new("bar.graphql")?])
@@ -53,7 +53,7 @@ fn test_parse_config() -> Result<()> {
            "project2".to_owned() => ProjectConfig {
                schema: OneOrMany::One(Glob::new("**/*.graphql")?)
            }
-        })
+        }))
     );
     Ok(())
 }

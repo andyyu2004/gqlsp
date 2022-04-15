@@ -277,7 +277,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tracing-test",
- "url",
  "vfs",
  "walkdir",
 ]

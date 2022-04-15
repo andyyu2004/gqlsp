@@ -8,7 +8,19 @@ use serde::{Deserialize, Deserializer};
 #[serde(untagged)]
 pub enum Config {
     Project(ProjectConfig),
-    Projects(BTreeMap<String, ProjectConfig>),
+    Projects(Projects),
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Deserialize)]
+pub struct Projects {
+    projects: BTreeMap<String, ProjectConfig>,
+}
+
+impl Projects {
+    #[cfg(test)]
+    fn new(projects: BTreeMap<String, ProjectConfig>) -> Self {
+        Self { projects }
+    }
 }
 
 pub const DEFAULT_PROJECT: &str = "default";
@@ -20,16 +32,24 @@ impl Config {
             Config::Project(project) =>
                 project.matches(path).then(|| DEFAULT_PROJECT).into_iter().collect(),
             Config::Projects(projects) => projects
+                .projects
                 .iter()
-                .filter(|(_, project)| project.matches(path))
-                .map(|(name, _)| name.as_ref())
+                .filter_map(|(name, project)| project.matches(path).then(|| name.as_ref()))
                 .collect(),
         }
     }
 
     pub(crate) fn read(path: &Path) -> anyhow::Result<Self> {
+        assert!(path.exists());
         let s = std::fs::read_to_string(path)?;
-        Ok(toml::from_str(&s)?)
+        let ext = path.extension();
+        if ext == Some("toml".as_ref()) {
+            Ok(toml::from_str(&s)?)
+        } else if ext.is_none() || ext == Some("yaml".as_ref()) {
+            Ok(serde_yaml::from_str(&s)?)
+        } else {
+            Err(anyhow::anyhow!("unsupported config file extension (yaml or toml only)"))
+        }
     }
 }
 

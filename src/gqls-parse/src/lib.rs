@@ -41,7 +41,7 @@ impl<'tree> NodeExt<'tree> for Node<'tree> {
     }
 
     fn text(self, source: &str) -> &str {
-        self.utf8_text(source.as_bytes()).unwrap()
+        self.utf8_text(source.as_bytes()).expect("text was not valid utf8")
     }
 
     fn find_descendent(self, f: impl FnMut(&Node<'tree>) -> bool) -> Option<Node<'tree>> {

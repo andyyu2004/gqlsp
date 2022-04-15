@@ -77,7 +77,7 @@ macro_rules! fixture_path {
 }
 
 macro_rules! fixture {
-    ($name:literal) => {{ url::Url::from_file_path(fixture_path!($name)).unwrap() }};
+    ($name:literal) => {{ lsp_types::Url::from_file_path(fixture_path!($name)).unwrap() }};
 }
 
 macro_rules! url {
@@ -199,7 +199,7 @@ async fn test_lsp_diagnostics() -> Result<()> {
 async fn test_lsp_configuration() -> Result<()> {
     let (service, _) = make_service!();
     request_init!(service: "config");
-    let foo = url!("config"."foo.graphql");
+    let _foo = url!("config"."foo.graphql");
 
     Ok(())
 }
