@@ -128,7 +128,10 @@ impl LanguageServer for Gqls {
         let path = ide.path(&position.text_document.uri)?;
         let analysis = ide.analysis();
         let locations = analysis.find_references(path, position.position.convert());
-        todo!()
+        match &locations[..] {
+            [] => Ok(None),
+            locations => Ok(Some(locations.convert())),
+        }
     }
 }
 

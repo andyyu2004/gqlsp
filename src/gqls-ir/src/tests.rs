@@ -112,11 +112,7 @@ fn test_definitions() {
                             },
                         },
                         kind: TypeDefinition(
-                            TypeDefinition {
-                                name: Name(
-                                    "Foo",
-                                ),
-                            },
+                            Idx::<TypeDefinition>(0),
                         ),
                     },
                     Item {
@@ -133,11 +129,7 @@ fn test_definitions() {
                             },
                         },
                         kind: TypeDefinition(
-                            TypeDefinition {
-                                name: Name(
-                                    "Foo",
-                                ),
-                            },
+                            Idx::<TypeDefinition>(1),
                         ),
                     },
                     Item {
@@ -154,11 +146,7 @@ fn test_definitions() {
                             },
                         },
                         kind: TypeDefinition(
-                            TypeDefinition {
-                                name: Name(
-                                    "Bar",
-                                ),
-                            },
+                            Idx::<TypeDefinition>(2),
                         ),
                     },
                     Item {
@@ -175,11 +163,41 @@ fn test_definitions() {
                             },
                         },
                         kind: TypeExtension(
-                            TypeExtension {
-                                name: Name(
-                                    "Bar",
-                                ),
-                            },
+                            Idx::<TypeExtension>(0),
+                        ),
+                    },
+                ],
+            },
+            types: Arena {
+                len: 3,
+                data: [
+                    TypeDefinition {
+                        name: Name(
+                            "Foo",
+                        ),
+                    },
+                    TypeDefinition {
+                        name: Name(
+                            "Foo",
+                        ),
+                    },
+                    TypeDefinition {
+                        name: Name(
+                            "Bar",
+                        ),
+                    },
+                ],
+            },
+            directives: Arena {
+                len: 0,
+                data: [],
+            },
+            type_exts: Arena {
+                len: 1,
+                data: [
+                    TypeExtension {
+                        name: Name(
+                            "Bar",
                         ),
                     },
                 ],
@@ -208,11 +226,7 @@ fn test_definitions() {
                             },
                         },
                         kind: TypeDefinition(
-                            TypeDefinition {
-                                name: Name(
-                                    "Bar",
-                                ),
-                            },
+                            Idx::<TypeDefinition>(0),
                         ),
                     },
                     Item {
@@ -229,11 +243,7 @@ fn test_definitions() {
                             },
                         },
                         kind: TypeDefinition(
-                            TypeDefinition {
-                                name: Name(
-                                    "Baz",
-                                ),
-                            },
+                            Idx::<TypeDefinition>(1),
                         ),
                     },
                     Item {
@@ -250,14 +260,39 @@ fn test_definitions() {
                             },
                         },
                         kind: DirectiveDefinition(
-                            DirectiveDefinition {
-                                name: Name(
-                                    "d",
-                                ),
-                            },
+                            Idx::<DirectiveDefinition>(0),
                         ),
                     },
                 ],
+            },
+            types: Arena {
+                len: 2,
+                data: [
+                    TypeDefinition {
+                        name: Name(
+                            "Bar",
+                        ),
+                    },
+                    TypeDefinition {
+                        name: Name(
+                            "Baz",
+                        ),
+                    },
+                ],
+            },
+            directives: Arena {
+                len: 1,
+                data: [
+                    DirectiveDefinition {
+                        name: Name(
+                            "d",
+                        ),
+                    },
+                ],
+            },
+            type_exts: Arena {
+                len: 0,
+                data: [],
             },
         }
     "#]]

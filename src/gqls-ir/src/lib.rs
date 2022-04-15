@@ -13,27 +13,30 @@ use vfs::FileId;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Items {
     pub items: Arena<Item>,
+    pub types: Arena<TypeDefinition>,
+    pub directives: Arena<DirectiveDefinition>,
+    pub type_exts: Arena<TypeExtension>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Item {
     pub range: Range,
     pub kind: ItemKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ItemKind {
-    TypeDefinition(TypeDefinition),
-    DirectiveDefinition(DirectiveDefinition),
-    TypeExtension(TypeExtension),
+    TypeDefinition(Idx<TypeDefinition>),
+    DirectiveDefinition(Idx<DirectiveDefinition>),
+    TypeExtension(Idx<TypeExtension>),
 }
 
-impl Item {
-    fn name(&self) -> Name {
-        match &self.kind {
-            ItemKind::TypeDefinition(typedef) => typedef.name.clone(),
-            ItemKind::DirectiveDefinition(directive) => directive.name.clone(),
-            ItemKind::TypeExtension(ext) => ext.name.clone(),
+impl Items {
+    fn name(&self, item: Item) -> Name {
+        match item.kind {
+            ItemKind::TypeDefinition(idx) => self.types[idx].name.clone(),
+            ItemKind::DirectiveDefinition(idx) => self.directives[idx].name.clone(),
+            ItemKind::TypeExtension(idx) => self.type_exts[idx].name.clone(),
         }
     }
 }
@@ -64,6 +67,7 @@ impl Name {
 
 pub type ItemMap = HashMap<Name, SmallVec<[Idx<Item>; 1]>>;
 pub type Resolutions = SmallVec<[Res; 1]>;
+pub type References = SmallVec<[Res; 1]>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Res {

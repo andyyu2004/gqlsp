@@ -1,6 +1,4 @@
-use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::{Name, Resolutions};
-use gqls_parse::{NodeExt, NodeKind};
+use gqls_db::DefDatabase;
 use tree_sitter::Point;
 use vfs::FileId;
 
