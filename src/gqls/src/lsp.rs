@@ -32,6 +32,7 @@ pub fn capabilities() -> ServerCapabilities {
         )),
         definition_provider: Some(OneOf::Left(true)),
         references_provider: Some(OneOf::Left(true)),
+        document_symbol_provider: Some(OneOf::Left(true)),
         // hover_provider: Some(HoverProviderCapability::Simple(true)),
         // completion_provider: Some(CompletionOptions::default()),
         ..Default::default()
@@ -132,6 +133,17 @@ impl LanguageServer for Gqls {
             [] => Ok(None),
             locations => Ok(Some(locations.convert())),
         }
+    }
+
+    async fn document_symbol(
+        &self,
+        params: DocumentSymbolParams,
+    ) -> jsonrpc::Result<Option<DocumentSymbolResponse>> {
+        let ide = self.ide.lock();
+        let analysis = ide.analysis();
+        let path = ide.path(&params.text_document.uri)?;
+        let symbols = analysis.document_symbols(path);
+        Ok(Some(DocumentSymbolResponse::Nested(symbols.convert())))
     }
 }
 

@@ -1,3 +1,4 @@
+use gqls_parse::Range;
 use la_arena::Arena;
 
 use crate::{Name, Ty};
@@ -26,6 +27,7 @@ impl Fields {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Field {
+    pub range: Range,
     pub name: Name,
     pub ty: Ty,
 }

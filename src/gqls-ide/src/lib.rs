@@ -5,8 +5,10 @@ mod edit;
 mod macros;
 mod references;
 mod resolve;
+mod symbols;
 
 pub use self::edit::{Change, ChangeKind, Changeset, Patch, Point, Range};
+pub use symbols::{Symbol, SymbolKind, SymbolTree};
 pub use tree_sitter;
 pub use vfs::{FileId, Vfs};
 

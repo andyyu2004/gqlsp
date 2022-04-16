@@ -36,7 +36,7 @@ fn item(db: &dyn DefDatabase, res: Res) -> Item {
 fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
     let items = db.items(file);
     let mut map = ItemMap::with_capacity(items.items.len());
-    for (idx, &item) in items.items.iter() {
+    for (idx, item) in items.items.iter() {
         map.entry(items.name(item)).or_default().push(idx);
     }
     Arc::new(map)

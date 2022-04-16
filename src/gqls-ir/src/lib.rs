@@ -13,7 +13,7 @@ use gqls_parse::Range;
 use la_arena::{Arena, Idx};
 use smallvec::SmallVec;
 use smol_str::SmolStr;
-use std::fmt::{self, Debug};
+use std::fmt::{self, Debug, Display};
 use vfs::FileId;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -38,7 +38,7 @@ pub enum ItemKind {
 }
 
 impl Items {
-    fn name(&self, item: Item) -> Name {
+    pub fn name(&self, item: &Item) -> Name {
         match item.kind {
             ItemKind::TypeDefinition(idx) => self.types[idx].name.clone(),
             ItemKind::DirectiveDefinition(idx) => self.directives[idx].name.clone(),
@@ -66,6 +66,12 @@ pub struct TypeExtension {
 pub struct Name(SmolStr);
 
 impl Debug for Name {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self, f)
+    }
+}
+
+impl Display for Name {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.0, f)
     }

@@ -43,7 +43,7 @@ impl BodyCtxt {
         assert_eq!(node.kind(), NodeKind::FIELD_DEFINITION);
         let name = node.name_node()?;
         let ty = self.lower_type(node.child_of_kind(NodeKind::TYPE)?)?;
-        Some(Field { name: Name::new(name.text(&self.text)), ty })
+        Some(Field { range: node.range(), name: Name::new(name.text(&self.text)), ty })
     }
 
     fn lower_type(&mut self, node: Node<'_>) -> Option<Ty> {

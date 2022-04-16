@@ -7,7 +7,7 @@ pub trait Convert {
     fn convert(&self) -> Self::Converted;
 }
 
-impl<'a, T> Convert for &'a [T]
+impl<T> Convert for [T]
 where
     T: Convert,
 {
@@ -79,6 +79,36 @@ impl Convert for gqls_ide::Point {
 
     fn convert(&self) -> Self::Converted {
         lsp_types::Position::new(self.row as u32, self.column as u32)
+    }
+}
+
+impl Convert for gqls_ide::SymbolKind {
+    type Converted = lsp_types::SymbolKind;
+
+    fn convert(&self) -> Self::Converted {
+        match self {
+            gqls_ide::SymbolKind::Struct => lsp_types::SymbolKind::STRUCT,
+            gqls_ide::SymbolKind::Field => lsp_types::SymbolKind::FIELD,
+            gqls_ide::SymbolKind::Constant => lsp_types::SymbolKind::CONSTANT,
+        }
+    }
+}
+
+impl Convert for gqls_ide::Symbol {
+    type Converted = lsp_types::DocumentSymbol;
+
+    fn convert(&self) -> Self::Converted {
+        #[allow(deprecated)]
+        lsp_types::DocumentSymbol {
+            name: self.name.to_string(),
+            detail: self.detail.clone(),
+            kind: self.kind.convert(),
+            range: self.range.convert(),
+            selection_range: self.range.convert(),
+            children: Some(self.children.convert()),
+            tags: None,
+            deprecated: None,
+        }
     }
 }
 
