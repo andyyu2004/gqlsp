@@ -305,6 +305,8 @@ name = "gqls-fixture"
 version = "0.1.0"
 dependencies = [
  "gqls-parse",
+ "maplit",
+ "vfs",
 ]
 
 [[package]]
@@ -313,6 +315,7 @@ version = "0.1.0"
 dependencies = [
  "expect-test",
  "gqls-db",
+ "gqls-fixture",
  "gqls-ir",
  "gqls-parse",
  "maplit",

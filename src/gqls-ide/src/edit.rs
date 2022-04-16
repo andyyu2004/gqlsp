@@ -13,6 +13,12 @@ pub struct Range {
     pub end: Point,
 }
 
+impl<'a> From<&'a std::ops::Range<Point>> for Range {
+    fn from(range: &'a std::ops::Range<Point>) -> Self {
+        Self { start: range.start, end: range.end }
+    }
+}
+
 impl From<tree_sitter::Range> for Range {
     fn from(range: tree_sitter::Range) -> Self {
         Self { start: range.start_point, end: range.end_point }

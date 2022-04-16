@@ -1,6 +1,4 @@
-use gqls_parse::Range;
-
-use crate::Name;
+use crate::{Name, Range};
 use std::fmt::{self, Debug};
 
 pub type Ty = Box<Type>;

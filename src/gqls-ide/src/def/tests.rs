@@ -1,12 +1,11 @@
-use gqls_ir::Name;
-
 use crate::tests::setup;
 use crate::{point, range, Ide, Location};
+use gqls_ir::Name;
 
 #[test]
 fn test_goto_definition() {
     let mut ide = Ide::default();
-    let foo = ide.vfs.intern("foo.gql");
+    let foo = ide.vfs.intern("foo.graphql");
     let summary = setup!(ide: {
                foo: r#"
 type Foo {
