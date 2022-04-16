@@ -1,23 +1,12 @@
 use std::collections::HashSet;
 
 use gqls_fixture::{fixture, Fixture};
-use maplit::hashmap;
 
-use crate::{change, Changeset, Ide, Location};
+use crate::{Ide, Location};
 
 fn test(fixture: Fixture) {
     let mut ide = Ide::default();
-
-    let mut changeset = Changeset::default().with_projects(hashmap! {
-        "default" => fixture.fileset()
-    });
-    for (file, fixture_file) in fixture.files() {
-        changeset = changeset.with_change(change!(file => fixture_file.text));
-    }
-    let summary = ide.apply_changeset(changeset);
-    for file in fixture.fileset() {
-        assert!(summary[file].diagnostics.is_empty());
-    }
+    ide.setup_fixture(&fixture);
 
     let (reference_file, at) = fixture.sole_point();
     let analysis = ide.analysis();

@@ -11,7 +11,21 @@ fn test(fixture: &str, points: Vec<Point>, ranges: Vec<std::ops::Range<Point>>) 
 #[test]
 #[should_panic]
 fn test_caret_on_first_line() {
-    FixtureFile::parse("^");
+    FixtureFile::parse("#^");
+}
+
+#[test]
+fn test_parse_fixture_with_delimited_range() {
+    test(
+        r#"
+#{
+scalar Foo
+scalar Bar
+#}
+    "#,
+        vec![],
+        vec![Point { row: 2, column: 0 }..Point { row: 3, column: 10 }],
+    );
 }
 
 #[test]
@@ -20,13 +34,13 @@ fn test_parse_fixture() {
         r#"
 scalar Foo
 #      ^^^
-scalar Bar
-...... ...
+ scalar Bar
+#...... ...
     "#,
         vec![Point { row: 1, column: 7 }, Point { row: 1, column: 8 }, Point { row: 1, column: 9 }],
         vec![
-            Point { row: 3, column: 0 }..Point { row: 3, column: 6 },
-            Point { row: 3, column: 7 }..Point { row: 3, column: 10 },
+            Point { row: 3, column: 1 }..Point { row: 3, column: 7 },
+            Point { row: 3, column: 8 }..Point { row: 3, column: 11 },
         ],
     );
 }
