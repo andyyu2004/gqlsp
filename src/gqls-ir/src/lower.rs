@@ -2,7 +2,9 @@ use std::sync::Arc;
 
 use gqls_parse::{Node, NodeExt, NodeKind};
 
-use crate::{Field, Fields, ItemBody, Name, Ty, TyKind, Type, TypeDefinitionBody};
+use crate::{
+    Field, Fields, InterfaceDefinitionBody, ItemBody, Name, Ty, TyKind, Type, TypeDefinitionBody
+};
 
 pub(crate) struct BodyCtxt {
     text: Arc<str>,
@@ -17,17 +19,26 @@ impl BodyCtxt {
         match node.kind() {
             NodeKind::OBJECT_TYPE_DEFINITION =>
                 ItemBody::TypeDefinition(self.lower_object_typedef(node)),
+            NodeKind::INTERFACE_TYPE_DEFINITION =>
+                ItemBody::InterfaceDefinition(self.lower_interface_typedef(node)),
             _ => ItemBody::Todo,
         }
     }
 
     fn lower_object_typedef(&mut self, node: Node<'_>) -> TypeDefinitionBody {
         assert_eq!(node.kind(), NodeKind::OBJECT_TYPE_DEFINITION);
-        let fields = node
-            .child_of_kind(NodeKind::FIELDS_DEFINITION)
+        TypeDefinitionBody { fields: self.lower_fields_of(node) }
+    }
+
+    fn lower_interface_typedef(&mut self, node: Node<'_>) -> InterfaceDefinitionBody {
+        assert_eq!(node.kind(), NodeKind::INTERFACE_TYPE_DEFINITION);
+        InterfaceDefinitionBody { fields: self.lower_fields_of(node) }
+    }
+
+    fn lower_fields_of(&mut self, node: Node<'_>) -> Fields {
+        node.child_of_kind(NodeKind::FIELDS_DEFINITION)
             .map(|fields| self.lower_fields(fields))
-            .unwrap_or_default();
-        TypeDefinitionBody { fields }
+            .unwrap_or_default()
     }
 
     fn lower_fields(&mut self, node: Node<'_>) -> Fields {

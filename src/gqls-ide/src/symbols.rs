@@ -49,17 +49,17 @@ impl Analysis {
             };
             let children = self
                 .item_body(file, idx)
-                .map(|body| match body.as_ref() {
-                    ItemBody::TypeDefinition(typedef) => typedef
-                        .fields
+                .as_ref()
+                .and_then(|b| b.fields())
+                .map(|fields| {
+                    fields
                         .fields
                         .iter()
                         .map(|(_, field)| {
                             Symbol::leaf(field.name.clone(), SymbolKind::Field, field.range.into())
                                 .with_detail(format!("{:?}", field.ty))
                         })
-                        .collect(),
-                    ItemBody::Todo => vec![],
+                        .collect()
                 })
                 .unwrap_or_default();
 

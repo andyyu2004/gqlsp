@@ -25,6 +25,10 @@ fn test_document_symbols() {
             type Bar {
                 foo: Foo
             }
+
+            interface Interface {
+                foo: Foo
+            }
             "
     };
 
@@ -61,6 +65,9 @@ fn test_document_symbols() {
                                 },
                             },
                             children: [],
+                            detail: Some(
+                                "Bar",
+                            ),
                         },
                         Symbol {
                             name: baz,
@@ -76,8 +83,12 @@ fn test_document_symbols() {
                                 },
                             },
                             children: [],
+                            detail: Some(
+                                "Int",
+                            ),
                         },
                     ],
+                    detail: None,
                 },
                 Symbol {
                     name: Bar,
@@ -107,8 +118,47 @@ fn test_document_symbols() {
                                 },
                             },
                             children: [],
+                            detail: Some(
+                                "Foo",
+                            ),
                         },
                     ],
+                    detail: None,
+                },
+                Symbol {
+                    name: Interface,
+                    kind: Struct,
+                    range: Range {
+                        start: Point {
+                            row: 10,
+                            column: 12,
+                        },
+                        end: Point {
+                            row: 12,
+                            column: 13,
+                        },
+                    },
+                    children: [
+                        Symbol {
+                            name: foo,
+                            kind: Field,
+                            range: Range {
+                                start: Point {
+                                    row: 11,
+                                    column: 16,
+                                },
+                                end: Point {
+                                    row: 11,
+                                    column: 24,
+                                },
+                            },
+                            children: [],
+                            detail: Some(
+                                "Foo",
+                            ),
+                        },
+                    ],
+                    detail: None,
                 },
             ]
         "#]],

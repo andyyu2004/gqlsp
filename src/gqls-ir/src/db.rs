@@ -77,19 +77,17 @@ fn references(db: &dyn DefDatabase, file: FileId, name: Name) -> References {
         for &file in db.project_files(project).iter() {
             for (idx, _) in db.items(file).items.iter() {
                 let body = db.item_body(file, idx);
-                match body {
-                    Some(body) => match body.as_ref() {
-                        ItemBody::Todo => continue,
-                        ItemBody::TypeDefinition(typedef) => typedef
-                            .fields
-                            .fields
-                            .iter()
-                            .map(|(_, field)| field)
-                            .filter(|field| field.ty.name() == name)
-                            .for_each(|field| references.push((file, field.ty.range))),
-                    },
+                let fields = match body.as_deref().and_then(|b| b.fields()) {
+                    Some(fields) => fields,
                     None => continue,
-                }
+                };
+
+                fields
+                    .fields
+                    .iter()
+                    .map(|(_, field)| field)
+                    .filter(|field| field.ty.name() == name)
+                    .for_each(|field| references.push((file, field.ty.range)))
             }
         }
     }

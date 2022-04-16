@@ -31,6 +31,11 @@ fn test_find_references() {
                 foo: Foo
                    # ...
             }
+
+            interface Interface {
+                foo: Foo
+                    #...
+            }
             "#
 
         "baz" => r#"
