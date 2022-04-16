@@ -27,6 +27,12 @@ impl Fixture {
         Self { files }
     }
 
+    pub fn all_ranges(&self) -> impl Iterator<Item = (FileId, std::ops::Range<Point>)> + '_ {
+        self.files
+            .iter()
+            .flat_map(|(&path, file)| std::iter::repeat(path).zip(file.ranges.iter().cloned()))
+    }
+
     pub fn sole_point(&self) -> (FileId, Point) {
         let mut sole_point = None;
         for (&file, file_fixture) in self.files() {

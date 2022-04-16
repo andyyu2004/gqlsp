@@ -13,8 +13,8 @@ pub struct Range {
     pub end: Point,
 }
 
-impl<'a> From<&'a std::ops::Range<Point>> for Range {
-    fn from(range: &'a std::ops::Range<Point>) -> Self {
+impl From<std::ops::Range<Point>> for Range {
+    fn from(range: std::ops::Range<Point>) -> Self {
         Self { start: range.start, end: range.end }
     }
 }
