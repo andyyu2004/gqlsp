@@ -24,6 +24,16 @@ impl<'tree> Iterator for Parents<'tree> {
 
 pub type NodeIterator<'a, 'tree> = Box<dyn Iterator<Item = Node<'tree>> + 'a>;
 
+pub trait RangeExt {
+    fn contains(&self, point: Point) -> bool;
+}
+
+impl RangeExt for Range {
+    fn contains(&self, point: Point) -> bool {
+        self.start_point <= point && point < self.end_point
+    }
+}
+
 // FIXME avoid boxed iterators once impl trait type alias etc is stable
 pub trait NodeExt<'tree>: Sized {
     fn parents(self) -> Parents<'tree>;

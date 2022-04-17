@@ -21,7 +21,6 @@ path = "../gqls-parse"
 [dependencies.vfs]
 path = "../vfs"
 
-
 [dev-dependencies]
 expect-test = "1"
 maplit = "1"

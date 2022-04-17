@@ -8,9 +8,9 @@ use std::collections::HashMap;
 pub use self::body::*;
 pub use self::ty::*;
 pub use db::{DefDatabase, DefDatabaseStorage};
+pub use la_arena::{Arena, Idx, RawIdx};
 
 use gqls_parse::Range;
-use la_arena::{Arena, Idx};
 use smallvec::SmallVec;
 use smol_str::SmolStr;
 use std::fmt::{self, Debug, Display};
@@ -89,9 +89,21 @@ pub type ItemResolutions = SmallVec<[ItemRes; 1]>;
 pub type References = Vec<(FileId, Range)>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub enum Res {
+    Item(ItemRes),
+    Field(FieldRes),
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct ItemRes {
     pub file: FileId,
     pub idx: Idx<Item>,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub struct FieldRes {
+    pub item: ItemRes,
+    pub idx: Idx<Field>,
 }
 
 #[cfg(test)]

@@ -6,6 +6,7 @@ mod macros;
 mod references;
 mod resolve;
 mod symbols;
+mod typedef;
 
 pub use self::edit::{Change, ChangeKind, Changeset, Patch, Point, Range};
 pub use symbols::{Symbol, SymbolKind, SymbolTree};

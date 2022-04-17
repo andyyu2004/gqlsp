@@ -2,7 +2,7 @@ use expect_test::expect;
 use vfs::Vfs;
 
 use crate::tests::{idx, setup, TestDB};
-use crate::DefDatabase;
+use crate::{DefDatabase, ItemRes};
 
 #[test]
 fn test_lower_item_body() {
@@ -20,7 +20,7 @@ fn test_lower_item_body() {
         }"#,
     });
 
-    let body = db.item_body(foo, idx!(0));
+    let body = db.item_body(ItemRes { file: foo, idx: idx!(0) });
     expect![[r#"
         Some(
             ObjectTypeDefinition(

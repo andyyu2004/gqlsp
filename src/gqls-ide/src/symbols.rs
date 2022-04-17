@@ -1,5 +1,5 @@
 use gqls_db::DefDatabase;
-use gqls_ir::{ItemKind, Name};
+use gqls_ir::{ItemKind, ItemRes, Name};
 use vfs::FileId;
 
 use crate::{Analysis, Range};
@@ -48,7 +48,7 @@ impl Analysis {
                 ItemKind::DirectiveDefinition(_) => SymbolKind::Constant,
             };
             let children = self
-                .item_body(file, idx)
+                .item_body(ItemRes { file, idx })
                 .as_ref()
                 .and_then(|b| b.fields())
                 .map(|fields| {

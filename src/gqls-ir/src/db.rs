@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use gqls_base_db::SourceDatabase;
-use gqls_parse::{Node, NodeExt, NodeKind, Tree};
+use gqls_parse::{Node, NodeExt, NodeKind, Point, RangeExt, Tree};
 use smallvec::smallvec;
 use vfs::FileId;
 
@@ -12,9 +12,11 @@ use crate::*;
 pub trait DefDatabase: SourceDatabase {
     fn items(&self, file: FileId) -> Arc<Items>;
     fn item(&self, res: ItemRes) -> Item;
+    fn item_at(&self, file: FileId, at: Point) -> Option<Idx<Item>>;
     fn item_map(&self, file: FileId) -> Arc<ItemMap>;
-    fn item_body(&self, file: FileId, idx: Idx<Item>) -> Option<Arc<ItemBody>>;
+    fn item_body(&self, res: ItemRes) -> Option<Arc<ItemBody>>;
     fn resolve_item(&self, file: FileId, name: Name) -> ItemResolutions;
+    fn field(&self, res: FieldRes) -> Field;
     fn references(&self, file: FileId, name: Name) -> References;
 }
 
@@ -29,8 +31,16 @@ fn items(db: &dyn DefDatabase, file: FileId) -> Arc<Items> {
     .lower(data.tree)
 }
 
+fn item_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Idx<Item>> {
+    db.items(file).items.iter().find_map(|(idx, item)| item.range.contains(at).then(|| idx))
+}
+
 fn item(db: &dyn DefDatabase, res: ItemRes) -> Item {
     db.items(res.file).items[res.idx]
+}
+
+fn field(db: &dyn DefDatabase, res: FieldRes) -> Field {
+    db.item_body(res.item).unwrap().fields().unwrap()[res.idx].clone()
 }
 
 fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
@@ -42,12 +52,12 @@ fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
     Arc::new(map)
 }
 
-fn item_body(db: &dyn DefDatabase, file: FileId, idx: Idx<Item>) -> Option<Arc<ItemBody>> {
-    let items = db.items(file);
-    let tree = db.file_tree(file);
-    let item = items.items[idx];
+fn item_body(db: &dyn DefDatabase, res: ItemRes) -> Option<Arc<ItemBody>> {
+    let items = db.items(res.file);
+    let tree = db.file_tree(res.file);
+    let item = items.items[res.idx];
     let item_node = tree.root_node().named_descendant_for_range(item.range).unwrap();
-    let bcx = BodyCtxt::new(db.file_text(file));
+    let bcx = BodyCtxt::new(db.file_text(res.file));
     match item.kind {
         ItemKind::TypeDefinition(_) => Some(Arc::new(bcx.lower_typedef(item_node))),
         // TODO
@@ -76,7 +86,7 @@ fn references(db: &dyn DefDatabase, file: FileId, name: Name) -> References {
     for project in db.projects_of(file) {
         for &file in db.project_files(project).iter() {
             for (idx, _) in db.items(file).items.iter() {
-                let body = db.item_body(file, idx);
+                let body = db.item_body(ItemRes { file, idx });
                 let fields = match body.as_deref().and_then(|b| b.fields()) {
                     Some(fields) => fields,
                     None => continue,

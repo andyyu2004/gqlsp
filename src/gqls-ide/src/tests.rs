@@ -4,6 +4,14 @@ use maplit::{hashmap, hashset};
 
 use crate::{range, ChangeSummary, Changeset, Diagnostic, Ide};
 
+macro_rules! idx {
+    ($idx:expr) => {
+        gqls_ir::Idx::from_raw(gqls_ir::RawIdx::from($idx))
+    };
+}
+
+pub(crate) use idx;
+
 macro_rules! apply_changeset {
     ($ide:ident: $file:ident:$a:literal:$b:literal..$x:literal:$y:literal => $text:expr) => {
         $ide.apply_changeset($crate::Changeset::single($crate::change!($file:$a:$b..$x:$y => $text)))
