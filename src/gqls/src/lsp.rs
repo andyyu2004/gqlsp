@@ -5,6 +5,7 @@ use anyhow::Result;
 use gqls_ide::{Change, ChangeKind, Changeset, ChangesetSummary, FileId, Ide, Patch};
 use lsp_types::notification::PublishDiagnostics;
 use lsp_types::*;
+use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -13,11 +14,12 @@ use tower_lsp::{jsonrpc, Client, ClientSocket, LanguageServer, LspService};
 pub struct Gqls {
     client: Client,
     ide: Mutex<Ide>,
+    workspace_folders: OnceCell<Vec<WorkspaceFolder>>,
 }
 
 impl Gqls {
     pub fn new(client: Client) -> Self {
-        Self { client, ide: Default::default() }
+        Self { client, workspace_folders: Default::default(), ide: Default::default() }
     }
 
     pub fn service() -> (LspService<Gqls>, ClientSocket) {
@@ -34,6 +36,20 @@ pub fn capabilities() -> ServerCapabilities {
         references_provider: Some(OneOf::Left(true)),
         document_symbol_provider: Some(OneOf::Left(true)),
         type_definition_provider: Some(TypeDefinitionProviderCapability::Simple(true)),
+        workspace: Some(WorkspaceServerCapabilities {
+            workspace_folders: Some(WorkspaceFoldersServerCapabilities {
+                supported: Some(true),
+                change_notifications: Some(OneOf::Left(true)),
+            }),
+            file_operations: Some(WorkspaceFileOperationsServerCapabilities {
+                did_create: None,
+                will_create: None,
+                did_rename: None,
+                will_rename: None,
+                did_delete: None,
+                will_delete: None,
+            }),
+        }),
         // hover_provider: Some(HoverProviderCapability::Simple(true)),
         // completion_provider: Some(CompletionOptions::default()),
         ..Default::default()
@@ -52,15 +68,16 @@ impl IdeExt for Ide {
     }
 }
 
-#[tower_lsp::async_trait]
-impl LanguageServer for Gqls {
-    async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
-        // TODO should probably check client capabilities, but going to assume they have everything we need for now
-        let projects =
-            discover_projects(params.workspace_folders.into_iter().flatten()).map_err(|err| {
-                tracing::error!(%err);
-                jsonrpc::Error::internal_error()
-            })?;
+impl Gqls {
+    fn reinit(&self) -> jsonrpc::Result<ChangesetSummary> {
+        self.init(self.workspace_folders.get().expect("called reinit before init").clone())
+    }
+
+    fn init(&self, workspaces: Vec<WorkspaceFolder>) -> jsonrpc::Result<ChangesetSummary> {
+        let projects = discover_projects(workspaces).map_err(|err| {
+            tracing::error!(%err);
+            jsonrpc::Error::internal_error()
+        })?;
 
         let mut ide = self.ide.lock();
         let mut changeset = Changeset::default().with_projects(
@@ -81,7 +98,27 @@ impl LanguageServer for Gqls {
             }
         }
 
-        let summary = ide.apply_changeset(changeset);
+        Ok(ide.apply_changeset(changeset))
+    }
+
+    // dirty hack to retry a request if it fails by reinitializing
+    // this is to work around deletions/renames/creations for now
+    fn with_ide<R>(&self, mut f: impl FnMut(&mut Ide) -> jsonrpc::Result<R>) -> jsonrpc::Result<R> {
+        f(&mut self.ide.lock()).or_else(|_| {
+            self.reinit()?;
+            f(&mut self.ide.lock())
+        })
+    }
+}
+
+#[tower_lsp::async_trait]
+impl LanguageServer for Gqls {
+    async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
+        // TODO should probably check client capabilities, but going to assume they have everything we need for now
+
+        let workspaces = params.workspace_folders.unwrap_or_default();
+        self.workspace_folders.set(workspaces.clone()).expect("initialize called twice");
+        let summary = self.init(workspaces)?;
         self.diagnostics(summary).await;
 
         Ok(InitializeResult {
@@ -90,12 +127,38 @@ impl LanguageServer for Gqls {
         })
     }
 
+    async fn did_change_workspace_folders(&self, _params: DidChangeWorkspaceFoldersParams) {
+        todo!("did_change_workspace_folders")
+    }
+
     async fn initialized(&self, _: InitializedParams) {
         tracing::info!("gqls initialized");
     }
 
     async fn shutdown(&self) -> jsonrpc::Result<()> {
         Ok(())
+    }
+
+    async fn will_create_files(
+        &self,
+        _params: CreateFilesParams,
+    ) -> jsonrpc::Result<Option<WorkspaceEdit>> {
+        Ok(None)
+    }
+
+    async fn will_rename_files(
+        &self,
+        _params: RenameFilesParams,
+    ) -> jsonrpc::Result<Option<WorkspaceEdit>> {
+        let _ = self.reinit();
+        Ok(None)
+    }
+
+    async fn will_delete_files(
+        &self,
+        _params: DeleteFilesParams,
+    ) -> jsonrpc::Result<Option<WorkspaceEdit>> {
+        Ok(None)
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
@@ -112,47 +175,51 @@ impl LanguageServer for Gqls {
         &self,
         params: GotoDefinitionParams,
     ) -> jsonrpc::Result<Option<GotoDefinitionResponse>> {
-        let ide = self.ide.lock();
         let position = params.text_document_position_params;
-        let path = ide.path(&position.text_document.uri)?;
-        let analysis = ide.analysis();
-        let locations = analysis.goto_definition(path, position.position.convert());
-        Ok(convert::locations_to_goto_definition_response(&locations))
+        self.with_ide(|ide| {
+            let path = ide.path(&position.text_document.uri)?;
+            let analysis = ide.analysis();
+            let locations = analysis.goto_definition(path, position.position.convert());
+            Ok(convert::locations_to_goto_definition_response(&locations))
+        })
     }
 
     async fn goto_type_definition(
         &self,
         params: GotoDefinitionParams,
     ) -> jsonrpc::Result<Option<GotoDefinitionResponse>> {
-        let ide = self.ide.lock();
         let position = params.text_document_position_params;
-        let path = ide.path(&position.text_document.uri)?;
-        let analysis = ide.analysis();
-        let locations = analysis.goto_type_definition(path, position.position.convert());
-        Ok(convert::locations_to_goto_definition_response(&locations))
+        self.with_ide(|ide| {
+            let path = ide.path(&position.text_document.uri)?;
+            let analysis = ide.analysis();
+            let locations = analysis.goto_type_definition(path, position.position.convert());
+            Ok(convert::locations_to_goto_definition_response(&locations))
+        })
     }
 
     async fn references(&self, params: ReferenceParams) -> jsonrpc::Result<Option<Vec<Location>>> {
-        let ide = self.ide.lock();
         let position = params.text_document_position;
-        let path = ide.path(&position.text_document.uri)?;
-        let analysis = ide.analysis();
-        let locations = analysis.find_references(path, position.position.convert());
-        match &locations[..] {
-            [] => Ok(None),
-            locations => Ok(Some(locations.convert())),
-        }
+        self.with_ide(|ide| {
+            let path = ide.path(&position.text_document.uri)?;
+            let analysis = ide.analysis();
+            let locations = analysis.find_references(path, position.position.convert());
+            match &locations[..] {
+                [] => Ok(None),
+                locations => Ok(Some(locations.convert())),
+            }
+        })
     }
 
     async fn document_symbol(
         &self,
         params: DocumentSymbolParams,
     ) -> jsonrpc::Result<Option<DocumentSymbolResponse>> {
-        let ide = self.ide.lock();
-        let analysis = ide.analysis();
-        let path = ide.path(&params.text_document.uri)?;
-        let symbols = analysis.document_symbols(path);
-        Ok(Some(DocumentSymbolResponse::Nested(symbols.convert())))
+        self.with_ide(|ide| {
+            let analysis = ide.analysis();
+            let path = ide.path(&params.text_document.uri)?;
+            let symbols = analysis.document_symbols(path);
+            Ok(Some(DocumentSymbolResponse::Nested(symbols.convert())))
+        })
     }
 }
 
@@ -164,10 +231,11 @@ struct SyntaxTreeParams {
 
 impl Gqls {
     async fn syntax_tree(&self, params: SyntaxTreeParams) -> jsonrpc::Result<String> {
-        let ide = self.ide.lock();
-        let path = ide.path(&params.text_document.uri)?;
-        let analysis = ide.analysis();
-        Ok(analysis.syntax_tree(path))
+        self.with_ide(|ide| {
+            let path = ide.path(&params.text_document.uri)?;
+            let analysis = ide.analysis();
+            Ok(analysis.syntax_tree(path))
+        })
     }
 
     async fn handle_did_change(&self, params: DidChangeTextDocumentParams) -> Result<()> {
