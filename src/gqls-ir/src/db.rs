@@ -58,12 +58,12 @@ fn item_body(db: &dyn DefDatabase, res: ItemRes) -> Option<Arc<ItemBody>> {
     let item = items.items[res.idx];
     let item_node = tree.root_node().named_descendant_for_range(item.range).unwrap();
     let bcx = BodyCtxt::new(db.file_text(res.file));
-    match item.kind {
-        ItemKind::TypeDefinition(_) => Some(Arc::new(bcx.lower_typedef(item_node))),
-        // TODO
-        ItemKind::TypeExtension(_) => None,
-        ItemKind::DirectiveDefinition(_) => None,
-    }
+    let body = match item.kind {
+        ItemKind::TypeDefinition(_) => bcx.lower_typedef(item_node),
+        ItemKind::TypeExtension(_) => bcx.lower_type_ext(item_node),
+        ItemKind::DirectiveDefinition(_) => return None,
+    };
+    Some(Arc::new(body))
 }
 
 fn resolve_item(db: &dyn DefDatabase, file: FileId, name: Name) -> ItemResolutions {

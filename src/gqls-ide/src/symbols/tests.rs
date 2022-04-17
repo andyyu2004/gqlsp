@@ -33,6 +33,10 @@ fn test_document_symbols() {
             input Input {
                 i: Int
             }
+
+            extend type Extension {
+                foo: Foo
+            }
             "
     };
 
@@ -194,6 +198,41 @@ fn test_document_symbols() {
                             children: [],
                             detail: Some(
                                 "Int",
+                            ),
+                        },
+                    ],
+                    detail: None,
+                },
+                Symbol {
+                    name: Extension,
+                    kind: Struct,
+                    range: Range {
+                        start: Point {
+                            row: 18,
+                            column: 12,
+                        },
+                        end: Point {
+                            row: 20,
+                            column: 13,
+                        },
+                    },
+                    children: [
+                        Symbol {
+                            name: foo,
+                            kind: Field,
+                            range: Range {
+                                start: Point {
+                                    row: 19,
+                                    column: 16,
+                                },
+                                end: Point {
+                                    row: 19,
+                                    column: 24,
+                                },
+                            },
+                            children: [],
+                            detail: Some(
+                                "Foo",
                             ),
                         },
                     ],

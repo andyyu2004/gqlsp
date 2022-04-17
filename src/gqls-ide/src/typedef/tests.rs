@@ -19,7 +19,7 @@ fn test(fixture: Fixture) {
 }
 
 #[test]
-fn test_goto_definition_cross_file() {
+fn test_goto_type_definition() {
     let fixture = fixture!(
         "foo" => "
 #{
@@ -40,9 +40,9 @@ type Bar {
    #^^^^^^^^
 }
 
-type Baz {
-    foo: Foo
-   #^^^^^^^^
+extend type Bar {
+    f: Foo
+   #^^^^^^
 }
             "
     );

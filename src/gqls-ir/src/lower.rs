@@ -26,9 +26,22 @@ impl BodyCtxt {
         }
     }
 
+    pub(crate) fn lower_type_ext(mut self, node: Node<'_>) -> ItemBody {
+        match node.kind() {
+            NodeKind::OBJECT_TYPE_EXTENSION =>
+                ItemBody::ObjectTypeExtension(self.lower_object_type_ext(node)),
+            _ => ItemBody::Todo,
+        }
+    }
+
     fn lower_object_typedef(&mut self, node: Node<'_>) -> TypeDefinitionBody {
         assert_eq!(node.kind(), NodeKind::OBJECT_TYPE_DEFINITION);
         TypeDefinitionBody { fields: self.lower_fields_of(node) }
+    }
+
+    fn lower_object_type_ext(&mut self, node: Node<'_>) -> TypeExtensionBody {
+        assert_eq!(node.kind(), NodeKind::OBJECT_TYPE_EXTENSION);
+        TypeExtensionBody { fields: self.lower_fields_of(node) }
     }
 
     fn lower_input_object_typedef(&mut self, node: Node<'_>) -> InputTypeDefinitionBody {

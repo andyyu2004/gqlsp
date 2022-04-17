@@ -6,6 +6,7 @@ use crate::{Name, Ty};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemBody {
     ObjectTypeDefinition(TypeDefinitionBody),
+    ObjectTypeExtension(TypeExtensionBody),
     InterfaceDefinition(InterfaceDefinitionBody),
     InputObjectTypeDefinition(InputTypeDefinitionBody),
     Todo,
@@ -15,6 +16,7 @@ impl ItemBody {
     pub fn fields(&self) -> Option<&Arena<Field>> {
         match self {
             ItemBody::ObjectTypeDefinition(typedef) => Some(&typedef.fields.fields),
+            ItemBody::ObjectTypeExtension(type_ext) => Some(&type_ext.fields.fields),
             ItemBody::InputObjectTypeDefinition(typedef) => Some(&typedef.fields.fields),
             ItemBody::InterfaceDefinition(iface) => Some(&iface.fields.fields),
             ItemBody::Todo => None,
@@ -29,6 +31,11 @@ pub struct InputTypeDefinitionBody {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeDefinitionBody {
+    pub fields: Fields,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TypeExtensionBody {
     pub fields: Fields,
 }
 
