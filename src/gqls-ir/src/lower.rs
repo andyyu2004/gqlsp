@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
 use gqls_parse::{Node, NodeExt, NodeKind};
+use la_arena::ArenaMap;
 
-use crate::{
-    Field, Fields, InterfaceDefinitionBody, ItemBody, Name, Ty, TyKind, Type, TypeDefinitionBody
-};
+use crate::*;
 
 pub(crate) struct BodyCtxt {
     text: Arc<str>,
@@ -18,9 +17,11 @@ impl BodyCtxt {
     pub fn lower_typedef(mut self, node: Node<'_>) -> ItemBody {
         match node.kind() {
             NodeKind::OBJECT_TYPE_DEFINITION =>
-                ItemBody::TypeDefinition(self.lower_object_typedef(node)),
+                ItemBody::ObjectTypeDefinition(self.lower_object_typedef(node)),
             NodeKind::INTERFACE_TYPE_DEFINITION =>
                 ItemBody::InterfaceDefinition(self.lower_interface_typedef(node)),
+            NodeKind::INPUT_OBJECT_TYPE_DEFINITION =>
+                ItemBody::InputObjectTypeDefinition(self.lower_input_object_typedef(node)),
             _ => ItemBody::Todo,
         }
     }
@@ -28,6 +29,15 @@ impl BodyCtxt {
     fn lower_object_typedef(&mut self, node: Node<'_>) -> TypeDefinitionBody {
         assert_eq!(node.kind(), NodeKind::OBJECT_TYPE_DEFINITION);
         TypeDefinitionBody { fields: self.lower_fields_of(node) }
+    }
+
+    fn lower_input_object_typedef(&mut self, node: Node<'_>) -> InputTypeDefinitionBody {
+        assert_eq!(node.kind(), NodeKind::INPUT_OBJECT_TYPE_DEFINITION);
+        let fields = node
+            .child_of_kind(NodeKind::INPUT_FIELDS_DEFINITION)
+            .map(|fields| self.lower_input_fields(fields))
+            .unwrap_or_default();
+        InputTypeDefinitionBody { fields }
     }
 
     fn lower_interface_typedef(&mut self, node: Node<'_>) -> InterfaceDefinitionBody {
@@ -41,13 +51,34 @@ impl BodyCtxt {
             .unwrap_or_default()
     }
 
-    fn lower_fields(&mut self, node: Node<'_>) -> Fields {
-        assert_eq!(node.kind(), NodeKind::FIELDS_DEFINITION);
+    fn lower_input_fields(&mut self, node: Node<'_>) -> InputFields {
+        assert_eq!(node.kind(), NodeKind::INPUT_FIELDS_DEFINITION);
         let cursor = &mut node.walk();
         let fields = node
-            .children_of_kind(cursor, NodeKind::FIELD_DEFINITION)
-            .filter_map(|field| self.lower_field(field));
-        Fields::new(fields)
+            .children_of_kind(cursor, NodeKind::INPUT_VALUE_DEFINITION)
+            .filter_map(|field| self.lower_input_field(field))
+            .map(|(field, _default_value)| field);
+        InputFields::new(
+            // TODO
+            fields,
+            ArenaMap::default(),
+        )
+    }
+
+    fn lower_input_field(&mut self, node: Node<'_>) -> Option<(Field, ())> {
+        assert_eq!(node.kind(), NodeKind::INPUT_VALUE_DEFINITION);
+        let name = Name::new(node.name_node()?.text(&self.text));
+        let ty = self.lower_type(node.child_of_kind(NodeKind::TYPE)?)?;
+        // TODO default_value
+        Some((Field { range: node.range(), name, ty }, ()))
+    }
+
+    fn lower_fields(&mut self, node: Node<'_>) -> Fields {
+        assert_eq!(node.kind(), NodeKind::FIELDS_DEFINITION);
+        Fields::new(
+            node.children_of_kind(&mut node.walk(), NodeKind::FIELD_DEFINITION)
+                .filter_map(|field| self.lower_field(field)),
+        )
     }
 
     fn lower_field(&mut self, node: Node<'_>) -> Option<Field> {

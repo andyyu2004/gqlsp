@@ -1,5 +1,5 @@
 use gqls_db::DefDatabase;
-use gqls_ir::{ItemBody, ItemKind, Name};
+use gqls_ir::{ItemKind, Name};
 use vfs::FileId;
 
 use crate::{Analysis, Range};
@@ -53,7 +53,6 @@ impl Analysis {
                 .and_then(|b| b.fields())
                 .map(|fields| {
                     fields
-                        .fields
                         .iter()
                         .map(|(_, field)| {
                             Symbol::leaf(field.name.clone(), SymbolKind::Field, field.range.into())

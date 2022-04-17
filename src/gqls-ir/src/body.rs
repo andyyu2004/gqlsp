@@ -1,23 +1,30 @@
 use gqls_parse::Range;
-use la_arena::Arena;
+use la_arena::{Arena, ArenaMap, Idx};
 
 use crate::{Name, Ty};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemBody {
-    TypeDefinition(TypeDefinitionBody),
+    ObjectTypeDefinition(TypeDefinitionBody),
     InterfaceDefinition(InterfaceDefinitionBody),
+    InputObjectTypeDefinition(InputTypeDefinitionBody),
     Todo,
 }
 
 impl ItemBody {
-    pub fn fields(&self) -> Option<&Fields> {
+    pub fn fields(&self) -> Option<&Arena<Field>> {
         match self {
-            ItemBody::TypeDefinition(typedef) => Some(&typedef.fields),
-            ItemBody::InterfaceDefinition(iface) => Some(&iface.fields),
+            ItemBody::ObjectTypeDefinition(typedef) => Some(&typedef.fields.fields),
+            ItemBody::InputObjectTypeDefinition(typedef) => Some(&typedef.fields.fields),
+            ItemBody::InterfaceDefinition(iface) => Some(&iface.fields.fields),
             ItemBody::Todo => None,
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InputTypeDefinitionBody {
+    pub fields: InputFields,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -46,4 +53,19 @@ pub struct Field {
     pub range: Range,
     pub name: Name,
     pub ty: Ty,
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct InputFields {
+    pub fields: Arena<Field>,
+    pub default_values: ArenaMap<Idx<Field>, ()>,
+}
+
+impl InputFields {
+    pub fn new(
+        fields: impl IntoIterator<Item = Field>,
+        default_values: ArenaMap<Idx<Field>, ()>,
+    ) -> Self {
+        Self { fields: fields.into_iter().collect(), default_values }
+    }
 }

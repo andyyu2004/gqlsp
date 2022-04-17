@@ -36,6 +36,11 @@ fn test_find_references() {
                 foo: Foo
                     #...
             }
+
+            input Input {
+                foo: Foo
+                    #...
+            }
             "#
 
         "baz" => r#"

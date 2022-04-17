@@ -29,6 +29,10 @@ fn test_document_symbols() {
             interface Interface {
                 foo: Foo
             }
+
+            input Input {
+                i: Int
+            }
             "
     };
 
@@ -155,6 +159,41 @@ fn test_document_symbols() {
                             children: [],
                             detail: Some(
                                 "Foo",
+                            ),
+                        },
+                    ],
+                    detail: None,
+                },
+                Symbol {
+                    name: Input,
+                    kind: Struct,
+                    range: Range {
+                        start: Point {
+                            row: 14,
+                            column: 12,
+                        },
+                        end: Point {
+                            row: 16,
+                            column: 13,
+                        },
+                    },
+                    children: [
+                        Symbol {
+                            name: i,
+                            kind: Field,
+                            range: Range {
+                                start: Point {
+                                    row: 15,
+                                    column: 16,
+                                },
+                                end: Point {
+                                    row: 15,
+                                    column: 22,
+                                },
+                            },
+                            children: [],
+                            detail: Some(
+                                "Int",
                             ),
                         },
                     ],

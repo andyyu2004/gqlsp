@@ -23,7 +23,7 @@ fn test_lower_item_body() {
     let body = db.item_body(foo, idx!(0));
     expect![[r#"
         Some(
-            TypeDefinition(
+            ObjectTypeDefinition(
                 TypeDefinitionBody {
                     fields: Fields {
                         fields: Arena {

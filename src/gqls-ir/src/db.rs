@@ -83,7 +83,6 @@ fn references(db: &dyn DefDatabase, file: FileId, name: Name) -> References {
                 };
 
                 fields
-                    .fields
                     .iter()
                     .map(|(_, field)| field)
                     .filter(|field| field.ty.name() == name)
