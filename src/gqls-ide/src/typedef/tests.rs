@@ -37,12 +37,12 @@ extend type Foo {
 
 type Bar {
     foo: Foo
-    #^
+   #^^^^^^^^
 }
 
 type Baz {
     foo: Foo
-     #^
+   #^^^^^^^^
 }
             "
     );
