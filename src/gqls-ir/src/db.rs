@@ -11,10 +11,10 @@ use crate::*;
 #[salsa::query_group(DefDatabaseStorage)]
 pub trait DefDatabase: SourceDatabase {
     fn items(&self, file: FileId) -> Arc<Items>;
-    fn item(&self, res: Res) -> Item;
+    fn item(&self, res: ItemRes) -> Item;
     fn item_map(&self, file: FileId) -> Arc<ItemMap>;
     fn item_body(&self, file: FileId, idx: Idx<Item>) -> Option<Arc<ItemBody>>;
-    fn resolve(&self, file: FileId, name: Name) -> Resolutions;
+    fn resolve_item(&self, file: FileId, name: Name) -> ItemResolutions;
     fn references(&self, file: FileId, name: Name) -> References;
 }
 
@@ -29,7 +29,7 @@ fn items(db: &dyn DefDatabase, file: FileId) -> Arc<Items> {
     .lower(data.tree)
 }
 
-fn item(db: &dyn DefDatabase, res: Res) -> Item {
+fn item(db: &dyn DefDatabase, res: ItemRes) -> Item {
     db.items(res.file).items[res.idx]
 }
 
@@ -56,14 +56,14 @@ fn item_body(db: &dyn DefDatabase, file: FileId, idx: Idx<Item>) -> Option<Arc<I
     }
 }
 
-fn resolve(db: &dyn DefDatabase, file: FileId, name: Name) -> Resolutions {
+fn resolve_item(db: &dyn DefDatabase, file: FileId, name: Name) -> ItemResolutions {
     let mut resolutions = smallvec![];
     for project in db.projects_of(file) {
         for file in db.project_files(project).iter() {
             let map = db.item_map(file);
             if let Some(items) = map.get(&name) {
                 for &idx in items {
-                    resolutions.push(Res { file, idx });
+                    resolutions.push(ItemRes { file, idx });
                 }
             }
         }

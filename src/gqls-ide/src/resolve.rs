@@ -1,5 +1,5 @@
 use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::{Name, Resolutions};
+use gqls_ir::{ItemResolutions, Name};
 use gqls_parse::{NodeExt, NodeKind};
 use tree_sitter::Point;
 use vfs::FileId;
@@ -7,8 +7,8 @@ use vfs::FileId;
 use crate::Analysis;
 
 impl Analysis {
-    pub(crate) fn resolve_name_at(&self, file: FileId, at: Point) -> Resolutions {
-        self.name_at(file, at).map(|name| self.resolve(file, name)).unwrap_or_default()
+    pub(crate) fn resolve_item_name_at(&self, file: FileId, at: Point) -> ItemResolutions {
+        self.name_at(file, at).map(|name| self.resolve_item(file, name)).unwrap_or_default()
     }
 
     pub(crate) fn name_at(&self, file: FileId, at: Point) -> Option<Name> {

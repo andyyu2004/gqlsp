@@ -137,3 +137,13 @@ impl PathExt for Path {
         lsp_types::Url::from_file_path(self).unwrap()
     }
 }
+
+pub(crate) fn locations_to_goto_definition_response(
+    locations: &[gqls_ide::Location],
+) -> Option<lsp_types::GotoDefinitionResponse> {
+    match locations {
+        [] => None,
+        [location] => Some(lsp_types::GotoDefinitionResponse::Scalar(location.convert())),
+        locations => Some(lsp_types::GotoDefinitionResponse::Array(locations.convert())),
+    }
+}

@@ -1,9 +1,10 @@
+use std::collections::HashSet;
 use std::path::Path;
 
-use crate::{DefDatabase, DefDatabaseStorage, Name, Res};
+use crate::{DefDatabase, DefDatabaseStorage, ItemRes, Name};
 use expect_test::expect;
 use gqls_base_db::SourceDatabaseStorage;
-use maplit::hashmap;
+use maplit::{hashmap, hashset};
 use smallvec::smallvec;
 use vfs::Vfs;
 
@@ -91,25 +92,24 @@ fn test_definitions() {
         }
     );
 
-    let resolutions = db.resolve(bar, Name::new("Foo"));
+    let resolutions = db.resolve_item(bar, Name::new("Foo"));
     assert_eq!(
         resolutions.as_slice(),
-        [Res { file: foo, idx: idx!(0) }, Res { file: foo, idx: idx!(1) }]
+        [ItemRes { file: foo, idx: idx!(0) }, ItemRes { file: foo, idx: idx!(1) }]
     );
 
-    let mut resolutions = db.resolve(foo, Name::new("Bar"));
-    resolutions.sort();
+    let resolutions = db.resolve_item(foo, Name::new("Bar"));
     assert_eq!(
-        resolutions.as_slice(),
-        [
-            Res { file: bar, idx: idx!(0) },
-            Res { file: foo, idx: idx!(2) },
-            Res { file: foo, idx: idx!(3) },
-        ]
+        resolutions.into_iter().collect::<HashSet<_>>(),
+        hashset! {
+            ItemRes { file: bar, idx: idx!(0) },
+            ItemRes { file: foo, idx: idx!(2) },
+            ItemRes { file: foo, idx: idx!(3) },
+        }
     );
 
-    let resolutions = db.resolve(bar, Name::new("d"));
-    assert_eq!(resolutions.as_slice(), [Res { file: Path::new("bar"), idx: idx!(2) },]);
+    let resolutions = db.resolve_item(bar, Name::new("d"));
+    assert_eq!(resolutions.as_slice(), [ItemRes { file: Path::new("bar"), idx: idx!(2) },]);
 
     let items = db.items(foo);
     expect![[r#"

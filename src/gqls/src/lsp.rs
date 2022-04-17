@@ -1,5 +1,5 @@
 use crate::config::{Config, DEFAULT_PROJECT};
-use crate::convert::PathExt;
+use crate::convert::{self, PathExt};
 use crate::{Convert, UrlExt};
 use anyhow::Result;
 use gqls_ide::{Change, ChangeKind, Changeset, ChangesetSummary, FileId, Ide, Patch};
@@ -33,6 +33,7 @@ pub fn capabilities() -> ServerCapabilities {
         definition_provider: Some(OneOf::Left(true)),
         references_provider: Some(OneOf::Left(true)),
         document_symbol_provider: Some(OneOf::Left(true)),
+        type_definition_provider: Some(TypeDefinitionProviderCapability::Simple(true)),
         // hover_provider: Some(HoverProviderCapability::Simple(true)),
         // completion_provider: Some(CompletionOptions::default()),
         ..Default::default()
@@ -116,11 +117,19 @@ impl LanguageServer for Gqls {
         let path = ide.path(&position.text_document.uri)?;
         let analysis = ide.analysis();
         let locations = analysis.goto_definition(path, position.position.convert());
-        match &locations[..] {
-            [] => Ok(None),
-            [location] => Ok(Some(GotoDefinitionResponse::Scalar(location.convert()))),
-            locations => Ok(Some(GotoDefinitionResponse::Array(locations.convert()))),
-        }
+        Ok(convert::locations_to_goto_definition_response(&locations))
+    }
+
+    async fn goto_type_definition(
+        &self,
+        params: GotoDefinitionParams,
+    ) -> jsonrpc::Result<Option<GotoDefinitionResponse>> {
+        let ide = self.ide.lock();
+        let position = params.text_document_position_params;
+        let path = ide.path(&position.text_document.uri)?;
+        let analysis = ide.analysis();
+        let locations = analysis.goto_definition(path, position.position.convert());
+        Ok(convert::locations_to_goto_definition_response(&locations))
     }
 
     async fn references(&self, params: ReferenceParams) -> jsonrpc::Result<Option<Vec<Location>>> {

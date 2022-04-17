@@ -84,26 +84,14 @@ impl Name {
 }
 
 pub type ItemMap = HashMap<Name, SmallVec<[Idx<Item>; 1]>>;
-pub type Resolutions = SmallVec<[Res; 1]>;
+pub type ItemResolutions = SmallVec<[ItemRes; 1]>;
 // TODO what is the right type for these (should it be something `Range` based or something more like `Res` and index based)
 pub type References = Vec<(FileId, Range)>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-pub struct Res {
+pub struct ItemRes {
     pub file: FileId,
     pub idx: Idx<Item>,
-}
-
-impl PartialOrd for Res {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for Res {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.file.cmp(other.file).then_with(|| self.idx.into_raw().cmp(&other.idx.into_raw()))
-    }
 }
 
 #[cfg(test)]
