@@ -118,6 +118,7 @@ fn test_definitions() {
                 len: 4,
                 data: [
                     Item {
+                        name: Foo,
                         range: Range {
                             start_byte: 9,
                             end_byte: 49,
@@ -135,6 +136,7 @@ fn test_definitions() {
                         ),
                     },
                     Item {
+                        name: Foo,
                         range: Range {
                             start_byte: 59,
                             end_byte: 100,
@@ -152,6 +154,7 @@ fn test_definitions() {
                         ),
                     },
                     Item {
+                        name: Bar,
                         range: Range {
                             start_byte: 110,
                             end_byte: 151,
@@ -169,6 +172,7 @@ fn test_definitions() {
                         ),
                     },
                     Item {
+                        name: Bar,
                         range: Range {
                             start_byte: 161,
                             end_byte: 208,
@@ -190,15 +194,9 @@ fn test_definitions() {
             types: Arena {
                 len: 3,
                 data: [
-                    TypeDefinition {
-                        name: Foo,
-                    },
-                    TypeDefinition {
-                        name: Foo,
-                    },
-                    TypeDefinition {
-                        name: Bar,
-                    },
+                    TypeDefinition,
+                    TypeDefinition,
+                    TypeDefinition,
                 ],
             },
             directives: Arena {
@@ -208,9 +206,7 @@ fn test_definitions() {
             type_exts: Arena {
                 len: 1,
                 data: [
-                    TypeExtension {
-                        name: Bar,
-                    },
+                    TypeExtension,
                 ],
             },
         }
@@ -224,6 +220,7 @@ fn test_definitions() {
                 len: 3,
                 data: [
                     Item {
+                        name: Bar,
                         range: Range {
                             start_byte: 9,
                             end_byte: 50,
@@ -241,6 +238,7 @@ fn test_definitions() {
                         ),
                     },
                     Item {
+                        name: Baz,
                         range: Range {
                             start_byte: 60,
                             end_byte: 101,
@@ -258,6 +256,7 @@ fn test_definitions() {
                         ),
                     },
                     Item {
+                        name: d,
                         range: Range {
                             start_byte: 111,
                             end_byte: 132,
@@ -279,20 +278,14 @@ fn test_definitions() {
             types: Arena {
                 len: 2,
                 data: [
-                    TypeDefinition {
-                        name: Bar,
-                    },
-                    TypeDefinition {
-                        name: Baz,
-                    },
+                    TypeDefinition,
+                    TypeDefinition,
                 ],
             },
             directives: Arena {
                 len: 1,
                 data: [
-                    DirectiveDefinition {
-                        name: d,
-                    },
+                    DirectiveDefinition,
                 ],
             },
             type_exts: Arena {

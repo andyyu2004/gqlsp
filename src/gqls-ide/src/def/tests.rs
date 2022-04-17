@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use crate::tests::setup;
 use crate::{point, range, Ide, Location};
+use gqls_db::DefDatabase;
 use gqls_fixture::{fixture, Fixture};
 use gqls_ir::Name;
 

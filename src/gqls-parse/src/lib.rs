@@ -42,6 +42,7 @@ pub trait NodeExt<'tree>: Sized {
     fn find_descendant(self, f: impl FnMut(&Self) -> bool) -> Option<Self>;
     fn name_node(self) -> Option<Self>;
     fn child_of_kind(self, kind: &'static str) -> Option<Self>;
+    fn named_node_at(self, at: Point) -> Option<Self>;
     fn named_descendant_for_range(self, range: Range) -> Option<Self>;
     fn relevant_children<'a>(self, cursor: &'a mut TreeCursor<'tree>) -> NodeIterator<'a, 'tree>;
     fn children_of_kind<'a>(
@@ -74,12 +75,16 @@ impl<'tree> NodeExt<'tree> for Node<'tree> {
         self.child_of_kind(NodeKind::NAME)
     }
 
-    fn named_descendant_for_range(self, range: Range) -> Option<Self> {
-        self.named_descendant_for_point_range(range.start_point, range.end_point)
-    }
-
     fn child_of_kind(self, kind: &'static str) -> Option<Self> {
         self.named_children(&mut self.walk()).find(|node| node.kind() == kind)
+    }
+
+    fn named_node_at(self, at: Point) -> Option<Self> {
+        self.named_descendant_for_point_range(at, at)
+    }
+
+    fn named_descendant_for_range(self, range: Range) -> Option<Self> {
+        self.named_descendant_for_point_range(range.start_point, range.end_point)
     }
 
     fn relevant_children<'a>(self, cursor: &'a mut TreeCursor<'tree>) -> NodeIterator<'a, 'tree> {

@@ -15,9 +15,12 @@ pub trait DefDatabase: SourceDatabase {
     fn item_at(&self, file: FileId, at: Point) -> Option<Idx<Item>>;
     fn item_map(&self, file: FileId) -> Arc<ItemMap>;
     fn item_body(&self, res: ItemRes) -> Option<Arc<ItemBody>>;
-    fn resolve_item(&self, file: FileId, name: Name) -> ItemResolutions;
+    fn name_at(&self, file: FileId, at: Point) -> Option<Name>;
     fn field(&self, res: FieldRes) -> Field;
-    fn references(&self, file: FileId, name: Name) -> References;
+    fn references(&self, res: Res) -> References;
+    fn item_references(&self, res: ItemRes) -> References;
+    fn resolve(&self, file: FileId, at: Point) -> Option<Res>;
+    fn resolve_item(&self, file: FileId, name: Name) -> ItemResolutions;
 }
 
 fn items(db: &dyn DefDatabase, file: FileId) -> Arc<Items> {
@@ -36,7 +39,7 @@ fn item_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Idx<Item>> {
 }
 
 fn item(db: &dyn DefDatabase, res: ItemRes) -> Item {
-    db.items(res.file).items[res.idx]
+    db.items(res.file).items[res.idx].clone()
 }
 
 fn field(db: &dyn DefDatabase, res: FieldRes) -> Field {
@@ -47,7 +50,7 @@ fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
     let items = db.items(file);
     let mut map = ItemMap::with_capacity(items.items.len());
     for (idx, item) in items.items.iter() {
-        map.entry(items.name(item)).or_default().push(idx);
+        map.entry(item.name.clone()).or_default().push(idx);
     }
     Arc::new(map)
 }
@@ -55,7 +58,7 @@ fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
 fn item_body(db: &dyn DefDatabase, res: ItemRes) -> Option<Arc<ItemBody>> {
     let items = db.items(res.file);
     let tree = db.file_tree(res.file);
-    let item = items.items[res.idx];
+    let item = &items.items[res.idx];
     let item_node = tree.root_node().named_descendant_for_range(item.range).unwrap();
     let bcx = BodyCtxt::new(db.file_text(res.file));
     let body = match item.kind {
@@ -64,6 +67,40 @@ fn item_body(db: &dyn DefDatabase, res: ItemRes) -> Option<Arc<ItemBody>> {
         ItemKind::DirectiveDefinition(_) => return None,
     };
     Some(Arc::new(body))
+}
+
+fn name_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Name> {
+    let data = db.file_data(file);
+    let root = data.tree.root_node();
+    let node = root.named_node_at(at)?;
+    (node.kind() == NodeKind::NAME).then(|| Name::new(node.text(&data.text)))
+}
+
+fn resolve(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Res> {
+    let data = db.file_data(file);
+    let root = data.tree.root_node();
+    let node = root.named_node_at(at)?;
+    if node.kind() != NodeKind::NAME {
+        return None;
+    }
+    let parent = node.parent()?;
+    match parent.kind() {
+        NodeKind::FIELD_DEFINITION => todo!(),
+        NodeKind::OBJECT_TYPE_DEFINITION
+        | NodeKind::OBJECT_TYPE_EXTENSION
+        | NodeKind::SCALAR_TYPE_DEFINITION
+        | NodeKind::INTERFACE_TYPE_DEFINITION => {
+            let idx = db
+                .items(file)
+                .items
+                .iter()
+                .find_map(|(idx, item)| (item.range == parent.range()).then(|| idx))
+                .expect("item not found");
+            Some(Res::Item(ItemRes { file, idx }))
+        }
+        // TODO
+        _ => return None,
+    }
 }
 
 fn resolve_item(db: &dyn DefDatabase, file: FileId, name: Name) -> ItemResolutions {
@@ -81,9 +118,10 @@ fn resolve_item(db: &dyn DefDatabase, file: FileId, name: Name) -> ItemResolutio
     resolutions
 }
 
-fn references(db: &dyn DefDatabase, file: FileId, name: Name) -> References {
+fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
     let mut references = vec![];
-    for project in db.projects_of(file) {
+    let name = db.item(res).name;
+    for project in db.projects_of(res.file) {
         for &file in db.project_files(project).iter() {
             for (idx, _) in db.items(file).items.iter() {
                 let body = db.item_body(ItemRes { file, idx });
@@ -101,6 +139,13 @@ fn references(db: &dyn DefDatabase, file: FileId, name: Name) -> References {
         }
     }
     references
+}
+
+fn references(db: &dyn DefDatabase, res: Res) -> References {
+    match res {
+        Res::Item(item) => db.item_references(item),
+        Res::Field(_) => todo!(),
+    }
 }
 
 struct LowerCtxt {
@@ -128,10 +173,10 @@ impl LowerCtxt {
     fn lower_item(&mut self, node: Node<'_>) -> Option<Item> {
         assert_eq!(node.kind(), NodeKind::ITEM);
         let def = node.sole_named_child();
-        let kind = match def.kind() {
+        let (name, kind) = match def.kind() {
             NodeKind::TYPE_DEFINITION => {
                 let typedef = def.sole_named_child();
-                let name = match typedef.kind() {
+                let name_node = match typedef.kind() {
                     NodeKind::OBJECT_TYPE_DEFINITION
                     | NodeKind::INTERFACE_TYPE_DEFINITION
                     | NodeKind::SCALAR_TYPE_DEFINITION
@@ -141,30 +186,25 @@ impl LowerCtxt {
                     _ =>
                         unreachable!("invalid node kind for type definition: {:?}", typedef.kind()),
                 };
-                ItemKind::TypeDefinition(
-                    self.types.alloc(TypeDefinition { name: Name::new(name.text(&self.text)) }),
-                )
+                let name = Name::new(name_node.text(&self.text));
+                (name, ItemKind::TypeDefinition(self.types.alloc(TypeDefinition {})))
             }
             NodeKind::TYPE_EXTENSION => {
                 let type_ext = def.sole_named_child();
-                let name = match type_ext.kind() {
+                let name_node = match type_ext.kind() {
                     NodeKind::OBJECT_TYPE_EXTENSION => type_ext.name_node()?,
                     _ => return None,
                 };
-                ItemKind::TypeExtension(
-                    self.type_exts.alloc(TypeExtension { name: Name::new(name.text(&self.text)) }),
-                )
+                let name = Name::new(name_node.text(&self.text));
+                (name, ItemKind::TypeExtension(self.type_exts.alloc(TypeExtension {})))
             }
             NodeKind::DIRECTIVE_DEFINITION => {
-                let name = def.name_node()?;
-                ItemKind::DirectiveDefinition(
-                    self.directives
-                        .alloc(DirectiveDefinition { name: Name::new(name.text(&self.text)) }),
-                )
+                let name = Name::new(def.name_node()?.text(&self.text));
+                (name, ItemKind::DirectiveDefinition(self.directives.alloc(DirectiveDefinition {})))
             }
             // TODO
             _ => return None,
         };
-        Some(Item { range: def.range(), kind })
+        Some(Item { range: def.range(), name, kind })
     }
 }

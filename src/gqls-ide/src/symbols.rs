@@ -62,7 +62,7 @@ impl Analysis {
                 })
                 .unwrap_or_default();
 
-            let symbol = Symbol::new(items.name(item), kind, item.range.into(), children);
+            let symbol = Symbol::new(item.name.clone(), kind, item.range.into(), children);
             tree.push(symbol);
         }
         tree

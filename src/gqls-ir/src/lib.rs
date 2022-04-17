@@ -26,8 +26,9 @@ pub struct Items {
     pub type_exts: Arena<TypeExtension>,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Item {
+    pub name: Name,
     pub range: Range,
     pub kind: ItemKind,
 }
@@ -39,30 +40,14 @@ pub enum ItemKind {
     TypeExtension(Idx<TypeExtension>),
 }
 
-impl Items {
-    pub fn name(&self, item: &Item) -> Name {
-        match item.kind {
-            ItemKind::TypeDefinition(idx) => self.types[idx].name.clone(),
-            ItemKind::DirectiveDefinition(idx) => self.directives[idx].name.clone(),
-            ItemKind::TypeExtension(idx) => self.type_exts[idx].name.clone(),
-        }
-    }
-}
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TypeDefinition {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TypeDefinition {
-    pub name: Name,
-}
+pub struct DirectiveDefinition {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DirectiveDefinition {
-    pub name: Name,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TypeExtension {
-    pub name: Name,
-}
+pub struct TypeExtension {}
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Name(SmolStr);
@@ -87,6 +72,7 @@ impl Name {
 
 pub type ItemMap = HashMap<Name, SmallVec<[Idx<Item>; 1]>>;
 pub type ItemResolutions = SmallVec<[ItemRes; 1]>;
+pub type Resolutions = SmallVec<[Res; 1]>;
 // TODO what is the right type for these (should it be something `Range` based or something more like `Res` and index based)
 pub type References = Vec<(FileId, Range)>;
 
