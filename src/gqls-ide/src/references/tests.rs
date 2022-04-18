@@ -88,6 +88,22 @@ fn test_find_references_to_enum() {
 }
 
 #[test]
+fn test_find_references_to_scalar() {
+    let fixture = fixture! {
+        "foo" => "
+            scalar Scalar
+                  #^^^^^^
+
+            type Foo {
+                s: Scalar
+                  #......
+            }
+        "
+    };
+    test(fixture);
+}
+
+#[test]
 fn test_find_directive_references() {
     let fixture = fixture! {
         "foo" => r#"
