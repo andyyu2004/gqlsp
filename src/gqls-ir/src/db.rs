@@ -84,6 +84,7 @@ fn resolve(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Res> {
         | NodeKind::OBJECT_TYPE_DEFINITION
         | NodeKind::OBJECT_TYPE_EXTENSION
         | NodeKind::SCALAR_TYPE_DEFINITION
+        | NodeKind::INPUT_OBJECT_TYPE_DEFINITION
         | NodeKind::INTERFACE_TYPE_DEFINITION => {
             let idx = db
                 .items(file)

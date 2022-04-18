@@ -11,7 +11,7 @@ macro_rules! fixture {
         let mut vfs = vfs::Vfs::default();
         $crate::Fixture::new(
             $crate::hashmap! {
-                $(vfs.intern($file) => $crate::FixtureFile::parse($text)),*
+                $(vfs.intern($file) => $crate::FixtureFile::parse(&$text)),*
             }
         )
     }};

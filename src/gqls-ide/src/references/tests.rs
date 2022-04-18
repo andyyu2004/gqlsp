@@ -22,46 +22,50 @@ fn test(fixture: Fixture) {
 }
 
 #[test]
-fn test_find_references() {
-    let fixture = fixture! {
-        "foo" => r#"
-            # TODO find references in unions
+fn test_find_references_to_object_like_type() {
+    let foo = r#"
+        # TODO find references in unions
 
-            type Foo {
-                #^^^
-                bar: Bar
-            }
+        extend type Foo {
+                   #^^^
+            bar: Bar
+        }
 
-            type Bar {
-                foo: Foo
-                   # ...
-            }
+        type Bar {
+            foo: Foo
+               # ...
+        }
 
-            interface Interface {
-                foo: Foo
-                    #...
-            }
+        interface Interface {
+            foo: Foo
+                #...
+        }
 
-            input Input {
-                foo: Foo
-                    #...
-            }
+        input Input {
+            foo: Foo
+                #...
+        }
 
-            extend type Bar {
-                k: Foo
-                  #...
-            }
+        extend type Bar {
+            k: Foo
+              #...
+        }"#;
 
+    for kind in ["extend type", "type", "interface", "input"] {
+        assert!(kind.len() <= "extend type".len());
+        let padding = " ".repeat("extend type".len() - kind.len());
+        let templated = foo.replace("extend type Foo", &format!("{padding}{kind} Foo"));
+        let fixture = fixture! {
+            "foo" => templated
+            "baz" => r#"
+                type Baz {
+                    foo: Foo
+                       # ...
+                }
             "#
-
-        "baz" => r#"
-            type Baz {
-                foo: Foo
-                   # ...
-            }
-            "#
-    };
-    test(fixture);
+        };
+        test(fixture);
+    }
 }
 
 #[test]
