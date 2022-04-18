@@ -25,6 +25,8 @@ fn test(fixture: Fixture) {
 fn test_find_references() {
     let fixture = fixture! {
         "foo" => r#"
+            # TODO find references in unions
+
             type Foo {
                 #^^^
                 bar: Bar
@@ -44,6 +46,12 @@ fn test_find_references() {
                 foo: Foo
                     #...
             }
+
+            extend type Bar {
+                k: Foo
+                  #...
+            }
+
             "#
 
         "baz" => r#"
@@ -70,8 +78,6 @@ fn test_find_directive_references() {
                 | INPUT_OBJECT
                 | INPUT_FIELD_DEFINITION
 
-            # TODO scalar enum union
-
             scalar S @qux
                     #....
 
@@ -92,7 +98,12 @@ fn test_find_directive_references() {
                         #....
             }
 
-        # TODO directive on interface types inputs extend types etc
+            extend type Foo @qux {
+                           #....
+                baz: Baz @qux
+                        #....
+            }
+
             type Bar {
                 foo: Foo @qux
                         #....
