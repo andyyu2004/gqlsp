@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use gqls_parse::{Node, NodeExt, NodeKind};
+use gqls_parse::{Node, NodeExt, NodeKind, Tree};
 use la_arena::ArenaMap;
 
 use crate::*;
@@ -80,10 +80,11 @@ impl BodyCtxt {
 
     fn lower_input_field(&mut self, node: Node<'_>) -> Option<(Field, ())> {
         assert_eq!(node.kind(), NodeKind::INPUT_VALUE_DEFINITION);
-        let name = Name::new(node.name_node()?.text(&self.text));
+        let name = self.name_of(node)?;
         let ty = self.lower_type(node.child_of_kind(NodeKind::TYPE)?)?;
+        let directives = self.lower_directives_of(node);
         // TODO default_value
-        Some((Field { range: node.range(), name, ty }, ()))
+        Some((Field { range: node.range(), name, ty, directives }, ()))
     }
 
     fn lower_fields(&mut self, node: Node<'_>) -> Fields {
@@ -96,9 +97,10 @@ impl BodyCtxt {
 
     fn lower_field(&mut self, node: Node<'_>) -> Option<Field> {
         assert_eq!(node.kind(), NodeKind::FIELD_DEFINITION);
-        let name = node.name_node()?;
         let ty = self.lower_type(node.child_of_kind(NodeKind::TYPE)?)?;
-        Some(Field { range: node.range(), name: Name::new(name.text(&self.text)), ty })
+        let name = self.name_of(node)?;
+        let directives = self.lower_directives_of(node);
+        Some(Field { range: node.range(), name, ty, directives })
     }
 
     fn lower_type(&mut self, node: Node<'_>) -> Option<Ty> {
@@ -130,6 +132,118 @@ impl BodyCtxt {
         assert_eq!(node.kind(), NodeKind::LIST_TYPE);
         let kind = TyKind::List(self.lower_type(node.sole_named_child())?);
         Some(Box::new(Type { range: node.range(), kind }))
+    }
+}
+
+pub(crate) struct ItemCtxt {
+    text: Arc<str>,
+    types: Arena<TypeDefinition>,
+    directives: Arena<DirectiveDefinition>,
+    type_exts: Arena<TypeExtension>,
+}
+
+impl ItemCtxt {
+    pub(crate) fn new(text: Arc<str>) -> Self {
+        Self {
+            text,
+            types: Default::default(),
+            directives: Default::default(),
+            type_exts: Default::default(),
+        }
+    }
+
+    pub fn lower(mut self, tree: Tree) -> Arc<Items> {
+        let node = tree.root_node();
+        let items = node
+            .relevant_children(&mut node.walk())
+            .filter_map(|node| self.lower_item(node))
+            .collect();
+        Arc::new(Items {
+            items,
+            types: self.types,
+            directives: self.directives,
+            type_exts: self.type_exts,
+        })
+    }
+
+    fn lower_item(&mut self, node: Node<'_>) -> Option<Item> {
+        assert_eq!(node.kind(), NodeKind::ITEM);
+        let def = node.sole_named_child();
+        let (name, kind) = match def.kind() {
+            NodeKind::TYPE_DEFINITION => {
+                let typedef = def.sole_named_child();
+                let name_node = match typedef.kind() {
+                    NodeKind::OBJECT_TYPE_DEFINITION
+                    | NodeKind::INTERFACE_TYPE_DEFINITION
+                    | NodeKind::SCALAR_TYPE_DEFINITION
+                    | NodeKind::ENUM_TYPE_DEFINITION
+                    | NodeKind::UNION_TYPE_DEFINITION
+                    | NodeKind::INPUT_OBJECT_TYPE_DEFINITION => typedef.name_node()?,
+                    _ =>
+                        unreachable!("invalid node kind for type definition: {:?}", typedef.kind()),
+                };
+                let name = Name::new(name_node.text(&self.text));
+                let directives = self.lower_directives_of(typedef);
+                (name, ItemKind::TypeDefinition(self.types.alloc(TypeDefinition { directives })))
+            }
+            NodeKind::TYPE_EXTENSION => {
+                let type_ext = def.sole_named_child();
+                let name_node = match type_ext.kind() {
+                    NodeKind::OBJECT_TYPE_EXTENSION => type_ext.name_node()?,
+                    _ => return None,
+                };
+                let name = Name::new(name_node.text(&self.text));
+                let directives = self.lower_directives_of(type_ext);
+                (name, ItemKind::TypeExtension(self.type_exts.alloc(TypeExtension { directives })))
+            }
+            NodeKind::DIRECTIVE_DEFINITION => {
+                let name = Name::new(def.name_node()?.text(&self.text));
+                (name, ItemKind::DirectiveDefinition(self.directives.alloc(DirectiveDefinition {})))
+            }
+            // TODO
+            _ => return None,
+        };
+        Some(Item { range: def.range(), name, kind })
+    }
+}
+
+trait LowerCtxt {
+    fn text(&self) -> &str;
+
+    fn name_of(&mut self, node: Node<'_>) -> Option<Name> {
+        node.name_node().map(|node| Name::new(node.text(self.text())))
+    }
+
+    fn lower_directives_of(&mut self, node: Node<'_>) -> Directives {
+        node.child_of_kind(NodeKind::DIRECTIVES)
+            .map(|node| self.lower_directives(node))
+            .unwrap_or_default()
+    }
+
+    fn lower_directives(&mut self, node: Node<'_>) -> Directives {
+        assert_eq!(node.kind(), NodeKind::DIRECTIVES);
+        node.children_of_kind(&mut node.walk(), NodeKind::DIRECTIVE)
+            .filter_map(|node| self.lower_directive(node))
+            .collect()
+    }
+
+    fn lower_directive(&mut self, node: Node<'_>) -> Option<Directive> {
+        assert_eq!(node.kind(), NodeKind::DIRECTIVE);
+        // TODO arguments
+        let name = Name::new(node.name_node()?.text(self.text()));
+        Some(Directive { name })
+    }
+}
+
+impl LowerCtxt for ItemCtxt {
+    fn text(&self) -> &str {
+        &self.text
+    }
+}
+
+impl LowerCtxt for BodyCtxt {
+    fn text(&self) -> &str {
+        &self.text
     }
 }
 

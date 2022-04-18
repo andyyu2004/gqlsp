@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use gqls_base_db::SourceDatabase;
-use gqls_parse::{Node, NodeExt, NodeKind, Point, RangeExt, Tree};
+use gqls_parse::{NodeExt, NodeKind, Point, RangeExt};
 use smallvec::smallvec;
 use vfs::FileId;
 
@@ -25,13 +25,7 @@ pub trait DefDatabase: SourceDatabase {
 
 fn items(db: &dyn DefDatabase, file: FileId) -> Arc<Items> {
     let data = db.file_data(file);
-    LowerCtxt {
-        text: data.text,
-        types: Default::default(),
-        directives: Default::default(),
-        type_exts: Default::default(),
-    }
-    .lower(data.tree)
+    lower::ItemCtxt::new(data.text).lower(data.tree)
 }
 
 fn item_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Idx<Item>> {
@@ -149,88 +143,5 @@ fn references(db: &dyn DefDatabase, res: Res) -> References {
     match res {
         Res::Item(item) => db.item_references(item),
         Res::Field(_) => todo!(),
-    }
-}
-
-struct LowerCtxt {
-    text: Arc<str>,
-    types: Arena<TypeDefinition>,
-    directives: Arena<DirectiveDefinition>,
-    type_exts: Arena<TypeExtension>,
-}
-
-impl LowerCtxt {
-    fn lower(mut self, tree: Tree) -> Arc<Items> {
-        let node = tree.root_node();
-        let items = node
-            .relevant_children(&mut node.walk())
-            .filter_map(|node| self.lower_item(node))
-            .collect();
-        Arc::new(Items {
-            items,
-            types: self.types,
-            directives: self.directives,
-            type_exts: self.type_exts,
-        })
-    }
-
-    fn lower_item(&mut self, node: Node<'_>) -> Option<Item> {
-        assert_eq!(node.kind(), NodeKind::ITEM);
-        let def = node.sole_named_child();
-        let (name, kind) = match def.kind() {
-            NodeKind::TYPE_DEFINITION => {
-                let typedef = def.sole_named_child();
-                let name_node = match typedef.kind() {
-                    NodeKind::OBJECT_TYPE_DEFINITION
-                    | NodeKind::INTERFACE_TYPE_DEFINITION
-                    | NodeKind::SCALAR_TYPE_DEFINITION
-                    | NodeKind::ENUM_TYPE_DEFINITION
-                    | NodeKind::UNION_TYPE_DEFINITION
-                    | NodeKind::INPUT_OBJECT_TYPE_DEFINITION => typedef.name_node()?,
-                    _ =>
-                        unreachable!("invalid node kind for type definition: {:?}", typedef.kind()),
-                };
-                let name = Name::new(name_node.text(&self.text));
-                let directives = self.lower_directives_of(typedef);
-                (name, ItemKind::TypeDefinition(self.types.alloc(TypeDefinition { directives })))
-            }
-            NodeKind::TYPE_EXTENSION => {
-                let type_ext = def.sole_named_child();
-                let name_node = match type_ext.kind() {
-                    NodeKind::OBJECT_TYPE_EXTENSION => type_ext.name_node()?,
-                    _ => return None,
-                };
-                let name = Name::new(name_node.text(&self.text));
-                let directives = self.lower_directives_of(type_ext);
-                (name, ItemKind::TypeExtension(self.type_exts.alloc(TypeExtension { directives })))
-            }
-            NodeKind::DIRECTIVE_DEFINITION => {
-                let name = Name::new(def.name_node()?.text(&self.text));
-                (name, ItemKind::DirectiveDefinition(self.directives.alloc(DirectiveDefinition {})))
-            }
-            // TODO
-            _ => return None,
-        };
-        Some(Item { range: def.range(), name, kind })
-    }
-
-    fn lower_directives_of(&mut self, node: Node<'_>) -> Directives {
-        node.child_of_kind(NodeKind::DIRECTIVES)
-            .map(|node| self.lower_directives(node))
-            .unwrap_or_default()
-    }
-
-    fn lower_directives(&mut self, node: Node<'_>) -> Directives {
-        assert_eq!(node.kind(), NodeKind::DIRECTIVES);
-        node.children_of_kind(&mut node.walk(), NodeKind::DIRECTIVE)
-            .filter_map(|node| self.lower_directive(node))
-            .collect()
-    }
-
-    fn lower_directive(&mut self, node: Node<'_>) -> Option<Directive> {
-        assert_eq!(node.kind(), NodeKind::DIRECTIVE);
-        // TODO arguments
-        let name = Name::new(node.name_node()?.text(&self.text));
-        Some(Directive { name })
     }
 }

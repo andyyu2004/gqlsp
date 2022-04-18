@@ -1,7 +1,7 @@
 use gqls_parse::Range;
 use la_arena::{Arena, ArenaMap, Idx};
 
-use crate::{Name, Ty};
+use crate::{Directives, Name, Ty};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemBody {
@@ -60,6 +60,7 @@ pub struct Field {
     pub range: Range,
     pub name: Name,
     pub ty: Ty,
+    pub directives: Directives,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

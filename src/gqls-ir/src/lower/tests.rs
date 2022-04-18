@@ -10,17 +10,19 @@ fn test_lower_item_body() {
     let mut vfs = Vfs::default();
     let foo = vfs.intern("foo");
     setup!(db: {
-        foo: r#"type Foo {
-            foo: Int
+        foo: r#"
+        directive @qux on FIELD_DEFINITION
+        type Foo {
+            foo: Int @qux
             list: [Int]
-            nonNull: Int!
-            nonNullList: [Int!]!
+            nonNull: Int! @qux
+            nonNullList: [Int!]! @qux
             a: [Int!]
             b: [Int]!
         }"#,
     });
 
-    let body = db.item_body(ItemRes { file: foo, idx: idx!(0) });
+    let body = db.item_body(ItemRes { file: foo, idx: idx!(1) });
     expect![[r#"
         Some(
             ObjectTypeDefinition(
@@ -31,40 +33,8 @@ fn test_lower_item_body() {
                             data: [
                                 Field {
                                     range: Range {
-                                        start_byte: 23,
-                                        end_byte: 31,
-                                        start_point: Point {
-                                            row: 1,
-                                            column: 12,
-                                        },
-                                        end_point: Point {
-                                            row: 1,
-                                            column: 20,
-                                        },
-                                    },
-                                    name: foo,
-                                    ty: Int,
-                                },
-                                Field {
-                                    range: Range {
-                                        start_byte: 44,
-                                        end_byte: 55,
-                                        start_point: Point {
-                                            row: 2,
-                                            column: 12,
-                                        },
-                                        end_point: Point {
-                                            row: 2,
-                                            column: 23,
-                                        },
-                                    },
-                                    name: list,
-                                    ty: [Int],
-                                },
-                                Field {
-                                    range: Range {
-                                        start_byte: 68,
-                                        end_byte: 81,
+                                        start_byte: 75,
+                                        end_byte: 88,
                                         start_point: Point {
                                             row: 3,
                                             column: 12,
@@ -74,56 +44,106 @@ fn test_lower_item_body() {
                                             column: 25,
                                         },
                                     },
-                                    name: nonNull,
-                                    ty: Int!,
+                                    name: foo,
+                                    ty: Int,
+                                    directives: [
+                                        Directive {
+                                            name: qux,
+                                        },
+                                    ],
                                 },
                                 Field {
                                     range: Range {
-                                        start_byte: 94,
-                                        end_byte: 114,
+                                        start_byte: 101,
+                                        end_byte: 112,
                                         start_point: Point {
                                             row: 4,
                                             column: 12,
                                         },
                                         end_point: Point {
                                             row: 4,
-                                            column: 32,
+                                            column: 23,
+                                        },
+                                    },
+                                    name: list,
+                                    ty: [Int],
+                                    directives: [],
+                                },
+                                Field {
+                                    range: Range {
+                                        start_byte: 125,
+                                        end_byte: 143,
+                                        start_point: Point {
+                                            row: 5,
+                                            column: 12,
+                                        },
+                                        end_point: Point {
+                                            row: 5,
+                                            column: 30,
+                                        },
+                                    },
+                                    name: nonNull,
+                                    ty: Int!,
+                                    directives: [
+                                        Directive {
+                                            name: qux,
+                                        },
+                                    ],
+                                },
+                                Field {
+                                    range: Range {
+                                        start_byte: 156,
+                                        end_byte: 181,
+                                        start_point: Point {
+                                            row: 6,
+                                            column: 12,
+                                        },
+                                        end_point: Point {
+                                            row: 6,
+                                            column: 37,
                                         },
                                     },
                                     name: nonNullList,
                                     ty: [Int!]!,
+                                    directives: [
+                                        Directive {
+                                            name: qux,
+                                        },
+                                    ],
                                 },
                                 Field {
                                     range: Range {
-                                        start_byte: 127,
-                                        end_byte: 136,
+                                        start_byte: 194,
+                                        end_byte: 203,
                                         start_point: Point {
-                                            row: 5,
+                                            row: 7,
                                             column: 12,
                                         },
                                         end_point: Point {
-                                            row: 5,
+                                            row: 7,
                                             column: 21,
                                         },
                                     },
                                     name: a,
                                     ty: [Int!],
+                                    directives: [],
                                 },
                                 Field {
                                     range: Range {
-                                        start_byte: 149,
-                                        end_byte: 158,
+                                        start_byte: 216,
+                                        end_byte: 225,
                                         start_point: Point {
-                                            row: 6,
+                                            row: 8,
                                             column: 12,
                                         },
                                         end_point: Point {
-                                            row: 6,
+                                            row: 8,
                                             column: 21,
                                         },
                                     },
                                     name: b,
                                     ty: [Int]!,
+                                    directives: [],
                                 },
                             ],
                         },
