@@ -83,6 +83,7 @@ fn resolve(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Res> {
         NodeKind::DIRECTIVE_DEFINITION
         | NodeKind::OBJECT_TYPE_DEFINITION
         | NodeKind::OBJECT_TYPE_EXTENSION
+        | NodeKind::ENUM_TYPE_DEFINITION
         | NodeKind::SCALAR_TYPE_DEFINITION
         | NodeKind::INPUT_OBJECT_TYPE_DEFINITION
         | NodeKind::INTERFACE_TYPE_DEFINITION => {

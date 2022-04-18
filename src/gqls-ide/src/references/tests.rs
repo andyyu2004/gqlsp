@@ -69,6 +69,25 @@ fn test_find_references_to_object_like_type() {
 }
 
 #[test]
+fn test_find_references_to_enum() {
+    let fixture = fixture! {
+        "foo" => "
+            enum Enum {
+                #^^^^
+                FOO
+                BAR
+            }
+
+            type Foo {
+                enum: Enum
+                     #....
+            }
+        "
+    };
+    test(fixture);
+}
+
+#[test]
 fn test_find_directive_references() {
     let fixture = fixture! {
         "foo" => r#"
