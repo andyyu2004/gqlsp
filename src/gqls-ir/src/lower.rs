@@ -22,6 +22,9 @@ impl BodyCtxt {
                 ItemBody::InterfaceDefinition(self.lower_interface_typedef(node)),
             NodeKind::INPUT_OBJECT_TYPE_DEFINITION =>
                 ItemBody::InputObjectTypeDefinition(self.lower_input_object_typedef(node)),
+            NodeKind::UNION_TYPE_DEFINITION =>
+                ItemBody::UnionTypeDefinition(self.lower_union_typedef(node)),
+            // TODO enum etc
             _ => ItemBody::Todo,
         }
     }
@@ -56,6 +59,22 @@ impl BodyCtxt {
     fn lower_interface_typedef(&mut self, node: Node<'_>) -> InterfaceDefinitionBody {
         assert_eq!(node.kind(), NodeKind::INTERFACE_TYPE_DEFINITION);
         InterfaceDefinitionBody { fields: self.lower_fields_of(node) }
+    }
+
+    fn lower_union_typedef(&mut self, node: Node<'_>) -> UnionTypeDefinitionBody {
+        assert_eq!(node.kind(), NodeKind::UNION_TYPE_DEFINITION);
+        let types = node
+            .child_of_kind(NodeKind::UNION_MEMBER_TYPES)
+            .map(|node| self.lower_union_member_types(node))
+            .unwrap_or_default();
+        UnionTypeDefinitionBody { types }
+    }
+
+    fn lower_union_member_types(&mut self, node: Node<'_>) -> Vec<Ty> {
+        assert_eq!(node.kind(), NodeKind::UNION_MEMBER_TYPES);
+        node.children_of_kind(&mut node.walk(), NodeKind::NAMED_TYPE)
+            .filter_map(|node| self.lower_named_type(node))
+            .collect()
     }
 
     fn lower_fields_of(&mut self, node: Node<'_>) -> Fields {

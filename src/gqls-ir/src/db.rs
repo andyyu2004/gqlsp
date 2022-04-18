@@ -124,6 +124,17 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
             let items = db.items(file);
             for (idx, _) in items.items.iter() {
                 let body = db.item_body(ItemRes { file, idx });
+
+                if let Some(ItemBody::UnionTypeDefinition(union)) = body.as_deref() {
+                    references.extend(
+                        union
+                            .types
+                            .iter()
+                            .filter(|ty| ty.name() == name)
+                            .map(|ty| (file, ty.range)),
+                    )
+                }
+
                 let fields = body.as_deref().and_then(|b| b.fields_slice()).unwrap_or(&[]).iter();
                 match res_item.kind {
                     ItemKind::TypeDefinition(_) | ItemKind::TypeExtension(_) => references.extend(

@@ -347,6 +347,7 @@ name = "gqls-parse"
 version = "0.1.0"
 dependencies = [
  "cc",
+ "expect-test",
  "tree-sitter",
  "tree-sitter-traversal",
 ]

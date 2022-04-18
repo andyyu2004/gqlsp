@@ -854,22 +854,21 @@
       ]
     },
     "union_member_types": {
-      "type": "CHOICE",
+      "type": "SEQ",
       "members": [
         {
-          "type": "SEQ",
+          "type": "STRING",
+          "value": "="
+        },
+        {
+          "type": "CHOICE",
           "members": [
-            {
-              "type": "SYMBOL",
-              "name": "union_member_types"
-            },
             {
               "type": "STRING",
               "value": "|"
             },
             {
-              "type": "SYMBOL",
-              "name": "named_type"
+              "type": "BLANK"
             }
           ]
         },
@@ -877,24 +876,24 @@
           "type": "SEQ",
           "members": [
             {
-              "type": "STRING",
-              "value": "="
-            },
-            {
-              "type": "CHOICE",
-              "members": [
-                {
-                  "type": "STRING",
-                  "value": "|"
-                },
-                {
-                  "type": "BLANK"
-                }
-              ]
-            },
-            {
               "type": "SYMBOL",
               "name": "named_type"
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "|"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "named_type"
+                  }
+                ]
+              }
             }
           ]
         }

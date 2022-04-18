@@ -937,10 +937,6 @@
         {
           "type": "named_type",
           "named": true
-        },
-        {
-          "type": "union_member_types",
-          "named": true
         }
       ]
     }

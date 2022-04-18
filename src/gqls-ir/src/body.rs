@@ -9,6 +9,7 @@ pub enum ItemBody {
     ObjectTypeExtension(TypeExtensionBody),
     InterfaceDefinition(InterfaceDefinitionBody),
     InputObjectTypeDefinition(InputTypeDefinitionBody),
+    UnionTypeDefinition(UnionTypeDefinitionBody),
     Todo,
 }
 
@@ -19,6 +20,7 @@ impl ItemBody {
             ItemBody::ObjectTypeExtension(type_ext) => &type_ext.fields.fields,
             ItemBody::InputObjectTypeDefinition(typedef) => &typedef.fields.fields,
             ItemBody::InterfaceDefinition(iface) => &iface.fields.fields,
+            ItemBody::UnionTypeDefinition(_) => return None,
             ItemBody::Todo => return None,
         };
         Some(fields)
@@ -32,6 +34,11 @@ impl ItemBody {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InputTypeDefinitionBody {
     pub fields: InputFields,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UnionTypeDefinitionBody {
+    pub types: Vec<Ty>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

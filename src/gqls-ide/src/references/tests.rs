@@ -104,6 +104,37 @@ fn test_find_references_to_scalar() {
 }
 
 #[test]
+fn test_find_references_to_type_within_union() {
+    let fixture = fixture! {
+        "foo" => "
+            scalar S
+                  #^
+            scalar T
+
+
+            union U = S | T
+                     #.
+        "
+    };
+    test(fixture);
+
+    let fixture = fixture! {
+        "foo" => "
+            type Foo {
+                #^^^
+                t: T
+            }
+            scalar T
+
+
+            union U = Foo | T
+                     #...
+        "
+    };
+    test(fixture);
+}
+
+#[test]
 fn test_find_directive_references() {
     let fixture = fixture! {
         "foo" => r#"

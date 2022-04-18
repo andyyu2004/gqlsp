@@ -154,10 +154,7 @@ module.exports = grammar({
       ),
     default_value: ($) => seq("=", $.value),
     union_member_types: ($) =>
-      choice(
-        seq($.union_member_types, "|", $.named_type),
-        seq("=", optional("|"), $.named_type)
-      ),
+      seq("=", optional("|"), sepBy1("|", $.named_type)),
     root_operation_type_definition: ($) =>
       seq($.operation_type, ":", $.named_type),
     operation_type: (_) => choice("query", "mutation", "subscription"),
@@ -329,3 +326,11 @@ module.exports = grammar({
     description: ($) => $.string_value,
   },
 });
+
+function sepBy1(sep, rule) {
+  return seq(rule, repeat(seq(sep, rule)));
+}
+
+function sepBy(sep, rule) {
+  return optional(sepBy1(sep, rule));
+}

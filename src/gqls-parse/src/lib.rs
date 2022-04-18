@@ -128,21 +128,7 @@ fn make_parser() -> Parser {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_make_parser() {
-        make_parser();
-    }
-
-    #[test]
-    fn test_parse_empty() {
-        let mut parser = make_parser();
-        let tree = parser.parse("", None).unwrap();
-        assert_eq!(tree.root_node().to_sexp(), "(document)");
-    }
-}
+mod node_generator;
 
 #[cfg(test)]
-mod node_generator;
+mod tests;
