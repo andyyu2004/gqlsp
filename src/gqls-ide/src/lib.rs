@@ -181,7 +181,7 @@ impl<'a> TextProvider<'a> for RopeText<'a> {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct Location {
     pub file: FileId,
     pub range: Range,

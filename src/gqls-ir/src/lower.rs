@@ -231,7 +231,7 @@ trait LowerCtxt {
         assert_eq!(node.kind(), NodeKind::DIRECTIVE);
         // TODO arguments
         let name = Name::new(node.name_node()?.text(self.text()));
-        Some(Directive { name })
+        Some(Directive { range: node.range(), name })
     }
 }
 

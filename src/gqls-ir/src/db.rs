@@ -119,20 +119,32 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
     let name = res_item.name;
     for project in db.projects_of(res.file) {
         for &file in db.project_files(project).iter() {
-            for (idx, _item) in db.items(file).items.iter() {
+            let items = db.items(file);
+            for (idx, _) in items.items.iter() {
                 let body = db.item_body(ItemRes { file, idx });
                 let fields = match body.as_deref().and_then(|b| b.fields()) {
                     Some(fields) => fields,
                     None => continue,
                 };
                 match res_item.kind {
-                    ItemKind::TypeDefinition(_) | ItemKind::TypeExtension(_) => fields
-                        .iter()
-                        .map(|(_, field)| field)
-                        .filter(|field| field.ty.name() == name)
-                        .for_each(|field| references.push((file, field.ty.range))),
-                    ItemKind::DirectiveDefinition(_) => todo!(),
-                }
+                    ItemKind::TypeDefinition(_) | ItemKind::TypeExtension(_) => references.extend(
+                        fields
+                            .iter()
+                            .map(|(_, field)| field)
+                            .filter(|field| field.ty.name() == name)
+                            .map(|field| (file, field.ty.range)),
+                    ),
+                    ItemKind::DirectiveDefinition(_) => references.extend(
+                        fields
+                            .iter()
+                            .map(|(_, field)| field)
+                            .flat_map(|field| &field.directives)
+                            .chain(items.directives(idx).map(Vec::as_slice).unwrap_or(&[]))
+                            .inspect(|x| println!("{x:?}"))
+                            .filter(|directive| directive.name == name)
+                            .map(|directive| (file, directive.range)),
+                    ),
+                };
             }
         }
     }

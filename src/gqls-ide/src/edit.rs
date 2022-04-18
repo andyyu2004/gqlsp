@@ -7,7 +7,7 @@ use ropey::Rope;
 use vfs::FileId;
 
 /// Similar to [`tree_sitter::Range`] but only containing points (but no byte offsets)
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash, Default)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash, PartialOrd, Ord, Default)]
 pub struct Range {
     pub start: Point,
     pub end: Point,

@@ -218,6 +218,18 @@ fn test_definitions() {
                     TypeDefinition {
                         directives: [
                             Directive {
+                                range: Range {
+                                    start_byte: 18,
+                                    end_byte: 22,
+                                    start_point: Point {
+                                        row: 1,
+                                        column: 17,
+                                    },
+                                    end_point: Point {
+                                        row: 1,
+                                        column: 21,
+                                    },
+                                },
                                 name: qux,
                             },
                         ],
@@ -319,6 +331,18 @@ fn test_definitions() {
                     TypeDefinition {
                         directives: [
                             Directive {
+                                range: Range {
+                                    start_byte: 69,
+                                    end_byte: 73,
+                                    start_point: Point {
+                                        row: 5,
+                                        column: 17,
+                                    },
+                                    end_point: Point {
+                                        row: 5,
+                                        column: 21,
+                                    },
+                                },
                                 name: foo,
                             },
                         ],

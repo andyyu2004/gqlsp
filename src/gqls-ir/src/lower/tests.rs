@@ -48,6 +48,18 @@ fn test_lower_item_body() {
                                     ty: Int,
                                     directives: [
                                         Directive {
+                                            range: Range {
+                                                start_byte: 84,
+                                                end_byte: 88,
+                                                start_point: Point {
+                                                    row: 3,
+                                                    column: 21,
+                                                },
+                                                end_point: Point {
+                                                    row: 3,
+                                                    column: 25,
+                                                },
+                                            },
                                             name: qux,
                                         },
                                     ],
@@ -86,6 +98,18 @@ fn test_lower_item_body() {
                                     ty: Int!,
                                     directives: [
                                         Directive {
+                                            range: Range {
+                                                start_byte: 139,
+                                                end_byte: 143,
+                                                start_point: Point {
+                                                    row: 5,
+                                                    column: 26,
+                                                },
+                                                end_point: Point {
+                                                    row: 5,
+                                                    column: 30,
+                                                },
+                                            },
                                             name: qux,
                                         },
                                     ],
@@ -107,6 +131,18 @@ fn test_lower_item_body() {
                                     ty: [Int!]!,
                                     directives: [
                                         Directive {
+                                            range: Range {
+                                                start_byte: 177,
+                                                end_byte: 181,
+                                                start_point: Point {
+                                                    row: 6,
+                                                    column: 33,
+                                                },
+                                                end_point: Point {
+                                                    row: 6,
+                                                    column: 37,
+                                                },
+                                            },
                                             name: qux,
                                         },
                                     ],

@@ -26,6 +26,16 @@ pub struct Items {
     pub type_exts: Arena<TypeExtension>,
 }
 
+impl Items {
+    pub fn directives(&self, idx: Idx<Item>) -> Option<&Directives> {
+        match self.items[idx].kind {
+            ItemKind::TypeDefinition(typedef) => Some(&self.types[typedef].directives),
+            ItemKind::TypeExtension(type_ext) => Some(&self.type_exts[type_ext].directives),
+            ItemKind::DirectiveDefinition(_) => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Item {
     pub name: Name,
@@ -37,14 +47,15 @@ pub type Directives = Vec<Directive>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Directive {
+    pub range: Range,
     pub name: Name,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ItemKind {
     TypeDefinition(Idx<TypeDefinition>),
-    DirectiveDefinition(Idx<DirectiveDefinition>),
     TypeExtension(Idx<TypeExtension>),
+    DirectiveDefinition(Idx<DirectiveDefinition>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

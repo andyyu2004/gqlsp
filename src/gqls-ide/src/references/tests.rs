@@ -15,7 +15,9 @@ fn test(fixture: Fixture) {
             .all_ranges()
             .map(|(file, range)| Location::new(file, range.into()))
             .collect::<HashSet<Location>>();
-        assert_eq!(references.into_iter().collect::<HashSet<Location>>(), expected);
+        let actual = references.into_iter().collect::<HashSet<Location>>();
+
+        assert_eq!(expected, actual);
     }
 }
 
@@ -58,36 +60,48 @@ fn test_find_references() {
 fn test_find_directive_references() {
     let fixture = fixture! {
         "foo" => r#"
-            directive @foo on FIELD_DEFINITION
+            directive @qux on FIELD_DEFINITION
                       #^^^
+                | OBJECT
+                | SCALAR
+                | UNION
+                | ENUM
+                | ENUM_VALUE
+                | INPUT_OBJECT
+                | INPUT_FIELD_DEFINITION
 
-            type Foo {
-                bar: Bar @foo
-                         #...
+            # TODO scalar enum union
+
+            type Foo @qux {
+                    #....
+                bar: Bar @qux
+                        #....
             }
 
+        # TODO directive on interface types inputs extend types etc
             type Bar {
                 foo: Foo @qux
-                         #...
+                        #....
             }
 
-            interface Interface {
+            interface Interface @qux {
+                               #....
                 foo: Foo @qux
-                         #...
+                        #....
             }
 
-            input Input {
+            input Input @qux {
+                       #....
                 foo: Foo @qux
-                         #...
-            }
-            "#
+                        #....
+            }"#
 
-        "baz" => r#"
+        "baz" => "
             type Baz {
-                foo: Foo
-                   # ...
+                foo: Foo @qux
+                        #....
             }
-            "#
+            "
     };
     test(fixture);
 }
