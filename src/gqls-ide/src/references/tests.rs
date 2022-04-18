@@ -72,6 +72,7 @@ fn test_find_directive_references() {
 
             # TODO scalar enum union
 
+
             type Foo @qux {
                     #....
                 bar: Bar @qux

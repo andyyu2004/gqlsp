@@ -65,6 +65,18 @@ fn test_definitions() {
         }
 
         directive @qux on FIELD_DEFINITION | OBJECT
+
+        scalar S @qux
+
+        union U @qux = Foo | Bar
+
+        input I @qux {
+            foo: Foo @qux
+        }
+
+        interface Iface @qux {
+            foo: Foo @qux
+        }
     "#;
 
     let bar = vfs.intern("bar");
@@ -92,6 +104,10 @@ fn test_definitions() {
             Name::new("Foo") => smallvec![idx!(0), idx!(1)],
             Name::new("Bar") => smallvec![idx!(2), idx!(3)],
             Name::new("qux") => smallvec![idx!(4)],
+            Name::new("S") => smallvec![idx!(5)],
+            Name::new("U") => smallvec![idx!(6)],
+            Name::new("I") => smallvec![idx!(7)],
+            Name::new("Iface") => smallvec![idx!(8)],
         }
     );
 
@@ -118,7 +134,7 @@ fn test_definitions() {
     expect![[r#"
         Items {
             items: Arena {
-                len: 5,
+                len: 9,
                 data: [
                     Item {
                         name: Foo,
@@ -210,10 +226,82 @@ fn test_definitions() {
                             Idx::<DirectiveDefinition>(0),
                         ),
                     },
+                    Item {
+                        name: S,
+                        range: Range {
+                            start_byte: 289,
+                            end_byte: 302,
+                            start_point: Point {
+                                row: 19,
+                                column: 8,
+                            },
+                            end_point: Point {
+                                row: 19,
+                                column: 21,
+                            },
+                        },
+                        kind: TypeDefinition(
+                            Idx::<TypeDefinition>(3),
+                        ),
+                    },
+                    Item {
+                        name: U,
+                        range: Range {
+                            start_byte: 312,
+                            end_byte: 336,
+                            start_point: Point {
+                                row: 21,
+                                column: 8,
+                            },
+                            end_point: Point {
+                                row: 21,
+                                column: 32,
+                            },
+                        },
+                        kind: TypeDefinition(
+                            Idx::<TypeDefinition>(4),
+                        ),
+                    },
+                    Item {
+                        name: I,
+                        range: Range {
+                            start_byte: 346,
+                            end_byte: 396,
+                            start_point: Point {
+                                row: 23,
+                                column: 8,
+                            },
+                            end_point: Point {
+                                row: 25,
+                                column: 9,
+                            },
+                        },
+                        kind: TypeDefinition(
+                            Idx::<TypeDefinition>(5),
+                        ),
+                    },
+                    Item {
+                        name: Iface,
+                        range: Range {
+                            start_byte: 406,
+                            end_byte: 464,
+                            start_point: Point {
+                                row: 27,
+                                column: 8,
+                            },
+                            end_point: Point {
+                                row: 29,
+                                column: 9,
+                            },
+                        },
+                        kind: TypeDefinition(
+                            Idx::<TypeDefinition>(6),
+                        ),
+                    },
                 ],
             },
             types: Arena {
-                len: 3,
+                len: 7,
                 data: [
                     TypeDefinition {
                         directives: [
@@ -239,6 +327,82 @@ fn test_definitions() {
                     },
                     TypeDefinition {
                         directives: [],
+                    },
+                    TypeDefinition {
+                        directives: [
+                            Directive {
+                                range: Range {
+                                    start_byte: 298,
+                                    end_byte: 302,
+                                    start_point: Point {
+                                        row: 19,
+                                        column: 17,
+                                    },
+                                    end_point: Point {
+                                        row: 19,
+                                        column: 21,
+                                    },
+                                },
+                                name: qux,
+                            },
+                        ],
+                    },
+                    TypeDefinition {
+                        directives: [
+                            Directive {
+                                range: Range {
+                                    start_byte: 320,
+                                    end_byte: 324,
+                                    start_point: Point {
+                                        row: 21,
+                                        column: 16,
+                                    },
+                                    end_point: Point {
+                                        row: 21,
+                                        column: 20,
+                                    },
+                                },
+                                name: qux,
+                            },
+                        ],
+                    },
+                    TypeDefinition {
+                        directives: [
+                            Directive {
+                                range: Range {
+                                    start_byte: 354,
+                                    end_byte: 358,
+                                    start_point: Point {
+                                        row: 23,
+                                        column: 16,
+                                    },
+                                    end_point: Point {
+                                        row: 23,
+                                        column: 20,
+                                    },
+                                },
+                                name: qux,
+                            },
+                        ],
+                    },
+                    TypeDefinition {
+                        directives: [
+                            Directive {
+                                range: Range {
+                                    start_byte: 422,
+                                    end_byte: 426,
+                                    start_point: Point {
+                                        row: 27,
+                                        column: 24,
+                                    },
+                                    end_point: Point {
+                                        row: 27,
+                                        column: 28,
+                                    },
+                                },
+                                name: qux,
+                            },
+                        ],
                     },
                 ],
             },

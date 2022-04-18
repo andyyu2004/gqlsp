@@ -126,21 +126,15 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
                     Some(fields) => fields,
                     None => continue,
                 };
+                let iter = fields.iter().map(|(_, field)| field);
                 match res_item.kind {
                     ItemKind::TypeDefinition(_) | ItemKind::TypeExtension(_) => references.extend(
-                        fields
-                            .iter()
-                            .map(|(_, field)| field)
-                            .filter(|field| field.ty.name() == name)
+                        iter.filter(|field| field.ty.name() == name)
                             .map(|field| (file, field.ty.range)),
                     ),
                     ItemKind::DirectiveDefinition(_) => references.extend(
-                        fields
-                            .iter()
-                            .map(|(_, field)| field)
-                            .flat_map(|field| &field.directives)
+                        iter.flat_map(|field| &field.directives)
                             .chain(items.directives(idx).map(Vec::as_slice).unwrap_or(&[]))
-                            .inspect(|x| println!("{x:?}"))
                             .filter(|directive| directive.name == name)
                             .map(|directive| (file, directive.range)),
                     ),
