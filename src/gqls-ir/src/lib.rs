@@ -33,6 +33,13 @@ pub struct Item {
     pub kind: ItemKind,
 }
 
+pub type Directives = Vec<Directive>;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Directive {
+    pub name: Name,
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ItemKind {
     TypeDefinition(Idx<TypeDefinition>),
@@ -41,13 +48,17 @@ pub enum ItemKind {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TypeDefinition {}
+pub struct TypeDefinition {
+    directives: Directives,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DirectiveDefinition {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TypeExtension {}
+pub struct TypeExtension {
+    directives: Directives,
+}
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Name(SmolStr);

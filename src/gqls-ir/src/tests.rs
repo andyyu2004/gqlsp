@@ -48,12 +48,12 @@ fn test_definitions() {
 
     let foo = vfs.intern("foo");
     let foogql = r#"
-        type Foo {
-           bar: Bar
+        type Foo @qux {
+           bar: Bar @qux
         }
 
         type Foo {
-            foo: Foo
+            foo: Foo @d
         }
 
         type Bar {
@@ -61,8 +61,10 @@ fn test_definitions() {
         }
 
         extend type Bar {
-            i: Int!
+            i: Int! @qux
         }
+
+        directive @qux on FIELD_DEFINITION | OBJECT
     "#;
 
     let bar = vfs.intern("bar");
@@ -71,7 +73,7 @@ fn test_definitions() {
             baz: Baz
         }
 
-        type Baz {
+        type Baz @foo {
             foo: Foo
         }
 
@@ -89,6 +91,7 @@ fn test_definitions() {
         hashmap! {
             Name::new("Foo") => smallvec![idx!(0), idx!(1)],
             Name::new("Bar") => smallvec![idx!(2), idx!(3)],
+            Name::new("qux") => smallvec![idx!(4)],
         }
     );
 
@@ -115,13 +118,13 @@ fn test_definitions() {
     expect![[r#"
         Items {
             items: Arena {
-                len: 4,
+                len: 5,
                 data: [
                     Item {
                         name: Foo,
                         range: Range {
                             start_byte: 9,
-                            end_byte: 49,
+                            end_byte: 59,
                             start_point: Point {
                                 row: 1,
                                 column: 8,
@@ -138,8 +141,8 @@ fn test_definitions() {
                     Item {
                         name: Foo,
                         range: Range {
-                            start_byte: 59,
-                            end_byte: 100,
+                            start_byte: 69,
+                            end_byte: 113,
                             start_point: Point {
                                 row: 5,
                                 column: 8,
@@ -156,8 +159,8 @@ fn test_definitions() {
                     Item {
                         name: Bar,
                         range: Range {
-                            start_byte: 110,
-                            end_byte: 151,
+                            start_byte: 123,
+                            end_byte: 164,
                             start_point: Point {
                                 row: 9,
                                 column: 8,
@@ -174,8 +177,8 @@ fn test_definitions() {
                     Item {
                         name: Bar,
                         range: Range {
-                            start_byte: 161,
-                            end_byte: 208,
+                            start_byte: 174,
+                            end_byte: 226,
                             start_point: Point {
                                 row: 13,
                                 column: 8,
@@ -189,24 +192,56 @@ fn test_definitions() {
                             Idx::<TypeExtension>(0),
                         ),
                     },
+                    Item {
+                        name: qux,
+                        range: Range {
+                            start_byte: 236,
+                            end_byte: 279,
+                            start_point: Point {
+                                row: 17,
+                                column: 8,
+                            },
+                            end_point: Point {
+                                row: 17,
+                                column: 51,
+                            },
+                        },
+                        kind: DirectiveDefinition(
+                            Idx::<DirectiveDefinition>(0),
+                        ),
+                    },
                 ],
             },
             types: Arena {
                 len: 3,
                 data: [
-                    TypeDefinition,
-                    TypeDefinition,
-                    TypeDefinition,
+                    TypeDefinition {
+                        directives: [
+                            Directive {
+                                name: qux,
+                            },
+                        ],
+                    },
+                    TypeDefinition {
+                        directives: [],
+                    },
+                    TypeDefinition {
+                        directives: [],
+                    },
                 ],
             },
             directives: Arena {
-                len: 0,
-                data: [],
+                len: 1,
+                data: [
+                    DirectiveDefinition,
+                ],
             },
             type_exts: Arena {
                 len: 1,
                 data: [
-                    TypeExtension,
+                    TypeExtension {
+                        directives: [],
+                    },
                 ],
             },
         }
@@ -241,7 +276,7 @@ fn test_definitions() {
                         name: Baz,
                         range: Range {
                             start_byte: 60,
-                            end_byte: 101,
+                            end_byte: 106,
                             start_point: Point {
                                 row: 5,
                                 column: 8,
@@ -258,8 +293,8 @@ fn test_definitions() {
                     Item {
                         name: d,
                         range: Range {
-                            start_byte: 111,
-                            end_byte: 132,
+                            start_byte: 116,
+                            end_byte: 137,
                             start_point: Point {
                                 row: 9,
                                 column: 8,
@@ -278,8 +313,16 @@ fn test_definitions() {
             types: Arena {
                 len: 2,
                 data: [
-                    TypeDefinition,
-                    TypeDefinition,
+                    TypeDefinition {
+                        directives: [],
+                    },
+                    TypeDefinition {
+                        directives: [
+                            Directive {
+                                name: foo,
+                            },
+                        ],
+                    },
                 ],
             },
             directives: Arena {

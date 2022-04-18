@@ -86,7 +86,8 @@ fn resolve(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Res> {
     let parent = node.parent()?;
     match parent.kind() {
         NodeKind::FIELD_DEFINITION => todo!(),
-        NodeKind::OBJECT_TYPE_DEFINITION
+        NodeKind::DIRECTIVE_DEFINITION
+        | NodeKind::OBJECT_TYPE_DEFINITION
         | NodeKind::OBJECT_TYPE_EXTENSION
         | NodeKind::SCALAR_TYPE_DEFINITION
         | NodeKind::INTERFACE_TYPE_DEFINITION => {
@@ -120,21 +121,24 @@ fn resolve_item(db: &dyn DefDatabase, file: FileId, name: Name) -> ItemResolutio
 
 fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
     let mut references = vec![];
-    let name = db.item(res).name;
+    let res_item = db.item(res);
+    let name = res_item.name;
     for project in db.projects_of(res.file) {
         for &file in db.project_files(project).iter() {
-            for (idx, _) in db.items(file).items.iter() {
+            for (idx, _item) in db.items(file).items.iter() {
                 let body = db.item_body(ItemRes { file, idx });
                 let fields = match body.as_deref().and_then(|b| b.fields()) {
                     Some(fields) => fields,
                     None => continue,
                 };
-
-                fields
-                    .iter()
-                    .map(|(_, field)| field)
-                    .filter(|field| field.ty.name() == name)
-                    .for_each(|field| references.push((file, field.ty.range)))
+                match res_item.kind {
+                    ItemKind::TypeDefinition(_) | ItemKind::TypeExtension(_) => fields
+                        .iter()
+                        .map(|(_, field)| field)
+                        .filter(|field| field.ty.name() == name)
+                        .for_each(|field| references.push((file, field.ty.range))),
+                    ItemKind::DirectiveDefinition(_) => todo!(),
+                }
             }
         }
     }
@@ -187,7 +191,8 @@ impl LowerCtxt {
                         unreachable!("invalid node kind for type definition: {:?}", typedef.kind()),
                 };
                 let name = Name::new(name_node.text(&self.text));
-                (name, ItemKind::TypeDefinition(self.types.alloc(TypeDefinition {})))
+                let directives = self.lower_directives_of(typedef);
+                (name, ItemKind::TypeDefinition(self.types.alloc(TypeDefinition { directives })))
             }
             NodeKind::TYPE_EXTENSION => {
                 let type_ext = def.sole_named_child();
@@ -196,7 +201,8 @@ impl LowerCtxt {
                     _ => return None,
                 };
                 let name = Name::new(name_node.text(&self.text));
-                (name, ItemKind::TypeExtension(self.type_exts.alloc(TypeExtension {})))
+                let directives = self.lower_directives_of(type_ext);
+                (name, ItemKind::TypeExtension(self.type_exts.alloc(TypeExtension { directives })))
             }
             NodeKind::DIRECTIVE_DEFINITION => {
                 let name = Name::new(def.name_node()?.text(&self.text));
@@ -206,5 +212,25 @@ impl LowerCtxt {
             _ => return None,
         };
         Some(Item { range: def.range(), name, kind })
+    }
+
+    fn lower_directives_of(&mut self, node: Node<'_>) -> Directives {
+        node.child_of_kind(NodeKind::DIRECTIVES)
+            .map(|node| self.lower_directives(node))
+            .unwrap_or_default()
+    }
+
+    fn lower_directives(&mut self, node: Node<'_>) -> Directives {
+        assert_eq!(node.kind(), NodeKind::DIRECTIVES);
+        node.children_of_kind(&mut node.walk(), NodeKind::DIRECTIVE)
+            .filter_map(|node| self.lower_directive(node))
+            .collect()
+    }
+
+    fn lower_directive(&mut self, node: Node<'_>) -> Option<Directive> {
+        assert_eq!(node.kind(), NodeKind::DIRECTIVE);
+        // TODO arguments
+        let name = Name::new(node.name_node()?.text(&self.text));
+        Some(Directive { name })
     }
 }

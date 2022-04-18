@@ -54,40 +54,40 @@ fn test_find_references() {
     test(fixture);
 }
 
-// #[test]
-// fn test_find_directive_references() {
-//     let fixture = fixture! {
-//         "foo" => r#"
-//             directive @foo on FIELD_DEFINITION
-//                       #^^^
+#[test]
+fn test_find_directive_references() {
+    let fixture = fixture! {
+        "foo" => r#"
+            directive @foo on FIELD_DEFINITION
+                      #^^^
 
-//             type Foo {
-//                 bar: Bar @foo
-//                          #...
-//             }
+            type Foo {
+                bar: Bar @foo
+                         #...
+            }
 
-//             type Bar {
-//                 foo: Foo @qux
-//                          #...
-//             }
+            type Bar {
+                foo: Foo @qux
+                         #...
+            }
 
-//             interface Interface {
-//                 foo: Foo @qux
-//                          #...
-//             }
+            interface Interface {
+                foo: Foo @qux
+                         #...
+            }
 
-//             input Input {
-//                 foo: Foo @qux
-//                          #...
-//             }
-//             "#
+            input Input {
+                foo: Foo @qux
+                         #...
+            }
+            "#
 
-//         "baz" => r#"
-//             type Baz {
-//                 foo: Foo
-//                    # ...
-//             }
-//             "#
-//     };
-//     test(fixture);
-// }
+        "baz" => r#"
+            type Baz {
+                foo: Foo
+                   # ...
+            }
+            "#
+    };
+    test(fixture);
+}

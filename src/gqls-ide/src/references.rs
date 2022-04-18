@@ -1,5 +1,4 @@
 use gqls_db::DefDatabase;
-use gqls_ir::Res;
 use tree_sitter::Point;
 use vfs::FileId;
 
