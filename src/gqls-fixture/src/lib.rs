@@ -76,7 +76,7 @@ impl Fixture {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 /// A fixture file supports three forms of annotations:
-/// - points (`^`)
+/// - points (`^`) (if ^ points to a range, then it is shifted a further one up)
 /// - inline ranges (`...`)
 /// - delimited ranges `(delimited above by `{` and below by `}` )`
 ///   This ranges from the start of the following line of `{` to the end of the the preceding line of `}`
@@ -122,7 +122,11 @@ impl FixtureFile {
                     if row == 0 {
                         panic!("cannot contain `^` in the first line");
                     }
-                    points.push(Point { row: row - 1, column });
+                    let mut point = Point { row: row - 2, column };
+                    if !ranges.iter().any(|range| range.contains(&point)) {
+                        point.row += 1;
+                    }
+                    points.push(point);
                 }
             }
 

@@ -36,8 +36,15 @@ scalar Foo
 #      ^^^
  scalar Bar
 #...... ...
+#^^
     "#,
-        vec![Point { row: 1, column: 7 }, Point { row: 1, column: 8 }, Point { row: 1, column: 9 }],
+        vec![
+            Point { row: 1, column: 7 },
+            Point { row: 1, column: 8 },
+            Point { row: 1, column: 9 },
+            Point { row: 3, column: 1 },
+            Point { row: 3, column: 2 },
+        ],
         vec![
             Point { row: 3, column: 1 }..Point { row: 3, column: 7 },
             Point { row: 3, column: 8 }..Point { row: 3, column: 11 },

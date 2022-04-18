@@ -8,13 +8,14 @@ fn test(fixture: Fixture) {
     let mut ide = Ide::default();
     ide.setup_fixture(&fixture);
 
+    let expected = fixture
+        .all_ranges()
+        .map(|(file, range)| Location::new(file, range.into()))
+        .collect::<HashSet<Location>>();
+
     for (reference_file, at) in fixture.all_points() {
         let analysis = ide.analysis();
         let references = analysis.find_references(reference_file, at);
-        let expected = fixture
-            .all_ranges()
-            .map(|(file, range)| Location::new(file, range.into()))
-            .collect::<HashSet<Location>>();
         let actual = references.into_iter().collect::<HashSet<Location>>();
 
         assert_eq!(expected, actual);
@@ -24,8 +25,6 @@ fn test(fixture: Fixture) {
 #[test]
 fn test_find_references_to_object_like_type() {
     let foo = r#"
-        # TODO find references in unions
-
         extend type Foo {
                    #^^^
             bar: Bar
@@ -66,6 +65,23 @@ fn test_find_references_to_object_like_type() {
         };
         test(fixture);
     }
+}
+
+#[test]
+fn test_find_references_when_cursor_on_reference() {
+    let fixture = fixture! {
+        "foo" => "
+            # TODO the definition site be included in references probably
+            scalar Scalar
+
+            type Foo {
+                s: Scalar
+                 # ......
+                 # ^^^^^^
+            }
+        "
+    };
+    test(fixture);
 }
 
 #[test]
