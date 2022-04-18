@@ -10,6 +10,7 @@ use std::collections::HashMap;
 pub use self::body::*;
 pub use self::ty::*;
 pub use db::{DefDatabase, DefDatabaseStorage};
+use la_arena::IdxRange;
 pub use la_arena::{Arena, Idx, RawIdx};
 
 use gqls_parse::Range;
@@ -114,6 +115,23 @@ pub struct ItemRes {
 pub struct FieldRes {
     pub item: ItemRes,
     pub idx: Idx<Field>,
+}
+
+trait ArenaExt {
+    type Item;
+    fn as_slice(&self) -> &[Self::Item];
+}
+
+impl<T> ArenaExt for Arena<T> {
+    type Item = T;
+
+    // An abuse of the api to obtain a full slice of the arena
+    fn as_slice(&self) -> &[Self::Item] {
+        fn make<T>(i: u32) -> Idx<T> {
+            Idx::from_raw(RawIdx::from(i))
+        }
+        &self[IdxRange::new(make(0)..make(self.len() as u32))]
+    }
 }
 
 #[cfg(test)]

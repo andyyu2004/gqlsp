@@ -72,6 +72,19 @@ fn test_find_directive_references() {
 
             # TODO scalar enum union
 
+            scalar S @qux
+                    #....
+
+            union U @qux = Foo | Bar
+                   #....
+
+            enum E @qux {
+                  #....
+                FOO
+                    # TODO enum value directives
+                BAR
+            }
+
 
             type Foo @qux {
                     #....

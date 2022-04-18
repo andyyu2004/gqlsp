@@ -1,7 +1,7 @@
 use gqls_parse::Range;
 use la_arena::{Arena, ArenaMap, Idx};
 
-use crate::{Directives, Name, Ty};
+use crate::{ArenaExt, Directives, Name, Ty};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemBody {
@@ -14,13 +14,18 @@ pub enum ItemBody {
 
 impl ItemBody {
     pub fn fields(&self) -> Option<&Arena<Field>> {
-        match self {
-            ItemBody::ObjectTypeDefinition(typedef) => Some(&typedef.fields.fields),
-            ItemBody::ObjectTypeExtension(type_ext) => Some(&type_ext.fields.fields),
-            ItemBody::InputObjectTypeDefinition(typedef) => Some(&typedef.fields.fields),
-            ItemBody::InterfaceDefinition(iface) => Some(&iface.fields.fields),
-            ItemBody::Todo => None,
-        }
+        let fields = match self {
+            ItemBody::ObjectTypeDefinition(typedef) => &typedef.fields.fields,
+            ItemBody::ObjectTypeExtension(type_ext) => &type_ext.fields.fields,
+            ItemBody::InputObjectTypeDefinition(typedef) => &typedef.fields.fields,
+            ItemBody::InterfaceDefinition(iface) => &iface.fields.fields,
+            ItemBody::Todo => return None,
+        };
+        Some(fields)
+    }
+
+    pub fn fields_slice(&self) -> Option<&[Field]> {
+        self.fields().map(Arena::as_slice)
     }
 }
 
