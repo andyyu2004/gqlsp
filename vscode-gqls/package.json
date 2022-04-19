@@ -3,8 +3,12 @@
   "displayName": "Gqls",
   "description": "",
   "version": "0.0.1",
+  "repository": {
+    "url": "https://github.com/andyyu2004/gqls",
+    "type": "git"
+  },
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.66.0"
   },
   "categories": [
     "Other"
