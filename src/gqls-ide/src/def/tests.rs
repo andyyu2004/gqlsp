@@ -25,27 +25,25 @@ fn test(fixture: Fixture) {
 fn test_goto_definition_cross_file() {
     let fixture = fixture!(
         "foo" => "
-#{
 type Foo {
+    #...
     bar: Bar
 }
-#}
 "
         "baz" => "
-#{
 extend type Foo {
+           #...
     i: Int!
 }
-#}
 
 type Bar {
     foo: Foo
-         #^
+        #^^^
 }
 
 type Baz {
     foo: Foo
-         #^
+        #^^^
 }
             "
     );
@@ -88,7 +86,7 @@ type Bar {
 
     assert!(analysis.goto_definition(foo, point!(0:0)).is_empty());
     assert_eq!(
+        vec![Location { file: foo, range: range!(1:5..1:8) }],
         analysis.goto_definition(foo, point!(1:6)),
-        vec![Location { file: foo, range: range!(1:0..3:1) }]
     );
 }
