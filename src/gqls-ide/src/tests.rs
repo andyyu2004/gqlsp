@@ -94,12 +94,4 @@ fn test_ide_syntax_diagnostics() {
             Diagnostic::syntax(range!(0:0..0:3))
         }
     );
-
-    let summary = apply_changeset!(ide: foo:0:0..0:3 => "type Empty {}");
-    assert_eq!(
-        summary[foo].diagnostics,
-        hashset! {
-            Diagnostic::syntax(range!(0:0..0:13))
-        }
-    );
 }

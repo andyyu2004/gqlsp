@@ -8,6 +8,16 @@ fn test(s: &str, expect: Expect) {
 }
 
 #[test]
+fn test_parse_empty_type() {
+    test(
+        "type Foo {}",
+        expect![[
+            r#"(document (item (type_definition (object_type_definition (name) (fields_definition)))))"#
+        ]],
+    );
+}
+
+#[test]
 fn test_parse_union() {
     test(
         "union U = X | Y | Z",

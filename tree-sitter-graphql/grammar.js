@@ -131,7 +131,8 @@ module.exports = grammar({
         seq($.implements_interfaces, "&", $.named_type),
         seq("implements", optional("&"), $.named_type)
       ),
-    fields_definition: ($) => seq("{", repeat1($.field_definition), "}"),
+    // allow empty fields to be syntactically valid to avoid bad error messages
+    fields_definition: ($) => seq("{", repeat($.field_definition), "}"),
     field_definition: ($) =>
       seq(
         optional($.description),
