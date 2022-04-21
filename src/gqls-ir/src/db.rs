@@ -67,7 +67,7 @@ fn name_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Name> {
     let data = db.file_data(file);
     let root = data.tree.root_node();
     let node = root.named_node_at(at)?;
-    (node.kind() == NodeKind::NAME).then(|| Name::new(node.text(&data.text)))
+    (node.kind() == NodeKind::NAME).then(|| Name::new(&data.text, node))
 }
 
 fn resolve(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Res> {

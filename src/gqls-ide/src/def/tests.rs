@@ -74,15 +74,15 @@ type Bar {
 
     assert!(analysis.name_at(foo, point!(1:0)).is_none());
     for j in 5..8 {
-        assert_eq!(analysis.name_at(foo, point!(1: j)), Some(Name::new("Foo")));
-        assert_eq!(analysis.name_at(foo, point!(1: j)), Some(Name::new("Foo")));
-        assert_eq!(analysis.name_at(foo, point!(1: j)), Some(Name::new("Foo")));
+        assert_eq!(analysis.name_at(foo, point!(1: j)), Some(Name::unranged("Foo")));
+        assert_eq!(analysis.name_at(foo, point!(1: j)), Some(Name::unranged("Foo")));
+        assert_eq!(analysis.name_at(foo, point!(1: j)), Some(Name::unranged("Foo")));
     }
     assert!(analysis.name_at(foo, point!(1:8)).is_none());
 
     assert!(analysis.name_at(foo, point!(2:8)).is_none());
     for j in 9..12 {
-        assert_eq!(analysis.name_at(foo, point!(2: j)), Some(Name::new("Bar")));
+        assert_eq!(analysis.name_at(foo, point!(2: j)), Some(Name::unranged("Bar")));
     }
     assert!(analysis.name_at(foo, point!(2:12)).is_none());
 

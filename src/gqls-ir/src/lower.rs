@@ -143,7 +143,7 @@ impl BodyCtxt {
 
     fn lower_named_type(&mut self, node: Node<'_>) -> Option<Ty> {
         assert_eq!(node.kind(), NodeKind::NAMED_TYPE);
-        let kind = TyKind::Named(Name::new(node.text(&self.text)));
+        let kind = TyKind::Named(Name::new(self, node));
         Some(Box::new(Type { range: node.range(), kind }))
     }
 
@@ -201,7 +201,7 @@ impl ItemCtxt {
                     _ =>
                         unreachable!("invalid node kind for type definition: {:?}", typedef.kind()),
                 };
-                let name = Name::new(name_node.text(&self.text));
+                let name = Name::new(self, name_node);
                 let directives = self.lower_directives_of(typedef);
                 (name, ItemKind::TypeDefinition(self.types.alloc(TypeDefinition { directives })))
             }
@@ -211,12 +211,12 @@ impl ItemCtxt {
                     NodeKind::OBJECT_TYPE_EXTENSION => type_ext.name_node()?,
                     _ => return None,
                 };
-                let name = Name::new(name_node.text(&self.text));
+                let name = Name::new(self, name_node);
                 let directives = self.lower_directives_of(type_ext);
                 (name, ItemKind::TypeExtension(self.type_exts.alloc(TypeExtension { directives })))
             }
             NodeKind::DIRECTIVE_DEFINITION => {
-                let name = Name::new(def.name_node()?.text(&self.text));
+                let name = Name::new(self, def.name_node()?);
                 (name, ItemKind::DirectiveDefinition(self.directives.alloc(DirectiveDefinition {})))
             }
             // TODO
@@ -226,11 +226,9 @@ impl ItemCtxt {
     }
 }
 
-trait LowerCtxt {
-    fn text(&self) -> &str;
-
+trait LowerCtxt: HasText {
     fn name_of(&mut self, node: Node<'_>) -> Option<Name> {
-        node.name_node().map(|node| Name::new(node.text(self.text())))
+        node.name_node().map(|node| Name::new(self, node))
     }
 
     fn lower_directives_of(&mut self, node: Node<'_>) -> Directives {
@@ -249,18 +247,21 @@ trait LowerCtxt {
     fn lower_directive(&mut self, node: Node<'_>) -> Option<Directive> {
         assert_eq!(node.kind(), NodeKind::DIRECTIVE);
         // TODO arguments
-        let name = Name::new(node.name_node()?.text(self.text()));
+        let name = Name::new(self, node.name_node()?);
         Some(Directive { range: node.range(), name })
     }
 }
 
-impl LowerCtxt for ItemCtxt {
+impl<C: HasText> LowerCtxt for C {
+}
+
+impl HasText for ItemCtxt {
     fn text(&self) -> &str {
         &self.text
     }
 }
 
-impl LowerCtxt for BodyCtxt {
+impl HasText for BodyCtxt {
     fn text(&self) -> &str {
         &self.text
     }

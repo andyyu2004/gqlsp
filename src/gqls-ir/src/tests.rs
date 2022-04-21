@@ -101,23 +101,23 @@ fn test_definitions() {
     assert_eq!(
         *item_map,
         hashmap! {
-            Name::new("Foo") => smallvec![idx!(0), idx!(1)],
-            Name::new("Bar") => smallvec![idx!(2), idx!(3)],
-            Name::new("qux") => smallvec![idx!(4)],
-            Name::new("S") => smallvec![idx!(5)],
-            Name::new("U") => smallvec![idx!(6)],
-            Name::new("I") => smallvec![idx!(7)],
-            Name::new("Iface") => smallvec![idx!(8)],
+            Name::unranged("Foo") => smallvec![idx!(0), idx!(1)],
+            Name::unranged("Bar") => smallvec![idx!(2), idx!(3)],
+            Name::unranged("qux") => smallvec![idx!(4)],
+            Name::unranged("S") => smallvec![idx!(5)],
+            Name::unranged("U") => smallvec![idx!(6)],
+            Name::unranged("I") => smallvec![idx!(7)],
+            Name::unranged("Iface") => smallvec![idx!(8)],
         }
     );
 
-    let resolutions = db.resolve_item(bar, Name::new("Foo"));
+    let resolutions = db.resolve_item(bar, Name::unranged("Foo"));
     assert_eq!(
         resolutions.as_slice(),
         [ItemRes { file: foo, idx: idx!(0) }, ItemRes { file: foo, idx: idx!(1) }]
     );
 
-    let resolutions = db.resolve_item(foo, Name::new("Bar"));
+    let resolutions = db.resolve_item(foo, Name::unranged("Bar"));
     assert_eq!(
         resolutions.into_iter().collect::<HashSet<_>>(),
         hashset! {
@@ -127,7 +127,7 @@ fn test_definitions() {
         }
     );
 
-    let resolutions = db.resolve_item(bar, Name::new("d"));
+    let resolutions = db.resolve_item(bar, Name::unranged("d"));
     assert_eq!(resolutions.as_slice(), [ItemRes { file: Path::new("bar"), idx: idx!(2) },]);
 
     let items = db.items(foo);

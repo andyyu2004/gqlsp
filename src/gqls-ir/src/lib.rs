@@ -5,18 +5,19 @@ mod db;
 mod lower;
 mod ty;
 
-use std::collections::HashMap;
-
 pub use self::body::*;
 pub use self::ty::*;
 pub use db::{DefDatabase, DefDatabaseStorage};
-use la_arena::IdxRange;
 pub use la_arena::{Arena, Idx, RawIdx};
 
-use gqls_parse::Range;
+use gqls_parse::{Node, NodeExt, Range};
+use la_arena::IdxRange;
 use smallvec::SmallVec;
 use smol_str::SmolStr;
+use std::collections::HashMap;
 use std::fmt::{self, Debug, Display};
+use std::hash::{Hash, Hasher};
+use std::sync::Arc;
 use vfs::FileId;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -72,8 +73,23 @@ pub struct TypeExtension {
     directives: Directives,
 }
 
-#[derive(Clone, Hash, PartialEq, Eq)]
-pub struct Name(SmolStr);
+#[derive(Clone, Eq)]
+pub struct Name {
+    pub range: Range,
+    name: SmolStr,
+}
+
+impl PartialEq for Name {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+impl Hash for Name {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+    }
+}
 
 impl Debug for Name {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -83,13 +99,43 @@ impl Debug for Name {
 
 impl Display for Name {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.0, f)
+        fmt::Display::fmt(&self.name, f)
     }
 }
 
 impl Name {
-    pub fn new(s: &str) -> Self {
-        Self(SmolStr::new(s))
+    pub fn new(t: &(impl HasText + ?Sized), node: Node<'_>) -> Self {
+        Self { name: SmolStr::new(node.text(t.text())), range: node.range() }
+    }
+
+    pub fn unranged(s: &str) -> Self {
+        use gqls_parse::Point;
+
+        Self {
+            name: SmolStr::new(s),
+            range: Range {
+                start_byte: 0,
+                end_byte: 0,
+                start_point: Point::new(0, 0),
+                end_point: Point::new(0, 0),
+            },
+        }
+    }
+}
+
+pub trait HasText {
+    fn text(&self) -> &str;
+}
+
+impl HasText for Arc<str> {
+    fn text(&self) -> &str {
+        self
+    }
+}
+
+impl HasText for str {
+    fn text(&self) -> &str {
+        self
     }
 }
 

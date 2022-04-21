@@ -49,7 +49,7 @@ impl Debug for Type {
 impl Debug for TyKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
-            TyKind::Named(name) => write!(f, "{}", name.0),
+            TyKind::Named(name) => write!(f, "{}", name.name),
             TyKind::NonNull(ty) => write!(f, "{ty:?}!"),
             TyKind::List(ty) => write!(f, "[{ty:?}]"),
         }
