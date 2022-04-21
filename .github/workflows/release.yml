@@ -38,7 +38,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           bin: gqls
-          tar: unix
-          zip: windows
+          tar: all
+          zip: all
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
