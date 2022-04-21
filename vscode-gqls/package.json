@@ -1,8 +1,8 @@
 {
   "name": "gqls",
-  "displayName": "Gqls",
+  "displayName": "gqls",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "andyyu2004",
   "repository": {
     "url": "https://github.com/andyyu2004/gqls",
