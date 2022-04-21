@@ -4,6 +4,7 @@ import { Config } from "./config";
 import * as tar from "tar-fs";
 import { dirname, join } from "path";
 import { createGunzip } from "zlib";
+import assert = require("assert");
 
 const GQLS_VERSION = "v0.0.1";
 
@@ -44,6 +45,11 @@ async function serverPath(
 
   await downloadServer(path);
 
+  assert(
+    await exists(path),
+    "failed to download gqls (file was not where it was expected)"
+  );
+
   return path.fsPath;
 }
 
@@ -81,7 +87,7 @@ async function downloadServer(path: vscode.Uri) {
     stream.on("error", reject);
   });
 
-  vscode.workspace.fs.rename(vscode.Uri.file(join(bindir, "gqls")), path);
+  await vscode.workspace.fs.rename(vscode.Uri.file(join(bindir, "gqls")), path);
 }
 
 function distName() {
