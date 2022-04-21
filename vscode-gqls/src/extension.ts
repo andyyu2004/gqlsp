@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 import { workspace } from "vscode";
 import * as lc from "vscode-languageclient/node";
+import { bootstrap } from "./bootstrap";
+import { makeConfig } from "./config";
 
 interface LspContext {
   client: lc.LanguageClient;
@@ -8,7 +10,7 @@ interface LspContext {
 }
 let lcx: LspContext | undefined;
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("gqls.restart-server", async () => {
       await vscode.window.showInformationMessage("Restarting gqls...");
@@ -17,11 +19,19 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions.pop()!.dispose();
       }
 
-      activate(context);
+      await activateInner(context);
     })
   );
 
-  const opt: lc.Executable = { command: "gqls" };
+  await activateInner(context);
+}
+
+async function activateInner(context: vscode.ExtensionContext) {
+  const config = makeConfig();
+  const serverPath = await bootstrap(context, config);
+  console.log("running gqls server at", serverPath);
+
+  const opt: lc.Executable = { command: serverPath };
   const serverOptions: lc.ServerOptions = {
     run: opt,
     debug: opt,
