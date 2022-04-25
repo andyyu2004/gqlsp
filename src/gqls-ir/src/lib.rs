@@ -14,7 +14,7 @@ use gqls_parse::{Node, NodeExt, Range};
 use la_arena::IdxRange;
 use smallvec::SmallVec;
 use smol_str::SmolStr;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Debug, Display};
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
@@ -35,6 +35,17 @@ impl Items {
             ItemKind::TypeExtension(type_ext) => Some(&self.type_exts[type_ext].directives),
             ItemKind::DirectiveDefinition(_) => None,
         }
+    }
+
+    pub fn implements(&self, idx: Idx<Item>, interface: &Name) -> bool {
+        match self.items[idx].kind {
+            ItemKind::TypeDefinition(typedef) => &self.types[typedef].implementations,
+            ItemKind::TypeExtension(type_ext) => &self.type_exts[type_ext].implementations,
+            ItemKind::DirectiveDefinition(_) => return false,
+        }
+        .as_ref()
+        .map(|implements| implements.contains(interface))
+        .unwrap_or_default()
     }
 }
 
@@ -60,7 +71,7 @@ pub enum ItemKind {
     DirectiveDefinition(Idx<DirectiveDefinition>),
 }
 
-pub type Implementations = Vec<Ty>;
+pub type Implementations = HashSet<Name>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeDefinition {

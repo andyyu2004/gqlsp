@@ -237,7 +237,7 @@ impl ItemCtxt {
         Some(
             implementations
                 .children_of_kind(cursor, NodeKind::NAMED_TYPE)
-                .map(|node| self.lower_named_type(node))
+                .map(|node| self.lower_named_type(node).name())
                 .collect(),
         )
     }

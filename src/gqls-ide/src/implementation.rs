@@ -5,8 +5,16 @@ use vfs::FileId;
 use crate::{Analysis, Location};
 
 impl Analysis {
-    pub fn implementations(&self, file: FileId, at: Point) -> Vec<Location> {
-        todo!()
+    pub fn goto_implementation(&self, file: FileId, at: Point) -> Vec<Location> {
+        let name = match self.name_at(file, at) {
+            Some(name) => name,
+            None => return vec![],
+        };
+        self.implementations(file, name)
+            .into_iter()
+            .map(|res| self.item(res))
+            .map(|item| Location::new(file, item.name.range.into()))
+            .collect()
     }
 }
 

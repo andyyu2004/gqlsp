@@ -425,9 +425,9 @@ fn test_definitions() {
                     TypeExtension {
                         directives: [],
                         implementations: Some(
-                            [
+                            {
                                 Iface,
-                            ],
+                            },
                         ),
                     },
                 ],

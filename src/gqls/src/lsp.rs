@@ -206,7 +206,7 @@ impl LanguageServer for Gqls {
         self.with_ide(|ide| {
             let path = ide.path(&position.text_document.uri)?;
             let analysis = ide.analysis();
-            let locations = analysis.implementations(path, position.position.convert());
+            let locations = analysis.goto_implementation(path, position.position.convert());
             Ok(convert::locations_to_goto_definition_response(&locations))
         })
     }

@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::vec;
 
 use gqls_base_db::SourceDatabase;
 use gqls_parse::{NodeExt, NodeKind, Point, RangeExt};
@@ -10,17 +11,33 @@ use crate::*;
 
 #[salsa::query_group(DefDatabaseStorage)]
 pub trait DefDatabase: SourceDatabase {
-    fn items(&self, file: FileId) -> Arc<Items>;
+    fn field(&self, res: FieldRes) -> Field;
+    fn implementations(&self, file: FileId, name: Name) -> Vec<ItemRes>;
     fn item(&self, res: ItemRes) -> Item;
     fn item_at(&self, file: FileId, at: Point) -> Option<Idx<Item>>;
-    fn item_map(&self, file: FileId) -> Arc<ItemMap>;
     fn item_body(&self, res: ItemRes) -> Option<Arc<ItemBody>>;
-    fn name_at(&self, file: FileId, at: Point) -> Option<Name>;
-    fn field(&self, res: FieldRes) -> Field;
-    fn references(&self, res: Res) -> References;
+    fn item_map(&self, file: FileId) -> Arc<ItemMap>;
     fn item_references(&self, res: ItemRes) -> References;
+    fn items(&self, file: FileId) -> Arc<Items>;
+    fn name_at(&self, file: FileId, at: Point) -> Option<Name>;
+    fn references(&self, res: Res) -> References;
     fn resolve(&self, file: FileId, at: Point) -> Option<Res>;
     fn resolve_item(&self, file: FileId, name: Name) -> ItemResolutions;
+}
+
+fn implementations(db: &dyn DefDatabase, file: FileId, interface: Name) -> Vec<ItemRes> {
+    let mut implementations = vec![];
+    for project in db.projects_of(file) {
+        for &file in db.project_files(project).iter() {
+            let items = db.items(file);
+            for (idx, _) in items.items.iter() {
+                if items.implements(idx, &interface) {
+                    implementations.push(ItemRes { file, idx });
+                }
+            }
+        }
+    }
+    implementations
 }
 
 fn items(db: &dyn DefDatabase, file: FileId) -> Arc<Items> {
