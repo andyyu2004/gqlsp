@@ -60,9 +60,12 @@ pub enum ItemKind {
     DirectiveDefinition(Idx<DirectiveDefinition>),
 }
 
+pub type Implementations = Vec<Ty>;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeDefinition {
     directives: Directives,
+    implementations: Option<Implementations>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -71,6 +74,7 @@ pub struct DirectiveDefinition {}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeExtension {
     directives: Directives,
+    implementations: Option<Implementations>,
 }
 
 #[derive(Clone, Eq)]

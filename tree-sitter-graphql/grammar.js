@@ -127,6 +127,8 @@ module.exports = grammar({
     enum_value_definition: ($) =>
       seq(optional($.description), $.enum_value, optional($.directives)),
     implements_interfaces: ($) =>
+      seq("implements", optional("&"), sepBy1($.named_type, "&")),
+    implements_interfaces: ($) =>
       choice(
         seq($.implements_interfaces, "&", $.named_type),
         seq("implements", optional("&"), $.named_type)

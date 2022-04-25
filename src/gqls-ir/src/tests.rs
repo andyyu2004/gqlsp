@@ -60,7 +60,7 @@ fn test_definitions() {
             foo: Foo
         }
 
-        extend type Bar {
+        extend type Bar implements Iface {
             i: Int! @qux
         }
 
@@ -194,7 +194,7 @@ fn test_definitions() {
                         name: Bar,
                         range: Range {
                             start_byte: 174,
-                            end_byte: 226,
+                            end_byte: 243,
                             start_point: Point {
                                 row: 13,
                                 column: 8,
@@ -211,8 +211,8 @@ fn test_definitions() {
                     Item {
                         name: qux,
                         range: Range {
-                            start_byte: 236,
-                            end_byte: 279,
+                            start_byte: 253,
+                            end_byte: 296,
                             start_point: Point {
                                 row: 17,
                                 column: 8,
@@ -229,8 +229,8 @@ fn test_definitions() {
                     Item {
                         name: S,
                         range: Range {
-                            start_byte: 289,
-                            end_byte: 302,
+                            start_byte: 306,
+                            end_byte: 319,
                             start_point: Point {
                                 row: 19,
                                 column: 8,
@@ -247,8 +247,8 @@ fn test_definitions() {
                     Item {
                         name: U,
                         range: Range {
-                            start_byte: 312,
-                            end_byte: 336,
+                            start_byte: 329,
+                            end_byte: 353,
                             start_point: Point {
                                 row: 21,
                                 column: 8,
@@ -265,8 +265,8 @@ fn test_definitions() {
                     Item {
                         name: I,
                         range: Range {
-                            start_byte: 346,
-                            end_byte: 396,
+                            start_byte: 363,
+                            end_byte: 413,
                             start_point: Point {
                                 row: 23,
                                 column: 8,
@@ -283,8 +283,8 @@ fn test_definitions() {
                     Item {
                         name: Iface,
                         range: Range {
-                            start_byte: 406,
-                            end_byte: 464,
+                            start_byte: 423,
+                            end_byte: 481,
                             start_point: Point {
                                 row: 27,
                                 column: 8,
@@ -321,19 +321,22 @@ fn test_definitions() {
                                 name: qux,
                             },
                         ],
+                        implementations: None,
                     },
                     TypeDefinition {
                         directives: [],
+                        implementations: None,
                     },
                     TypeDefinition {
                         directives: [],
+                        implementations: None,
                     },
                     TypeDefinition {
                         directives: [
                             Directive {
                                 range: Range {
-                                    start_byte: 298,
-                                    end_byte: 302,
+                                    start_byte: 315,
+                                    end_byte: 319,
                                     start_point: Point {
                                         row: 19,
                                         column: 17,
@@ -346,13 +349,14 @@ fn test_definitions() {
                                 name: qux,
                             },
                         ],
+                        implementations: None,
                     },
                     TypeDefinition {
                         directives: [
                             Directive {
                                 range: Range {
-                                    start_byte: 320,
-                                    end_byte: 324,
+                                    start_byte: 337,
+                                    end_byte: 341,
                                     start_point: Point {
                                         row: 21,
                                         column: 16,
@@ -365,13 +369,14 @@ fn test_definitions() {
                                 name: qux,
                             },
                         ],
+                        implementations: None,
                     },
                     TypeDefinition {
                         directives: [
                             Directive {
                                 range: Range {
-                                    start_byte: 354,
-                                    end_byte: 358,
+                                    start_byte: 371,
+                                    end_byte: 375,
                                     start_point: Point {
                                         row: 23,
                                         column: 16,
@@ -384,13 +389,14 @@ fn test_definitions() {
                                 name: qux,
                             },
                         ],
+                        implementations: None,
                     },
                     TypeDefinition {
                         directives: [
                             Directive {
                                 range: Range {
-                                    start_byte: 422,
-                                    end_byte: 426,
+                                    start_byte: 439,
+                                    end_byte: 443,
                                     start_point: Point {
                                         row: 27,
                                         column: 24,
@@ -403,6 +409,7 @@ fn test_definitions() {
                                 name: qux,
                             },
                         ],
+                        implementations: None,
                     },
                 ],
             },
@@ -417,6 +424,11 @@ fn test_definitions() {
                 data: [
                     TypeExtension {
                         directives: [],
+                        implementations: Some(
+                            [
+                                Iface,
+                            ],
+                        ),
                     },
                 ],
             },
@@ -491,6 +503,7 @@ fn test_definitions() {
                 data: [
                     TypeDefinition {
                         directives: [],
+                        implementations: None,
                     },
                     TypeDefinition {
                         directives: [
@@ -510,6 +523,7 @@ fn test_definitions() {
                                 name: foo,
                             },
                         ],
+                        implementations: None,
                     },
                 ],
             },

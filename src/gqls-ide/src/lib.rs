@@ -2,6 +2,7 @@
 
 mod def;
 mod edit;
+mod implementation;
 mod macros;
 mod references;
 mod resolve;

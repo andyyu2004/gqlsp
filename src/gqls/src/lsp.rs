@@ -36,6 +36,7 @@ pub fn capabilities() -> ServerCapabilities {
         references_provider: Some(OneOf::Left(true)),
         document_symbol_provider: Some(OneOf::Left(true)),
         type_definition_provider: Some(TypeDefinitionProviderCapability::Simple(true)),
+        implementation_provider: Some(ImplementationProviderCapability::Simple(true)),
         workspace: Some(WorkspaceServerCapabilities {
             workspace_folders: Some(WorkspaceFoldersServerCapabilities {
                 supported: Some(true),
@@ -193,6 +194,19 @@ impl LanguageServer for Gqls {
             let path = ide.path(&position.text_document.uri)?;
             let analysis = ide.analysis();
             let locations = analysis.goto_type_definition(path, position.position.convert());
+            Ok(convert::locations_to_goto_definition_response(&locations))
+        })
+    }
+
+    async fn goto_implementation(
+        &self,
+        params: GotoDefinitionParams,
+    ) -> jsonrpc::Result<Option<GotoDefinitionResponse>> {
+        let position = params.text_document_position_params;
+        self.with_ide(|ide| {
+            let path = ide.path(&position.text_document.uri)?;
+            let analysis = ide.analysis();
+            let locations = analysis.implementations(path, position.position.convert());
             Ok(convert::locations_to_goto_definition_response(&locations))
         })
     }

@@ -73,7 +73,7 @@ impl BodyCtxt {
     fn lower_union_member_types(&mut self, node: Node<'_>) -> Vec<Ty> {
         assert_eq!(node.kind(), NodeKind::UNION_MEMBER_TYPES);
         node.children_of_kind(&mut node.walk(), NodeKind::NAMED_TYPE)
-            .filter_map(|node| self.lower_named_type(node))
+            .map(|node| self.lower_named_type(node))
             .collect()
     }
 
@@ -126,12 +126,12 @@ impl BodyCtxt {
         assert_eq!(node.kind(), NodeKind::TYPE);
         let ty = node.sole_named_child();
         let kind = match ty.kind() {
-            NodeKind::NAMED_TYPE => return self.lower_named_type(ty),
+            NodeKind::NAMED_TYPE => return Some(self.lower_named_type(ty)),
             NodeKind::LIST_TYPE => TyKind::List(self.lower_type(ty.sole_named_child())?),
             NodeKind::NON_NULL_TYPE => {
                 let inner = ty.sole_named_child();
                 match inner.kind() {
-                    NodeKind::NAMED_TYPE => TyKind::NonNull(self.lower_named_type(inner)?),
+                    NodeKind::NAMED_TYPE => TyKind::NonNull(self.lower_named_type(inner)),
                     NodeKind::LIST_TYPE => TyKind::NonNull(self.lower_list_type(inner)?),
                     _ => unreachable!(),
                 }
@@ -139,12 +139,6 @@ impl BodyCtxt {
             _ => unreachable!(),
         };
         Some(Box::new(Type { range: ty.range(), kind }))
-    }
-
-    fn lower_named_type(&mut self, node: Node<'_>) -> Option<Ty> {
-        assert_eq!(node.kind(), NodeKind::NAMED_TYPE);
-        let kind = TyKind::Named(Name::new(self, node));
-        Some(Box::new(Type { range: node.range(), kind }))
     }
 
     fn lower_list_type(&mut self, node: Node<'_>) -> Option<Ty> {
@@ -203,7 +197,13 @@ impl ItemCtxt {
                 };
                 let name = Name::new(self, name_node);
                 let directives = self.lower_directives_of(typedef);
-                (name, ItemKind::TypeDefinition(self.types.alloc(TypeDefinition { directives })))
+                let implementations = self.try_lower_implementations_of(typedef);
+                (
+                    name,
+                    ItemKind::TypeDefinition(
+                        self.types.alloc(TypeDefinition { directives, implementations }),
+                    ),
+                )
             }
             NodeKind::TYPE_EXTENSION => {
                 let type_ext = def.sole_named_child();
@@ -213,7 +213,13 @@ impl ItemCtxt {
                 };
                 let name = Name::new(self, name_node);
                 let directives = self.lower_directives_of(type_ext);
-                (name, ItemKind::TypeExtension(self.type_exts.alloc(TypeExtension { directives })))
+                let implementations = self.try_lower_implementations_of(type_ext);
+                (
+                    name,
+                    ItemKind::TypeExtension(
+                        self.type_exts.alloc(TypeExtension { directives, implementations }),
+                    ),
+                )
             }
             NodeKind::DIRECTIVE_DEFINITION => {
                 let name = Name::new(self, def.name_node()?);
@@ -223,6 +229,17 @@ impl ItemCtxt {
             _ => return None,
         };
         Some(Item { range: def.range(), name, kind })
+    }
+
+    fn try_lower_implementations_of(&mut self, node: Node<'_>) -> Option<Implementations> {
+        let implementations = node.child_of_kind(NodeKind::IMPLEMENTS_INTERFACES)?;
+        let cursor = &mut implementations.walk();
+        Some(
+            implementations
+                .children_of_kind(cursor, NodeKind::NAMED_TYPE)
+                .map(|node| self.lower_named_type(node))
+                .collect(),
+        )
     }
 }
 
@@ -249,6 +266,12 @@ trait LowerCtxt: HasText {
         // TODO arguments
         let name = Name::new(self, node.name_node()?);
         Some(Directive { range: node.range(), name })
+    }
+
+    fn lower_named_type(&mut self, node: Node<'_>) -> Ty {
+        assert_eq!(node.kind(), NodeKind::NAMED_TYPE);
+        let kind = TyKind::Named(Name::new(self, node));
+        Box::new(Type { range: node.range(), kind })
     }
 }
 

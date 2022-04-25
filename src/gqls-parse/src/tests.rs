@@ -18,6 +18,30 @@ fn test_parse_empty_type() {
 }
 
 #[test]
+fn test_parse_implements_interface() {
+    test(
+        "type Foo implements Bar {}",
+        expect![[
+            r#"(document (item (type_definition (object_type_definition (name) (implements_interfaces (named_type (name))) (fields_definition)))))"#
+        ]],
+    );
+
+    test(
+        "type Foo implements Bar & Bar {}",
+        expect![[
+            r#"(document (item (type_definition (object_type_definition (name) (implements_interfaces (implements_interfaces (named_type (name))) (named_type (name))) (fields_definition)))))"#
+        ]],
+    );
+
+    test(
+        "type Foo implements & Bar & Bar {}",
+        expect![[
+            r#"(document (item (type_definition (object_type_definition (name) (implements_interfaces (implements_interfaces (named_type (name))) (named_type (name))) (fields_definition)))))"#
+        ]],
+    );
+}
+
+#[test]
 fn test_parse_union() {
     test(
         "union U = X | Y | Z",
