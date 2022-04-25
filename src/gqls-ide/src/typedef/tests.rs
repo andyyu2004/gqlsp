@@ -22,27 +22,25 @@ fn test(fixture: Fixture) {
 fn test_goto_type_definition() {
     let fixture = fixture!(
         "foo" => "
-#{
 type Foo {
+    #...
     bar: Bar
 }
-#}
 "
         "baz" => "
-#{
 extend type Foo {
+           #...
     i: Int!
 }
-#}
 
 type Bar {
-    foo: Foo
-   #^^^^^^^^
+    foo: [Foo]!
+   #^^^^^^^^^^^
 }
 
 extend type Bar {
-    f: Foo
-   #^^^^^^
+    f: Foo!
+   #^^^^^^^
 }
             "
     );

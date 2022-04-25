@@ -10,7 +10,7 @@ impl Analysis {
             .into_iter()
             .map(|res| (res.item.file, self.field(res)))
             .flat_map(|(file, field)| self.resolve_item(file, field.ty.name()))
-            .map(|res| Location::new(res.file, self.item(res).range.into()))
+            .map(|res| Location::new(res.file, self.item(res).name.range.into()))
             .collect()
     }
 }
