@@ -2,9 +2,9 @@ use gqls_db::DefDatabase;
 use tree_sitter::Point;
 use vfs::FileId;
 
-use crate::{Analysis, Location};
+use crate::{Location, Snapshot};
 
-impl Analysis {
+impl Snapshot {
     pub fn goto_definition(&self, file: FileId, at: Point) -> Vec<Location> {
         self.resolve_item_name_at(file, at)
             .into_iter()

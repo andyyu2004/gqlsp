@@ -2,7 +2,7 @@ use gqls_db::DefDatabase;
 use gqls_ir::{ItemKind, ItemRes, Name};
 use vfs::FileId;
 
-use crate::{Analysis, Range};
+use crate::{Range, Snapshot};
 
 pub type SymbolTree = Vec<Symbol>;
 
@@ -37,7 +37,7 @@ pub enum SymbolKind {
     Constant,
 }
 
-impl Analysis {
+impl Snapshot {
     pub fn document_symbols(&self, file: FileId) -> SymbolTree {
         let mut tree = SymbolTree::default();
         let items = self.items(file);

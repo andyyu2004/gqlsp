@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
 use gqls_fixture::{fixture, Fixture};
-use gqls_parse::{NodeExt, Point};
 
 use crate::{Ide, Location};
 
@@ -15,8 +14,8 @@ fn test(fixture: Fixture) {
         .collect::<HashSet<Location>>();
 
     for (reference_file, at) in fixture.all_points() {
-        let analysis = ide.analysis();
-        let references = analysis.find_references(reference_file, at);
+        let snapshot = ide.snapshot();
+        let references = snapshot.find_references(reference_file, at);
         let actual = references.into_iter().collect::<HashSet<Location>>();
 
         assert_eq!(expected, actual);

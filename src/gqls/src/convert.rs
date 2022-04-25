@@ -112,6 +112,20 @@ impl Convert for gqls_ide::Symbol {
     }
 }
 
+impl Convert for gqls_ide::SemanticToken {
+    type Converted = lsp_types::SemanticToken;
+
+    fn convert(&self) -> Self::Converted {
+        lsp_types::SemanticToken {
+            delta_line: todo!(),
+            delta_start: todo!(),
+            length: todo!(),
+            token_type: todo!(),
+            token_modifiers_bitset: todo!(),
+        }
+    }
+}
+
 pub trait UrlExt {
     fn to_path(&self) -> jsonrpc::Result<PathBuf>;
 }

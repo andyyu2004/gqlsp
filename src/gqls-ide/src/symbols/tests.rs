@@ -8,8 +8,8 @@ use crate::Ide;
 fn test(fixture: Fixture, file: &'static str, expect: Expect) {
     let mut ide = Ide::default();
     ide.setup_fixture(&fixture);
-    let analysis = ide.analysis();
-    let symbols = analysis.document_symbols(Path::new(file));
+    let snapshot = ide.snapshot();
+    let symbols = snapshot.document_symbols(Path::new(file));
     expect.assert_debug_eq(&symbols);
 }
 

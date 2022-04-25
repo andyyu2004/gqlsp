@@ -3,9 +3,9 @@ use gqls_ir::Res;
 use tree_sitter::Point;
 use vfs::FileId;
 
-use crate::{Analysis, Location};
+use crate::{Location, Snapshot};
 
-impl Analysis {
+impl Snapshot {
     pub fn find_references(&self, file: FileId, at: Point) -> Vec<Location> {
         let res = match self.resolve_item_name_at(file, at)[..] {
             [] => return vec![],

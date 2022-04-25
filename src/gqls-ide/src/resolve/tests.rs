@@ -22,10 +22,10 @@ fn test_resolve_item_at() {
         "
     };
     ide.setup_fixture(&fixture);
-    let analysis = ide.analysis();
+    let snapshot = ide.snapshot();
 
     for (file, point) in fixture.all_points() {
-        let item = analysis.resolve_item_at(file, point).unwrap();
+        let item = snapshot.resolve_item_at(file, point).unwrap();
         assert_eq!(item, ItemRes { file, idx: idx!(1) });
     }
 }

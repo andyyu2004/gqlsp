@@ -7,10 +7,12 @@ mod macros;
 mod references;
 mod resolve;
 mod symbols;
+mod tokens;
 mod typedef;
 
 pub use self::edit::{Change, ChangeKind, Changeset, Patch, Point, Range};
-pub use symbols::{Symbol, SymbolKind, SymbolTree};
+pub use self::symbols::{Symbol, SymbolKind, SymbolTree};
+pub use self::tokens::SemanticToken;
 pub use tree_sitter;
 pub use vfs::{FileId, Vfs};
 
@@ -69,11 +71,11 @@ impl Display for DiagnosticKind {
     }
 }
 
-pub struct Analysis {
+pub struct Snapshot {
     snapshot: gqls_db::Snapshot<GqlsDatabase>,
 }
 
-impl Deref for Analysis {
+impl Deref for Snapshot {
     type Target = gqls_db::Snapshot<GqlsDatabase>;
 
     fn deref(&self) -> &Self::Target {
@@ -81,15 +83,15 @@ impl Deref for Analysis {
     }
 }
 
-impl Analysis {
+impl Snapshot {
     pub fn syntax_tree(&self, file: FileId) -> String {
         self.file_tree(file).root_node().to_sexp()
     }
 }
 
 impl Ide {
-    pub fn analysis(&self) -> Analysis {
-        Analysis { snapshot: self.db.snapshot() }
+    pub fn snapshot(&self) -> Snapshot {
+        Snapshot { snapshot: self.db.snapshot() }
     }
 
     pub fn intern_path(&mut self, path: PathBuf) -> FileId {

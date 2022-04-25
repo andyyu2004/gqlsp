@@ -74,13 +74,13 @@ fn test_ide() {
     assert_eq!(summary, hashmap! { foo => ChangeSummary::default() });
     assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Foo");
     expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]]
-        .assert_eq(&ide.analysis().syntax_tree(foo));
+        .assert_eq(&ide.snapshot().syntax_tree(foo));
 
     let summary = apply_changeset!(ide: foo:0:7..0:10 => "Baz");
     assert_eq!(summary, hashmap! { foo => ChangeSummary::default() });
     assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Baz");
     expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]]
-        .assert_eq(&ide.analysis().syntax_tree(foo));
+        .assert_eq(&ide.snapshot().syntax_tree(foo));
 }
 
 #[test]

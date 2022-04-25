@@ -6,14 +6,14 @@ use gqls_fixture::{fixture, Fixture};
 fn test(fixture: Fixture) {
     let mut ide = Ide::default();
     ide.setup_fixture(&fixture);
-    let analysis = ide.analysis();
+    let snapshot = ide.snapshot();
     let expected_locations = fixture
         .all_ranges()
         .map(|(file, range)| Location::new(file, range.into()))
         .collect::<HashSet<_>>();
 
     for (file, at) in fixture.all_points() {
-        let locations = analysis.goto_type_definition(file, at).into_iter().collect::<HashSet<_>>();
+        let locations = snapshot.goto_type_definition(file, at).into_iter().collect::<HashSet<_>>();
         assert_eq!(expected_locations, locations);
     }
 }

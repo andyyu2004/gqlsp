@@ -9,14 +9,14 @@ use gqls_ir::Name;
 fn test(fixture: Fixture) {
     let mut ide = Ide::default();
     ide.setup_fixture(&fixture);
-    let analysis = ide.analysis();
+    let snapshot = ide.snapshot();
     let expected_locations = fixture
         .all_ranges()
         .map(|(file, range)| Location::new(file, range.into()))
         .collect::<HashSet<_>>();
 
     for (file, at) in fixture.all_points() {
-        let locations = analysis.goto_definition(file, at).into_iter().collect::<HashSet<_>>();
+        let locations = snapshot.goto_definition(file, at).into_iter().collect::<HashSet<_>>();
         assert_eq!(expected_locations, locations);
     }
 }
@@ -72,26 +72,26 @@ type Bar {
 
     assert!(summary[foo].diagnostics.is_empty());
 
-    let analysis = ide.analysis();
-    assert!(analysis.name_at(foo, point!(0:0)).is_none());
+    let snapshot = ide.snapshot();
+    assert!(snapshot.name_at(foo, point!(0:0)).is_none());
 
-    assert!(analysis.name_at(foo, point!(1:0)).is_none());
+    assert!(snapshot.name_at(foo, point!(1:0)).is_none());
     for j in 5..8 {
-        assert_eq!(analysis.name_at(foo, point!(1: j)), Some(Name::unranged("Foo")));
-        assert_eq!(analysis.name_at(foo, point!(1: j)), Some(Name::unranged("Foo")));
-        assert_eq!(analysis.name_at(foo, point!(1: j)), Some(Name::unranged("Foo")));
+        assert_eq!(snapshot.name_at(foo, point!(1: j)), Some(Name::unranged("Foo")));
+        assert_eq!(snapshot.name_at(foo, point!(1: j)), Some(Name::unranged("Foo")));
+        assert_eq!(snapshot.name_at(foo, point!(1: j)), Some(Name::unranged("Foo")));
     }
-    assert!(analysis.name_at(foo, point!(1:8)).is_none());
+    assert!(snapshot.name_at(foo, point!(1:8)).is_none());
 
-    assert!(analysis.name_at(foo, point!(2:8)).is_none());
+    assert!(snapshot.name_at(foo, point!(2:8)).is_none());
     for j in 9..12 {
-        assert_eq!(analysis.name_at(foo, point!(2: j)), Some(Name::unranged("Bar")));
+        assert_eq!(snapshot.name_at(foo, point!(2: j)), Some(Name::unranged("Bar")));
     }
-    assert!(analysis.name_at(foo, point!(2:12)).is_none());
+    assert!(snapshot.name_at(foo, point!(2:12)).is_none());
 
-    assert!(analysis.goto_definition(foo, point!(0:0)).is_empty());
+    assert!(snapshot.goto_definition(foo, point!(0:0)).is_empty());
     assert_eq!(
         vec![Location { file: foo, range: range!(1:5..1:8) }],
-        analysis.goto_definition(foo, point!(1:6)),
+        snapshot.goto_definition(foo, point!(1:6)),
     );
 }

@@ -1,6 +1,6 @@
 use crate::config::{Config, DEFAULT_PROJECT};
 use crate::convert::{self, PathExt};
-use crate::{Convert, UrlExt};
+use crate::{tokens, Convert, UrlExt};
 use anyhow::Result;
 use gqls_ide::{Change, ChangeKind, Changeset, ChangesetSummary, FileId, Ide, Patch};
 use lsp_types::notification::PublishDiagnostics;
@@ -37,6 +37,18 @@ pub fn capabilities() -> ServerCapabilities {
         document_symbol_provider: Some(OneOf::Left(true)),
         type_definition_provider: Some(TypeDefinitionProviderCapability::Simple(true)),
         implementation_provider: Some(ImplementationProviderCapability::Simple(true)),
+        semantic_tokens_provider: Some(
+            SemanticTokensOptions {
+                work_done_progress_options: Default::default(),
+                legend: SemanticTokensLegend {
+                    token_types: tokens::TYPES.to_vec(),
+                    token_modifiers: tokens::MODIFIERS.to_vec(),
+                },
+                range: None,
+                full: Some(SemanticTokensFullOptions::Bool(true)),
+            }
+            .into(),
+        ),
         workspace: Some(WorkspaceServerCapabilities {
             workspace_folders: Some(WorkspaceFoldersServerCapabilities {
                 supported: Some(true),
@@ -179,8 +191,8 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position_params;
         self.with_ide(|ide| {
             let path = ide.path(&position.text_document.uri)?;
-            let analysis = ide.analysis();
-            let locations = analysis.goto_definition(path, position.position.convert());
+            let snapshot = ide.snapshot();
+            let locations = snapshot.goto_definition(path, position.position.convert());
             Ok(convert::locations_to_goto_definition_response(&locations))
         })
     }
@@ -192,8 +204,8 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position_params;
         self.with_ide(|ide| {
             let path = ide.path(&position.text_document.uri)?;
-            let analysis = ide.analysis();
-            let locations = analysis.goto_type_definition(path, position.position.convert());
+            let snapshot = ide.snapshot();
+            let locations = snapshot.goto_type_definition(path, position.position.convert());
             Ok(convert::locations_to_goto_definition_response(&locations))
         })
     }
@@ -205,8 +217,8 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position_params;
         self.with_ide(|ide| {
             let path = ide.path(&position.text_document.uri)?;
-            let analysis = ide.analysis();
-            let locations = analysis.goto_implementation(path, position.position.convert());
+            let snapshot = ide.snapshot();
+            let locations = snapshot.goto_implementation(path, position.position.convert());
             Ok(convert::locations_to_goto_definition_response(&locations))
         })
     }
@@ -215,8 +227,8 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position;
         self.with_ide(|ide| {
             let path = ide.path(&position.text_document.uri)?;
-            let analysis = ide.analysis();
-            let locations = analysis.find_references(path, position.position.convert());
+            let snapshot = ide.snapshot();
+            let locations = snapshot.find_references(path, position.position.convert());
             match &locations[..] {
                 [] => Ok(None),
                 locations => Ok(Some(locations.convert())),
@@ -229,10 +241,25 @@ impl LanguageServer for Gqls {
         params: DocumentSymbolParams,
     ) -> jsonrpc::Result<Option<DocumentSymbolResponse>> {
         self.with_ide(|ide| {
-            let analysis = ide.analysis();
+            let snapshot = ide.snapshot();
             let path = ide.path(&params.text_document.uri)?;
-            let symbols = analysis.document_symbols(path);
+            let symbols = snapshot.document_symbols(path);
             Ok(Some(DocumentSymbolResponse::Nested(symbols.convert())))
+        })
+    }
+
+    async fn semantic_tokens_full(
+        &self,
+        params: SemanticTokensParams,
+    ) -> jsonrpc::Result<Option<SemanticTokensResult>> {
+        let uri = params.text_document.uri;
+        self.with_ide(|ide| {
+            let snapshot = ide.snapshot();
+            let path = ide.path(&uri)?;
+            Ok(Some(SemanticTokensResult::Tokens(SemanticTokens {
+                data: snapshot.semantic_tokens(path).convert(),
+                result_id: None,
+            })))
         })
     }
 }
@@ -247,8 +274,8 @@ impl Gqls {
     async fn syntax_tree(&self, params: SyntaxTreeParams) -> jsonrpc::Result<String> {
         self.with_ide(|ide| {
             let path = ide.path(&params.text_document.uri)?;
-            let analysis = ide.analysis();
-            Ok(analysis.syntax_tree(path))
+            let snapshot = ide.snapshot();
+            Ok(snapshot.syntax_tree(path))
         })
     }
 

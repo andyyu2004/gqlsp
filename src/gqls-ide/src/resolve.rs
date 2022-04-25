@@ -4,9 +4,9 @@ use gqls_parse::RangeExt;
 use tree_sitter::Point;
 use vfs::FileId;
 
-use crate::Analysis;
+use crate::Snapshot;
 
-impl Analysis {
+impl Snapshot {
     pub(crate) fn resolve_item_name_at(&self, file: FileId, at: Point) -> ItemResolutions {
         self.name_at(file, at).map(|name| self.resolve_item(file, name)).unwrap_or_default()
     }
