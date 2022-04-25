@@ -1,10 +1,29 @@
 use expect_test::{expect, Expect};
+use tree_sitter::Point;
 
-use crate::make_parser;
+use crate::{make_parser, parse_fresh, NodeExt};
 
 fn test(s: &str, expect: Expect) {
     let sexp = make_parser().parse(s, None).unwrap().root_node().to_sexp();
     expect.assert_eq(&sexp);
+}
+
+#[test]
+fn test_named_node_at() {
+    let s = "
+type Foo {
+    s: [Int!]!
+}";
+    let tree = parse_fresh(s);
+    let node = tree.root_node();
+    let i = node.named_node_at(Point::new(2, 8)).unwrap();
+    expect![[r#"(name)"#]].assert_eq(&i.to_sexp());
+
+    let xs = node.named_node_at(Point::new(2, 7)).unwrap();
+    expect![[r#"(list_type (type (non_null_type (named_type (name)))))"#]].assert_eq(&xs.to_sexp());
+
+    let nn = node.named_node_at(Point::new(2, 11)).unwrap();
+    expect![[r#"(non_null_type (named_type (name)))"#]].assert_eq(&nn.to_sexp());
 }
 
 #[test]

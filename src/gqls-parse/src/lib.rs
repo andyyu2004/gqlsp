@@ -11,14 +11,16 @@ pub fn traverse(tree: &Tree) -> impl Iterator<Item = Node<'_>> {
 }
 
 pub struct Parents<'tree> {
-    node: Node<'tree>,
+    node: Option<Node<'tree>>,
 }
 
 impl<'tree> Iterator for Parents<'tree> {
     type Item = Node<'tree>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.node.parent()
+        let parent = self.node?.parent();
+        self.node = parent;
+        parent
     }
 }
 
@@ -37,6 +39,7 @@ impl RangeExt for Range {
 // FIXME avoid boxed iterators once impl trait type alias etc is stable
 pub trait NodeExt<'tree>: Sized {
     fn parents(self) -> Parents<'tree>;
+    fn parent_of_kind(self, kind: &'static str) -> Option<Self>;
     fn sole_named_child(self) -> Node<'tree>;
     fn text(self, text: &str) -> &str;
     fn find_descendant(self, f: impl FnMut(&Self) -> bool) -> Option<Self>;
@@ -54,7 +57,11 @@ pub trait NodeExt<'tree>: Sized {
 
 impl<'tree> NodeExt<'tree> for Node<'tree> {
     fn parents(self) -> Parents<'tree> {
-        Parents { node: self }
+        Parents { node: Some(self) }
+    }
+
+    fn parent_of_kind(self, kind: &'static str) -> Option<Self> {
+        self.parents().find(|node| node.kind() == kind)
     }
 
     #[track_caller]

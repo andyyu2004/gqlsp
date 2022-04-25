@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use gqls_fixture::{fixture, Fixture};
+use gqls_parse::{NodeExt, Point};
 
 use crate::{Ide, Location};
 
@@ -75,9 +76,9 @@ fn test_find_references_when_cursor_on_reference() {
             scalar Scalar
 
             type Foo {
-                s: Scalar
-                 # ......
-                 # ^^^^^^
+                s: [Scalar!]!
+                 # ^......^
+                 #  ^^^^^^
             }
         "
     };
@@ -95,7 +96,7 @@ fn test_find_references_to_enum() {
             }
 
             type Foo {
-                enum: Enum
+                enum: Enum!
                      #....
             }
         "
@@ -111,7 +112,7 @@ fn test_find_references_to_scalar() {
                   #^^^^^^
 
             type Foo {
-                s: Scalar
+                s: Scalar!
                   #......
             }
         "

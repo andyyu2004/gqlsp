@@ -42,8 +42,13 @@ type Bar {
 }
 
 type Baz {
-    foo: Foo
-        #^^^
+    foo: Foo!
+        #^^^^
+}
+
+type Qux {
+    foo: [Foo!]!
+        #^^^^^^^
 }
             "
     );

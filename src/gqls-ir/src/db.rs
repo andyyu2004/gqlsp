@@ -6,7 +6,7 @@ use gqls_parse::{NodeExt, NodeKind, Point, RangeExt};
 use smallvec::smallvec;
 use vfs::FileId;
 
-use crate::lower::BodyCtxt;
+use crate::lower::{BodyCtxt, LowerCtxt};
 use crate::*;
 
 #[salsa::query_group(DefDatabaseStorage)]
@@ -23,6 +23,7 @@ pub trait DefDatabase: SourceDatabase {
     fn references(&self, res: Res) -> References;
     fn resolve(&self, file: FileId, at: Point) -> Option<Res>;
     fn resolve_item(&self, file: FileId, name: Name) -> ItemResolutions;
+    fn type_at(&self, file: FileId, at: Point) -> Option<Ty>;
 }
 
 fn implementations(db: &dyn DefDatabase, file: FileId, interface: Name) -> Vec<ItemRes> {
@@ -84,7 +85,24 @@ fn name_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Name> {
     let data = db.file_data(file);
     let root = data.tree.root_node();
     let node = root.named_node_at(at)?;
-    (node.kind() == NodeKind::NAME).then(|| Name::new(&data.text, node))
+    match node.kind() {
+        NodeKind::NAME => Some(Name::new(&data.text, node)),
+        _ => db.type_at(file, at).map(|ty| ty.name()),
+    }
+}
+
+fn type_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Ty> {
+    let data = db.file_data(file);
+    let root = data.tree.root_node();
+    let node = root.named_node_at(at)?;
+    let type_node = match dbg!(node.kind()) {
+        NodeKind::NON_NULL_TYPE | NodeKind::LIST_TYPE | NodeKind::NAMED_TYPE => node
+            .parent_of_kind(NodeKind::TYPE)
+            .expect("these nodes to have a parent of kind `type`"),
+        NodeKind::TYPE => node,
+        _ => return None,
+    };
+    BodyCtxt::new(data.text).lower_type(type_node)
 }
 
 fn resolve(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Res> {
@@ -153,11 +171,12 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
                 }
 
                 let fields = body.as_deref().and_then(|b| b.fields_slice()).unwrap_or(&[]).iter();
+                dbg!(&name);
                 match res_item.kind {
                     ItemKind::TypeDefinition(_) | ItemKind::TypeExtension(_) => references.extend(
                         fields
                             .filter(|field| field.ty.name() == name)
-                            .map(|field| (file, field.ty.range)),
+                            .map(|field| (file, field.ty.name().range)),
                     ),
                     ItemKind::DirectiveDefinition(_) => references.extend(
                         fields

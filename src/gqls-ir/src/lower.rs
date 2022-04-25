@@ -121,31 +121,6 @@ impl BodyCtxt {
         let directives = self.lower_directives_of(node);
         Some(Field { range: node.range(), name, ty, directives })
     }
-
-    fn lower_type(&mut self, node: Node<'_>) -> Option<Ty> {
-        assert_eq!(node.kind(), NodeKind::TYPE);
-        let ty = node.sole_named_child();
-        let kind = match ty.kind() {
-            NodeKind::NAMED_TYPE => return Some(self.lower_named_type(ty)),
-            NodeKind::LIST_TYPE => TyKind::List(self.lower_type(ty.sole_named_child())?),
-            NodeKind::NON_NULL_TYPE => {
-                let inner = ty.sole_named_child();
-                match inner.kind() {
-                    NodeKind::NAMED_TYPE => TyKind::NonNull(self.lower_named_type(inner)),
-                    NodeKind::LIST_TYPE => TyKind::NonNull(self.lower_list_type(inner)?),
-                    _ => unreachable!(),
-                }
-            }
-            _ => unreachable!(),
-        };
-        Some(Box::new(Type { range: ty.range(), kind }))
-    }
-
-    fn lower_list_type(&mut self, node: Node<'_>) -> Option<Ty> {
-        assert_eq!(node.kind(), NodeKind::LIST_TYPE);
-        let kind = TyKind::List(self.lower_type(node.sole_named_child())?);
-        Some(Box::new(Type { range: node.range(), kind }))
-    }
 }
 
 pub(crate) struct ItemCtxt {
@@ -243,7 +218,7 @@ impl ItemCtxt {
     }
 }
 
-trait LowerCtxt: HasText {
+pub(crate) trait LowerCtxt: HasText {
     fn name_of(&mut self, node: Node<'_>) -> Option<Name> {
         node.name_node().map(|node| Name::new(self, node))
     }
@@ -266,6 +241,31 @@ trait LowerCtxt: HasText {
         // TODO arguments
         let name = Name::new(self, node.name_node()?);
         Some(Directive { range: node.range(), name })
+    }
+
+    fn lower_type(&mut self, node: Node<'_>) -> Option<Ty> {
+        assert_eq!(node.kind(), NodeKind::TYPE);
+        let ty = node.sole_named_child();
+        let kind = match ty.kind() {
+            NodeKind::NAMED_TYPE => return Some(self.lower_named_type(ty)),
+            NodeKind::LIST_TYPE => TyKind::List(self.lower_type(ty.sole_named_child())?),
+            NodeKind::NON_NULL_TYPE => {
+                let inner = ty.sole_named_child();
+                match inner.kind() {
+                    NodeKind::NAMED_TYPE => TyKind::NonNull(self.lower_named_type(inner)),
+                    NodeKind::LIST_TYPE => TyKind::NonNull(self.lower_list_type(inner)?),
+                    _ => unreachable!(),
+                }
+            }
+            _ => unreachable!(),
+        };
+        Some(Box::new(Type { range: ty.range(), kind }))
+    }
+
+    fn lower_list_type(&mut self, node: Node<'_>) -> Option<Ty> {
+        assert_eq!(node.kind(), NodeKind::LIST_TYPE);
+        let kind = TyKind::List(self.lower_type(node.sole_named_child())?);
+        Some(Box::new(Type { range: node.range(), kind }))
     }
 
     fn lower_named_type(&mut self, node: Node<'_>) -> Ty {

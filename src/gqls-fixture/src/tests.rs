@@ -1,6 +1,6 @@
 use gqls_parse::Point;
 
-use crate::FixtureFile;
+use crate::{Fixture, FixtureFile};
 
 fn test(fixture: &str, points: Vec<Point>, ranges: Vec<std::ops::Range<Point>>) {
     let actual = FixtureFile::parse(fixture);
