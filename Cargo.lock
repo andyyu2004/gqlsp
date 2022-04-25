@@ -305,7 +305,7 @@ dependencies = [
 name = "gqls-fixture"
 version = "0.1.0"
 dependencies = [
- "gqls-parse",
+ "gqls-syntax",
  "maplit",
  "vfs",
 ]
@@ -318,7 +318,7 @@ dependencies = [
  "gqls-db",
  "gqls-fixture",
  "gqls-ir",
- "gqls-parse",
+ "gqls-syntax",
  "maplit",
  "once_cell",
  "ropey",
@@ -333,7 +333,7 @@ version = "0.1.0"
 dependencies = [
  "expect-test",
  "gqls-base-db",
- "gqls-parse",
+ "gqls-syntax",
  "la-arena",
  "maplit",
  "salsa",
@@ -343,7 +343,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gqls-parse"
+name = "gqls-syntax"
 version = "0.1.0"
 dependencies = [
  "cc",

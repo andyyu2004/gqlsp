@@ -15,8 +15,8 @@ path = "../gqls-db"
 [dependencies.gqls-ir]
 path = "../gqls-ir"
 
-[dependencies.gqls-parse]
-path = "../gqls-parse"
+[dependencies.gqls-syntax]
+path = "../gqls-syntax"
 
 [dependencies.vfs]
 path = "../vfs"

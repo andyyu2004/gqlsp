@@ -82,16 +82,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'gqls-parse'",
+            "name": "Debug unit tests in library 'gqls-syntax'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=gqls-parse"
+                    "--package=gqls-syntax"
                 ],
                 "filter": {
-                    "name": "gqls-parse",
+                    "name": "gqls-syntax",
                     "kind": "lib"
                 }
             },

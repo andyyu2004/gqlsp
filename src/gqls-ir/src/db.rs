@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::vec;
 
 use gqls_base_db::SourceDatabase;
-use gqls_parse::{NodeExt, NodeKind, Point, RangeExt};
+use gqls_syntax::{NodeExt, NodeKind, Point, RangeExt};
 use smallvec::smallvec;
 use vfs::FileId;
 

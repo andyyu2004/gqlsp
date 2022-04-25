@@ -1,4 +1,4 @@
-use gqls_parse::Range;
+use gqls_syntax::Range;
 use la_arena::{Arena, ArenaMap, Idx};
 
 use crate::{ArenaExt, Directives, Name, Ty};

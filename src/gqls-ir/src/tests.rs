@@ -34,7 +34,7 @@ macro_rules! setup {
             maplit::hashmap! { "default" => maplit::hashset! { $($file),* } },
         ));
         $(
-            $db.set_file_data($file, FileData::new($text, gqls_parse::parse_fresh($text)));
+            $db.set_file_data($file, FileData::new($text, gqls_syntax::parse_fresh($text)));
         )*
     };
 }

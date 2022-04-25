@@ -6,7 +6,7 @@ members = [
     "src/gqls-ide",
     "src/gqls-ir",
     "src/gqls-fixture",
-    "src/gqls-parse",
+    "src/gqls-syntax",
     "src/vfs",
     "tree-sitter-graphql",
 ]

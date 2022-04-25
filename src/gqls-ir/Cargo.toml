@@ -14,8 +14,8 @@ git = "https://github.com/rust-lang/rust-analyzer"
 [dependencies.gqls-base-db]
 path = "../gqls-base-db"
 
-[dependencies.gqls-parse]
-path = "../gqls-parse"
+[dependencies.gqls-syntax]
+path = "../gqls-syntax"
 
 [dependencies.vfs]
 path = "../vfs"

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use gqls_parse::{Node, NodeExt, NodeKind, Tree};
+use gqls_syntax::{Node, NodeExt, NodeKind, Tree};
 use la_arena::ArenaMap;
 
 use crate::*;

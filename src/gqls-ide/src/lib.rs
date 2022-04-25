@@ -22,7 +22,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use gqls_db::{FileData, GqlsDatabase, ParallelDatabase, Project, SourceDatabase};
-use gqls_parse::query;
+use gqls_syntax::query;
 use once_cell::sync::Lazy;
 use ropey::Rope;
 use std::fmt::{self, Display};
@@ -140,7 +140,7 @@ impl Ide {
             .captures(&QUERY, tree.root_node(), text)
             .flat_map(|(captures, _)| captures.captures)
             .map(|capture| capture.node)
-            .chain(gqls_parse::traverse(&tree).filter(|node| node.is_missing()))
+            .chain(gqls_syntax::traverse(&tree).filter(|node| node.is_missing()))
             .map(|node| Diagnostic::syntax(node.range().into()))
             .collect()
     }
@@ -155,13 +155,13 @@ impl Ide {
                 let mut old =
                     self.file_ropes.insert(file, rope).map(|_| self.db.file_tree(file)).unwrap();
                 old.edit(&edit);
-                let tree = gqls_parse::parse(&text, Some(&old));
+                let tree = gqls_syntax::parse(&text, Some(&old));
                 FileData::new(text, tree)
             }
             ChangeKind::Set(text) => {
                 let rope = Rope::from_str(text);
                 self.file_ropes.insert(file, rope);
-                FileData::new(text, gqls_parse::parse_fresh(text))
+                FileData::new(text, gqls_syntax::parse_fresh(text))
             }
         };
         self.db.set_file_data(file, data);

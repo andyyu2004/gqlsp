@@ -10,7 +10,7 @@ pub use self::ty::*;
 pub use db::{DefDatabase, DefDatabaseStorage};
 pub use la_arena::{Arena, Idx, RawIdx};
 
-use gqls_parse::{Node, NodeExt, Range};
+use gqls_syntax::{Node, NodeExt, Range};
 use la_arena::IdxRange;
 use smallvec::SmallVec;
 use smol_str::SmolStr;
@@ -124,7 +124,7 @@ impl Name {
     }
 
     pub fn unranged(s: &str) -> Self {
-        use gqls_parse::Point;
+        use gqls_syntax::Point;
 
         Self {
             name: SmolStr::new(s),

@@ -2,7 +2,7 @@ pub use maplit::hashmap;
 
 use std::collections::{HashMap, HashSet};
 
-use gqls_parse::Point;
+use gqls_syntax::Point;
 use vfs::FileId;
 
 #[macro_export]

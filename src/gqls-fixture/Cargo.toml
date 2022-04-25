@@ -6,8 +6,8 @@ edition = "2021"
 [dependencies]
 maplit = "1"
 
-[dependencies.gqls-parse]
-path = "../gqls-parse"
+[dependencies.gqls-syntax]
+path = "../gqls-syntax"
 
 [dependencies.vfs]
 path = "../vfs"

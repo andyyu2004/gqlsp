@@ -1,6 +1,6 @@
 use gqls_db::DefDatabase;
 use gqls_ir::{FieldRes, ItemRes, ItemResolutions};
-use gqls_parse::RangeExt;
+use gqls_syntax::RangeExt;
 use tree_sitter::Point;
 use vfs::FileId;
 

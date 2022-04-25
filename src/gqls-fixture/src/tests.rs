@@ -1,4 +1,4 @@
-use gqls_parse::Point;
+use gqls_syntax::Point;
 
 use crate::FixtureFile;
 
