@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::fmt::Debug;
 
 use gqls_db::Project;
 pub use tree_sitter::Point;
@@ -7,10 +8,16 @@ use ropey::Rope;
 use vfs::FileId;
 
 /// Similar to [`tree_sitter::Range`] but only containing points (but no byte offsets)
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash, PartialOrd, Ord, Default)]
+#[derive(Eq, PartialEq, Copy, Clone, Hash, PartialOrd, Ord, Default)]
 pub struct Range {
     pub start: Point,
     pub end: Point,
+}
+
+impl Debug for Range {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}..{}", self.start, self.end)
+    }
 }
 
 impl From<std::ops::Range<Point>> for Range {

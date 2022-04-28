@@ -48,30 +48,12 @@ fn test_document_symbols() {
                 Symbol {
                     name: Foo,
                     kind: Struct,
-                    range: Range {
-                        start: Point {
-                            row: 1,
-                            column: 12,
-                        },
-                        end: Point {
-                            row: 4,
-                            column: 13,
-                        },
-                    },
+                    range: (1, 12)..(4, 13),
                     children: [
                         Symbol {
                             name: bar,
                             kind: Field,
-                            range: Range {
-                                start: Point {
-                                    row: 2,
-                                    column: 16,
-                                },
-                                end: Point {
-                                    row: 2,
-                                    column: 24,
-                                },
-                            },
+                            range: (2, 16)..(2, 24),
                             children: [],
                             detail: Some(
                                 "Bar",
@@ -80,16 +62,7 @@ fn test_document_symbols() {
                         Symbol {
                             name: baz,
                             kind: Field,
-                            range: Range {
-                                start: Point {
-                                    row: 3,
-                                    column: 16,
-                                },
-                                end: Point {
-                                    row: 3,
-                                    column: 24,
-                                },
-                            },
+                            range: (3, 16)..(3, 24),
                             children: [],
                             detail: Some(
                                 "Int",
@@ -101,30 +74,12 @@ fn test_document_symbols() {
                 Symbol {
                     name: Bar,
                     kind: Struct,
-                    range: Range {
-                        start: Point {
-                            row: 6,
-                            column: 12,
-                        },
-                        end: Point {
-                            row: 8,
-                            column: 13,
-                        },
-                    },
+                    range: (6, 12)..(8, 13),
                     children: [
                         Symbol {
                             name: foo,
                             kind: Field,
-                            range: Range {
-                                start: Point {
-                                    row: 7,
-                                    column: 16,
-                                },
-                                end: Point {
-                                    row: 7,
-                                    column: 24,
-                                },
-                            },
+                            range: (7, 16)..(7, 24),
                             children: [],
                             detail: Some(
                                 "Foo",
@@ -136,30 +91,12 @@ fn test_document_symbols() {
                 Symbol {
                     name: Interface,
                     kind: Struct,
-                    range: Range {
-                        start: Point {
-                            row: 10,
-                            column: 12,
-                        },
-                        end: Point {
-                            row: 12,
-                            column: 13,
-                        },
-                    },
+                    range: (10, 12)..(12, 13),
                     children: [
                         Symbol {
                             name: foo,
                             kind: Field,
-                            range: Range {
-                                start: Point {
-                                    row: 11,
-                                    column: 16,
-                                },
-                                end: Point {
-                                    row: 11,
-                                    column: 24,
-                                },
-                            },
+                            range: (11, 16)..(11, 24),
                             children: [],
                             detail: Some(
                                 "Foo",
@@ -171,30 +108,12 @@ fn test_document_symbols() {
                 Symbol {
                     name: Input,
                     kind: Struct,
-                    range: Range {
-                        start: Point {
-                            row: 14,
-                            column: 12,
-                        },
-                        end: Point {
-                            row: 16,
-                            column: 13,
-                        },
-                    },
+                    range: (14, 12)..(16, 13),
                     children: [
                         Symbol {
                             name: i,
                             kind: Field,
-                            range: Range {
-                                start: Point {
-                                    row: 15,
-                                    column: 16,
-                                },
-                                end: Point {
-                                    row: 15,
-                                    column: 22,
-                                },
-                            },
+                            range: (15, 16)..(15, 22),
                             children: [],
                             detail: Some(
                                 "Int",
@@ -206,30 +125,12 @@ fn test_document_symbols() {
                 Symbol {
                     name: Extension,
                     kind: Struct,
-                    range: Range {
-                        start: Point {
-                            row: 18,
-                            column: 12,
-                        },
-                        end: Point {
-                            row: 20,
-                            column: 13,
-                        },
-                    },
+                    range: (18, 12)..(20, 13),
                     children: [
                         Symbol {
                             name: foo,
                             kind: Field,
-                            range: Range {
-                                start: Point {
-                                    row: 19,
-                                    column: 16,
-                                },
-                                end: Point {
-                                    row: 19,
-                                    column: 24,
-                                },
-                            },
+                            range: (19, 16)..(19, 24),
                             children: [],
                             detail: Some(
                                 "Foo",
