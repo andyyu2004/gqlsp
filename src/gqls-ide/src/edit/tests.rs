@@ -1,4 +1,5 @@
-use crate::point;
+use crate::edit::RangeExt;
+use crate::{point, range};
 use ropey::Rope;
 
 #[macro_export]
@@ -76,4 +77,20 @@ fn test_apply_patch() {
         }
     );
     assert_eq!(rope.to_string(), "the quick fox\njumps\nnothing");
+}
+
+#[test]
+fn test_range_contains_point() {
+    assert!(!range!(0:0..0:0).contains(point!(0:0)));
+    assert!(range!(0:0..0:1).contains(point!(0:0)));
+}
+
+#[test]
+fn test_range_intersection() {
+    assert!(!range!(0:0..0:0).intersects(range!(0:0..0:0)));
+    assert!(!range!(0:0..0:0).intersects(range!(0:0..0:1)));
+    assert!(range!(0:0..0:1).intersects(range!(0:0..0:1)));
+
+    assert!(range!(0:0..0:2).intersects(range!(0:0..0:1)));
+    assert!(!range!(0:0..0:1).intersects(range!(0:1..0:2)));
 }

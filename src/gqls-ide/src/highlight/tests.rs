@@ -17,16 +17,27 @@ fn test_highlight() {
         x: Int!
     }
     ");
-    test(fixture, expect![[r#"
-        [
-            SemanticToken {
-                range: (1, 4)..(1, 8),
-                kind: Keyword,
-            },
-            SemanticToken {
-                range: (2, 11)..(2, 15),
-                kind: Keyword,
-            },
-        ]
-    "#]]);
+    test(
+        fixture,
+        expect![[r#"
+            [
+                SemanticToken {
+                    range: (1, 4)..(1, 8),
+                    kind: Keyword,
+                },
+                SemanticToken {
+                    range: (1, 9)..(1, 12),
+                    kind: Type,
+                },
+                SemanticToken {
+                    range: (2, 8)..(2, 9),
+                    kind: Type,
+                },
+                SemanticToken {
+                    range: (2, 11)..(2, 14),
+                    kind: Type,
+                },
+            ]
+        "#]],
+    );
 }

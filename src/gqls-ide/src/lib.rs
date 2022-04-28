@@ -140,7 +140,7 @@ impl Ide {
             .captures(&QUERY, tree.root_node(), text)
             .flat_map(|(captures, _)| captures.captures)
             .map(|capture| capture.node)
-            .chain(gqls_syntax::traverse(&tree).filter(|node| node.is_missing()))
+            .chain(gqls_syntax::traverse_preorder(&tree).filter(|node| node.is_missing()))
             .map(|node| Diagnostic::syntax(node.range().into()))
             .collect()
     }

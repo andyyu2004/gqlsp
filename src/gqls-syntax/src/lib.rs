@@ -1,12 +1,18 @@
 #![deny(rust_2018_idioms)]
 
 mod nodes;
+mod traverse;
 
 pub use self::nodes::NodeKind;
+use self::traverse::Traverse;
 
 pub use tree_sitter::{Language, Node, Parser, Point, Query, Range, Tree, TreeCursor};
 
-pub fn traverse(tree: &Tree) -> impl Iterator<Item = Node<'_>> {
+pub fn traverse(tree: &Tree) -> Traverse<'_> {
+    Traverse::new(tree.walk())
+}
+
+pub fn traverse_preorder(tree: &Tree) -> impl Iterator<Item = Node<'_>> {
     tree_sitter_traversal::traverse_tree(tree, tree_sitter_traversal::Order::Pre)
 }
 
@@ -28,11 +34,16 @@ pub type NodeIterator<'a, 'tree> = Box<dyn Iterator<Item = Node<'tree>> + 'a>;
 
 pub trait RangeExt {
     fn contains(&self, point: Point) -> bool;
+    fn intersects(&self, other: Self) -> bool;
 }
 
 impl RangeExt for Range {
     fn contains(&self, point: Point) -> bool {
         self.start_point <= point && point < self.end_point
+    }
+
+    fn intersects(&self, other: Self) -> bool {
+        self.start_byte.max(other.start_byte) > self.end_byte.min(other.end_byte)
     }
 }
 

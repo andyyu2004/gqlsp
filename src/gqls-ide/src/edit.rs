@@ -20,6 +20,21 @@ impl Debug for Range {
     }
 }
 
+pub trait RangeExt {
+    fn contains(&self, point: Point) -> bool;
+    fn intersects(&self, other: Self) -> bool;
+}
+
+impl RangeExt for Range {
+    fn contains(&self, point: Point) -> bool {
+        self.start <= point && point < self.end
+    }
+
+    fn intersects(&self, other: Self) -> bool {
+        self.end.min(other.end) > self.start.max(other.start)
+    }
+}
+
 impl From<std::ops::Range<Point>> for Range {
     fn from(range: std::ops::Range<Point>) -> Self {
         Self { start: range.start, end: range.end }

@@ -171,7 +171,6 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
                 }
 
                 let fields = body.as_deref().and_then(|b| b.fields_slice()).unwrap_or(&[]).iter();
-                dbg!(&name);
                 match res_item.kind {
                     ItemKind::TypeDefinition(_) | ItemKind::TypeExtension(_) => references.extend(
                         fields
