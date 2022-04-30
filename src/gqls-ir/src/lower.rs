@@ -16,7 +16,7 @@ impl BodyCtxt {
 
     pub fn lower_typedef(mut self, node: Node<'_>) -> ItemBody {
         match node.kind() {
-            NodeKind::OBJECT_TYPE_DEFINITION =>
+            NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
                 ItemBody::ObjectTypeDefinition(self.lower_object_typedef(node)),
             NodeKind::INTERFACE_TYPE_DEFINITION =>
                 ItemBody::InterfaceDefinition(self.lower_interface_typedef(node)),
@@ -29,22 +29,12 @@ impl BodyCtxt {
         }
     }
 
-    pub(crate) fn lower_type_ext(mut self, node: Node<'_>) -> ItemBody {
-        match node.kind() {
-            NodeKind::OBJECT_TYPE_EXTENSION =>
-                ItemBody::ObjectTypeExtension(self.lower_object_type_ext(node)),
-            _ => ItemBody::Todo,
-        }
-    }
-
     fn lower_object_typedef(&mut self, node: Node<'_>) -> TypeDefinitionBody {
-        assert_eq!(node.kind(), NodeKind::OBJECT_TYPE_DEFINITION);
+        assert!(
+            [NodeKind::OBJECT_TYPE_DEFINITION, NodeKind::OBJECT_TYPE_EXTENSION]
+                .contains(&node.kind())
+        );
         TypeDefinitionBody { fields: self.lower_fields_of(node) }
-    }
-
-    fn lower_object_type_ext(&mut self, node: Node<'_>) -> TypeExtensionBody {
-        assert_eq!(node.kind(), NodeKind::OBJECT_TYPE_EXTENSION);
-        TypeExtensionBody { fields: self.lower_fields_of(node) }
     }
 
     fn lower_input_object_typedef(&mut self, node: Node<'_>) -> InputTypeDefinitionBody {
@@ -125,19 +115,13 @@ impl BodyCtxt {
 
 pub(crate) struct ItemCtxt {
     text: Arc<str>,
-    types: Arena<TypeDefinition>,
+    typedefs: Arena<TypeDefinition>,
     directives: Arena<DirectiveDefinition>,
-    type_exts: Arena<TypeExtension>,
 }
 
 impl ItemCtxt {
     pub(crate) fn new(text: Arc<str>) -> Self {
-        Self {
-            text,
-            types: Default::default(),
-            directives: Default::default(),
-            type_exts: Default::default(),
-        }
+        Self { text, typedefs: Default::default(), directives: Default::default() }
     }
 
     pub fn lower(mut self, tree: Tree) -> Arc<Items> {
@@ -146,12 +130,7 @@ impl ItemCtxt {
             .relevant_children(&mut node.walk())
             .filter_map(|node| self.lower_item(node))
             .collect();
-        Arc::new(Items {
-            items,
-            types: self.types,
-            directives: self.directives,
-            type_exts: self.type_exts,
-        })
+        Arc::new(Items { items, types: self.typedefs, directives: self.directives })
     }
 
     fn lower_item(&mut self, node: Node<'_>) -> Option<Item> {
@@ -175,15 +154,18 @@ impl ItemCtxt {
                 let implementations = self.try_lower_implementations_of(typedef);
                 (
                     name,
-                    ItemKind::TypeDefinition(
-                        self.types.alloc(TypeDefinition { directives, implementations }),
-                    ),
+                    ItemKind::TypeDefinition(self.typedefs.alloc(TypeDefinition {
+                        is_ext: false,
+                        directives,
+                        implementations,
+                    })),
                 )
             }
             NodeKind::TYPE_EXTENSION => {
                 let type_ext = def.sole_named_child();
                 let name_node = match type_ext.kind() {
                     NodeKind::OBJECT_TYPE_EXTENSION => type_ext.name_node()?,
+                    // TODO
                     _ => return None,
                 };
                 let name = Name::new(self, name_node);
@@ -191,9 +173,11 @@ impl ItemCtxt {
                 let implementations = self.try_lower_implementations_of(type_ext);
                 (
                     name,
-                    ItemKind::TypeExtension(
-                        self.type_exts.alloc(TypeExtension { directives, implementations }),
-                    ),
+                    ItemKind::TypeDefinition(self.typedefs.alloc(TypeDefinition {
+                        is_ext: true,
+                        directives,
+                        implementations,
+                    })),
                 )
             }
             NodeKind::DIRECTIVE_DEFINITION => {

@@ -8,7 +8,6 @@ use crate::{ArenaExt, Directives, Name, RangeDebug, Ty};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemBody {
     ObjectTypeDefinition(TypeDefinitionBody),
-    ObjectTypeExtension(TypeExtensionBody),
     InterfaceDefinition(InterfaceDefinitionBody),
     InputObjectTypeDefinition(InputTypeDefinitionBody),
     UnionTypeDefinition(UnionTypeDefinitionBody),
@@ -19,7 +18,6 @@ impl ItemBody {
     pub fn fields(&self) -> Option<&Arena<Field>> {
         let fields = match self {
             ItemBody::ObjectTypeDefinition(typedef) => &typedef.fields.fields,
-            ItemBody::ObjectTypeExtension(type_ext) => &type_ext.fields.fields,
             ItemBody::InputObjectTypeDefinition(typedef) => &typedef.fields.fields,
             ItemBody::InterfaceDefinition(iface) => &iface.fields.fields,
             ItemBody::UnionTypeDefinition(_) => return None,

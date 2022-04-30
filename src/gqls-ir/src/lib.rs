@@ -25,14 +25,12 @@ pub struct Items {
     pub items: Arena<Item>,
     pub types: Arena<TypeDefinition>,
     pub directives: Arena<DirectiveDefinition>,
-    pub type_exts: Arena<TypeExtension>,
 }
 
 impl Items {
     pub fn directives(&self, idx: Idx<Item>) -> Option<&Directives> {
         match self.items[idx].kind {
             ItemKind::TypeDefinition(typedef) => Some(&self.types[typedef].directives),
-            ItemKind::TypeExtension(type_ext) => Some(&self.type_exts[type_ext].directives),
             ItemKind::DirectiveDefinition(_) => None,
         }
     }
@@ -40,7 +38,6 @@ impl Items {
     pub fn implements(&self, idx: Idx<Item>, interface: &Name) -> bool {
         match self.items[idx].kind {
             ItemKind::TypeDefinition(typedef) => &self.types[typedef].implementations,
-            ItemKind::TypeExtension(type_ext) => &self.type_exts[type_ext].implementations,
             ItemKind::DirectiveDefinition(_) => return false,
         }
         .as_ref()
@@ -99,7 +96,6 @@ impl Debug for Directive {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ItemKind {
     TypeDefinition(Idx<TypeDefinition>),
-    TypeExtension(Idx<TypeExtension>),
     DirectiveDefinition(Idx<DirectiveDefinition>),
 }
 
@@ -109,16 +105,11 @@ pub type Implementations = HashSet<Name>;
 pub struct TypeDefinition {
     directives: Directives,
     implementations: Option<Implementations>,
+    is_ext: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DirectiveDefinition {}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TypeExtension {
-    directives: Directives,
-    implementations: Option<Implementations>,
-}
 
 #[derive(Clone, Eq)]
 pub struct Name {

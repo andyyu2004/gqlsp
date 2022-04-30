@@ -12,14 +12,16 @@ fn test_lower_item_body() {
     setup!(db: {
         foo: r#"
         directive @qux on FIELD_DEFINITION
-        type Foo {
+        extend type Foo {
             foo: Int @qux
             list: [Int]
             nonNull: Int! @qux
             nonNullList: [Int!]! @qux
             a: [Int!]
             b: [Int]!
-        }"#,
+        }
+        "#,
+
     });
 
     let body = db.item_body(ItemRes { file: foo, idx: idx!(1) });

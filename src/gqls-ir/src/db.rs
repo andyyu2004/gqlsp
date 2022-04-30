@@ -75,7 +75,6 @@ fn item_body(db: &dyn DefDatabase, res: ItemRes) -> Option<Arc<ItemBody>> {
     let bcx = BodyCtxt::new(db.file_text(res.file));
     let body = match item.kind {
         ItemKind::TypeDefinition(_) => bcx.lower_typedef(item_node),
-        ItemKind::TypeExtension(_) => bcx.lower_type_ext(item_node),
         ItemKind::DirectiveDefinition(_) => return None,
     };
     Some(Arc::new(body))
@@ -172,7 +171,7 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
 
                 let fields = body.as_deref().and_then(|b| b.fields_slice()).unwrap_or(&[]).iter();
                 match res_item.kind {
-                    ItemKind::TypeDefinition(_) | ItemKind::TypeExtension(_) => references.extend(
+                    ItemKind::TypeDefinition(_) => references.extend(
                         fields
                             .filter(|field| field.ty.name() == name)
                             .map(|field| (file, field.ty.name().range)),

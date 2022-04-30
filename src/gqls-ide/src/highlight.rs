@@ -99,8 +99,7 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                 NodeKind::TYPE => match self.snapshot.resolve_type_at(self.file, at)[..] {
                     [] => SemanticTokenKind::Type,
                     [x, ..] => match self.snapshot.item(x).kind {
-                        ItemKind::TypeDefinition(_) | ItemKind::TypeExtension(_) =>
-                            SemanticTokenKind::Object,
+                        ItemKind::TypeDefinition(_) => SemanticTokenKind::Object,
                         ItemKind::DirectiveDefinition(_) => SemanticTokenKind::Directive,
                     },
                 },

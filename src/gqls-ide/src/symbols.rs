@@ -44,7 +44,7 @@ impl Snapshot {
         for (idx, item) in items.items.iter() {
             let kind = match item.kind {
                 // FIXME debatable which symbol kinds they should be
-                ItemKind::TypeDefinition(_) | ItemKind::TypeExtension(_) => SymbolKind::Struct,
+                ItemKind::TypeDefinition(_) => SymbolKind::Struct,
                 ItemKind::DirectiveDefinition(_) => SymbolKind::Constant,
             };
             let children = self

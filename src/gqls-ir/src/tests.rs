@@ -160,8 +160,8 @@ fn test_definitions() {
                     Item {
                         name: Bar,
                         range: 13:8..15:9,
-                        kind: TypeExtension(
-                            Idx::<TypeExtension>(0),
+                        kind: TypeDefinition(
+                            Idx::<TypeDefinition>(3),
                         ),
                     },
                     Item {
@@ -175,34 +175,34 @@ fn test_definitions() {
                         name: S,
                         range: 19:8..19:21,
                         kind: TypeDefinition(
-                            Idx::<TypeDefinition>(3),
+                            Idx::<TypeDefinition>(4),
                         ),
                     },
                     Item {
                         name: U,
                         range: 21:8..21:32,
                         kind: TypeDefinition(
-                            Idx::<TypeDefinition>(4),
+                            Idx::<TypeDefinition>(5),
                         ),
                     },
                     Item {
                         name: I,
                         range: 23:8..25:9,
                         kind: TypeDefinition(
-                            Idx::<TypeDefinition>(5),
+                            Idx::<TypeDefinition>(6),
                         ),
                     },
                     Item {
                         name: Iface,
                         range: 27:8..29:9,
                         kind: TypeDefinition(
-                            Idx::<TypeDefinition>(6),
+                            Idx::<TypeDefinition>(7),
                         ),
                     },
                 ],
             },
             types: Arena {
-                len: 7,
+                len: 8,
                 data: [
                     TypeDefinition {
                         directives: [
@@ -212,14 +212,26 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        is_ext: false,
                     },
                     TypeDefinition {
                         directives: [],
                         implementations: None,
+                        is_ext: false,
                     },
                     TypeDefinition {
                         directives: [],
                         implementations: None,
+                        is_ext: false,
+                    },
+                    TypeDefinition {
+                        directives: [],
+                        implementations: Some(
+                            {
+                                Iface,
+                            },
+                        ),
+                        is_ext: true,
                     },
                     TypeDefinition {
                         directives: [
@@ -229,6 +241,7 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        is_ext: false,
                     },
                     TypeDefinition {
                         directives: [
@@ -238,6 +251,7 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        is_ext: false,
                     },
                     TypeDefinition {
                         directives: [
@@ -247,6 +261,7 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        is_ext: false,
                     },
                     TypeDefinition {
                         directives: [
@@ -256,6 +271,7 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        is_ext: false,
                     },
                 ],
             },
@@ -263,19 +279,6 @@ fn test_definitions() {
                 len: 1,
                 data: [
                     DirectiveDefinition,
-                ],
-            },
-            type_exts: Arena {
-                len: 1,
-                data: [
-                    TypeExtension {
-                        directives: [],
-                        implementations: Some(
-                            {
-                                Iface,
-                            },
-                        ),
-                    },
                 ],
             },
         }
@@ -317,6 +320,7 @@ fn test_definitions() {
                     TypeDefinition {
                         directives: [],
                         implementations: None,
+                        is_ext: false,
                     },
                     TypeDefinition {
                         directives: [
@@ -326,6 +330,7 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        is_ext: false,
                     },
                 ],
             },
@@ -334,10 +339,6 @@ fn test_definitions() {
                 data: [
                     DirectiveDefinition,
                 ],
-            },
-            type_exts: Arena {
-                len: 0,
-                data: [],
             },
         }
     "#]]
