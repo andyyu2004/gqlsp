@@ -4,8 +4,8 @@ use std::io::Write;
 
 #[test]
 fn generate_node_kinds() -> std::io::Result<()> {
-    let path = std::path::PathBuf::from(env!("CARGO_WORKSPACE_DIR"))
-        .join("tree-sitter-graphql/src/parser.c");
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tree-sitter-graphql/src/parser.c");
     let source = std::fs::read_to_string(path)?;
     let mut lines = source.lines();
     while let Some(line) = lines.next() {

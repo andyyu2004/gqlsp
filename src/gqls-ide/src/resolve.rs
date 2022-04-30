@@ -6,9 +6,14 @@ use vfs::FileId;
 
 use crate::Snapshot;
 
+// TODO resolve logic should be moved to the ir layer
 impl Snapshot {
     pub(crate) fn resolve_item_name_at(&self, file: FileId, at: Point) -> ItemResolutions {
         self.name_at(file, at).map(|name| self.resolve_item(file, name)).unwrap_or_default()
+    }
+
+    pub(crate) fn resolve_type_at(&self, file: FileId, at: Point) -> ItemResolutions {
+        self.type_at(file, at).map(|ty| self.resolve_item(file, ty.name())).unwrap_or_default()
     }
 
     pub(crate) fn resolve_item_at(&self, file: FileId, at: Point) -> Option<ItemRes> {

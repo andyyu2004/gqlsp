@@ -34,7 +34,7 @@ fn test_highlight() {
                     kind: Type,
                 },
                 SemanticToken {
-                    range: (2, 11)..(2, 14),
+                    range: (2, 11)..(2, 15),
                     kind: Type,
                 },
             ]

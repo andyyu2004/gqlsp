@@ -4,7 +4,7 @@ mod nodes;
 mod traverse;
 
 pub use self::nodes::NodeKind;
-use self::traverse::Traverse;
+pub use self::traverse::{Traverse, TraverseEvent};
 
 pub use tree_sitter::{Language, Node, Parser, Point, Query, Range, Tree, TreeCursor};
 

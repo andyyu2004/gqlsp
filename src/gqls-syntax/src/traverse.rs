@@ -20,6 +20,19 @@ pub enum TraverseEvent<'tree> {
     Exit(Node<'tree>),
 }
 
+impl<'tree> TraverseEvent<'tree> {
+    pub fn node(self) -> Node<'tree> {
+        match self {
+            TraverseEvent::Enter(node) | TraverseEvent::Exit(node) => node,
+        }
+    }
+
+    #[must_use]
+    pub fn is_exit(&self) -> bool {
+        matches!(self, Self::Exit(..))
+    }
+}
+
 impl Debug for TraverseEvent<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
