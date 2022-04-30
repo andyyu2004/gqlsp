@@ -32,151 +32,52 @@ fn test_lower_item_body() {
                             len: 6,
                             data: [
                                 Field {
-                                    range: Range {
-                                        start_byte: 75,
-                                        end_byte: 88,
-                                        start_point: Point {
-                                            row: 3,
-                                            column: 12,
-                                        },
-                                        end_point: Point {
-                                            row: 3,
-                                            column: 25,
-                                        },
-                                    },
+                                    range: 3:12..3:25,
                                     name: foo,
                                     ty: Int,
                                     directives: [
                                         Directive {
-                                            range: Range {
-                                                start_byte: 84,
-                                                end_byte: 88,
-                                                start_point: Point {
-                                                    row: 3,
-                                                    column: 21,
-                                                },
-                                                end_point: Point {
-                                                    row: 3,
-                                                    column: 25,
-                                                },
-                                            },
+                                            range: 3:21..3:25,
                                             name: qux,
                                         },
                                     ],
                                 },
                                 Field {
-                                    range: Range {
-                                        start_byte: 101,
-                                        end_byte: 112,
-                                        start_point: Point {
-                                            row: 4,
-                                            column: 12,
-                                        },
-                                        end_point: Point {
-                                            row: 4,
-                                            column: 23,
-                                        },
-                                    },
+                                    range: 4:12..4:23,
                                     name: list,
                                     ty: [Int],
                                     directives: [],
                                 },
                                 Field {
-                                    range: Range {
-                                        start_byte: 125,
-                                        end_byte: 143,
-                                        start_point: Point {
-                                            row: 5,
-                                            column: 12,
-                                        },
-                                        end_point: Point {
-                                            row: 5,
-                                            column: 30,
-                                        },
-                                    },
+                                    range: 5:12..5:30,
                                     name: nonNull,
                                     ty: Int!,
                                     directives: [
                                         Directive {
-                                            range: Range {
-                                                start_byte: 139,
-                                                end_byte: 143,
-                                                start_point: Point {
-                                                    row: 5,
-                                                    column: 26,
-                                                },
-                                                end_point: Point {
-                                                    row: 5,
-                                                    column: 30,
-                                                },
-                                            },
+                                            range: 5:26..5:30,
                                             name: qux,
                                         },
                                     ],
                                 },
                                 Field {
-                                    range: Range {
-                                        start_byte: 156,
-                                        end_byte: 181,
-                                        start_point: Point {
-                                            row: 6,
-                                            column: 12,
-                                        },
-                                        end_point: Point {
-                                            row: 6,
-                                            column: 37,
-                                        },
-                                    },
+                                    range: 6:12..6:37,
                                     name: nonNullList,
                                     ty: [Int!]!,
                                     directives: [
                                         Directive {
-                                            range: Range {
-                                                start_byte: 177,
-                                                end_byte: 181,
-                                                start_point: Point {
-                                                    row: 6,
-                                                    column: 33,
-                                                },
-                                                end_point: Point {
-                                                    row: 6,
-                                                    column: 37,
-                                                },
-                                            },
+                                            range: 6:33..6:37,
                                             name: qux,
                                         },
                                     ],
                                 },
                                 Field {
-                                    range: Range {
-                                        start_byte: 194,
-                                        end_byte: 203,
-                                        start_point: Point {
-                                            row: 7,
-                                            column: 12,
-                                        },
-                                        end_point: Point {
-                                            row: 7,
-                                            column: 21,
-                                        },
-                                    },
+                                    range: 7:12..7:21,
                                     name: a,
                                     ty: [Int!],
                                     directives: [],
                                 },
                                 Field {
-                                    range: Range {
-                                        start_byte: 216,
-                                        end_byte: 225,
-                                        start_point: Point {
-                                            row: 8,
-                                            column: 12,
-                                        },
-                                        end_point: Point {
-                                            row: 8,
-                                            column: 21,
-                                        },
-                                    },
+                                    range: 8:12..8:21,
                                     name: b,
                                     ty: [Int]!,
                                     directives: [],

@@ -138,162 +138,63 @@ fn test_definitions() {
                 data: [
                     Item {
                         name: Foo,
-                        range: Range {
-                            start_byte: 9,
-                            end_byte: 59,
-                            start_point: Point {
-                                row: 1,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 3,
-                                column: 9,
-                            },
-                        },
+                        range: 1:8..3:9,
                         kind: TypeDefinition(
                             Idx::<TypeDefinition>(0),
                         ),
                     },
                     Item {
                         name: Foo,
-                        range: Range {
-                            start_byte: 69,
-                            end_byte: 113,
-                            start_point: Point {
-                                row: 5,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 7,
-                                column: 9,
-                            },
-                        },
+                        range: 5:8..7:9,
                         kind: TypeDefinition(
                             Idx::<TypeDefinition>(1),
                         ),
                     },
                     Item {
                         name: Bar,
-                        range: Range {
-                            start_byte: 123,
-                            end_byte: 164,
-                            start_point: Point {
-                                row: 9,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 11,
-                                column: 9,
-                            },
-                        },
+                        range: 9:8..11:9,
                         kind: TypeDefinition(
                             Idx::<TypeDefinition>(2),
                         ),
                     },
                     Item {
                         name: Bar,
-                        range: Range {
-                            start_byte: 174,
-                            end_byte: 243,
-                            start_point: Point {
-                                row: 13,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 15,
-                                column: 9,
-                            },
-                        },
+                        range: 13:8..15:9,
                         kind: TypeExtension(
                             Idx::<TypeExtension>(0),
                         ),
                     },
                     Item {
                         name: qux,
-                        range: Range {
-                            start_byte: 253,
-                            end_byte: 296,
-                            start_point: Point {
-                                row: 17,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 17,
-                                column: 51,
-                            },
-                        },
+                        range: 17:8..17:51,
                         kind: DirectiveDefinition(
                             Idx::<DirectiveDefinition>(0),
                         ),
                     },
                     Item {
                         name: S,
-                        range: Range {
-                            start_byte: 306,
-                            end_byte: 319,
-                            start_point: Point {
-                                row: 19,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 19,
-                                column: 21,
-                            },
-                        },
+                        range: 19:8..19:21,
                         kind: TypeDefinition(
                             Idx::<TypeDefinition>(3),
                         ),
                     },
                     Item {
                         name: U,
-                        range: Range {
-                            start_byte: 329,
-                            end_byte: 353,
-                            start_point: Point {
-                                row: 21,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 21,
-                                column: 32,
-                            },
-                        },
+                        range: 21:8..21:32,
                         kind: TypeDefinition(
                             Idx::<TypeDefinition>(4),
                         ),
                     },
                     Item {
                         name: I,
-                        range: Range {
-                            start_byte: 363,
-                            end_byte: 413,
-                            start_point: Point {
-                                row: 23,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 25,
-                                column: 9,
-                            },
-                        },
+                        range: 23:8..25:9,
                         kind: TypeDefinition(
                             Idx::<TypeDefinition>(5),
                         ),
                     },
                     Item {
                         name: Iface,
-                        range: Range {
-                            start_byte: 423,
-                            end_byte: 481,
-                            start_point: Point {
-                                row: 27,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 29,
-                                column: 9,
-                            },
-                        },
+                        range: 27:8..29:9,
                         kind: TypeDefinition(
                             Idx::<TypeDefinition>(6),
                         ),
@@ -306,18 +207,7 @@ fn test_definitions() {
                     TypeDefinition {
                         directives: [
                             Directive {
-                                range: Range {
-                                    start_byte: 18,
-                                    end_byte: 22,
-                                    start_point: Point {
-                                        row: 1,
-                                        column: 17,
-                                    },
-                                    end_point: Point {
-                                        row: 1,
-                                        column: 21,
-                                    },
-                                },
+                                range: 1:17..1:21,
                                 name: qux,
                             },
                         ],
@@ -334,18 +224,7 @@ fn test_definitions() {
                     TypeDefinition {
                         directives: [
                             Directive {
-                                range: Range {
-                                    start_byte: 315,
-                                    end_byte: 319,
-                                    start_point: Point {
-                                        row: 19,
-                                        column: 17,
-                                    },
-                                    end_point: Point {
-                                        row: 19,
-                                        column: 21,
-                                    },
-                                },
+                                range: 19:17..19:21,
                                 name: qux,
                             },
                         ],
@@ -354,18 +233,7 @@ fn test_definitions() {
                     TypeDefinition {
                         directives: [
                             Directive {
-                                range: Range {
-                                    start_byte: 337,
-                                    end_byte: 341,
-                                    start_point: Point {
-                                        row: 21,
-                                        column: 16,
-                                    },
-                                    end_point: Point {
-                                        row: 21,
-                                        column: 20,
-                                    },
-                                },
+                                range: 21:16..21:20,
                                 name: qux,
                             },
                         ],
@@ -374,18 +242,7 @@ fn test_definitions() {
                     TypeDefinition {
                         directives: [
                             Directive {
-                                range: Range {
-                                    start_byte: 371,
-                                    end_byte: 375,
-                                    start_point: Point {
-                                        row: 23,
-                                        column: 16,
-                                    },
-                                    end_point: Point {
-                                        row: 23,
-                                        column: 20,
-                                    },
-                                },
+                                range: 23:16..23:20,
                                 name: qux,
                             },
                         ],
@@ -394,18 +251,7 @@ fn test_definitions() {
                     TypeDefinition {
                         directives: [
                             Directive {
-                                range: Range {
-                                    start_byte: 439,
-                                    end_byte: 443,
-                                    start_point: Point {
-                                        row: 27,
-                                        column: 24,
-                                    },
-                                    end_point: Point {
-                                        row: 27,
-                                        column: 28,
-                                    },
-                                },
+                                range: 27:24..27:28,
                                 name: qux,
                             },
                         ],
@@ -444,54 +290,21 @@ fn test_definitions() {
                 data: [
                     Item {
                         name: Bar,
-                        range: Range {
-                            start_byte: 9,
-                            end_byte: 50,
-                            start_point: Point {
-                                row: 1,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 3,
-                                column: 9,
-                            },
-                        },
+                        range: 1:8..3:9,
                         kind: TypeDefinition(
                             Idx::<TypeDefinition>(0),
                         ),
                     },
                     Item {
                         name: Baz,
-                        range: Range {
-                            start_byte: 60,
-                            end_byte: 106,
-                            start_point: Point {
-                                row: 5,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 7,
-                                column: 9,
-                            },
-                        },
+                        range: 5:8..7:9,
                         kind: TypeDefinition(
                             Idx::<TypeDefinition>(1),
                         ),
                     },
                     Item {
                         name: d,
-                        range: Range {
-                            start_byte: 116,
-                            end_byte: 137,
-                            start_point: Point {
-                                row: 9,
-                                column: 8,
-                            },
-                            end_point: Point {
-                                row: 9,
-                                column: 29,
-                            },
-                        },
+                        range: 9:8..9:29,
                         kind: DirectiveDefinition(
                             Idx::<DirectiveDefinition>(0),
                         ),
@@ -508,18 +321,7 @@ fn test_definitions() {
                     TypeDefinition {
                         directives: [
                             Directive {
-                                range: Range {
-                                    start_byte: 69,
-                                    end_byte: 73,
-                                    start_point: Point {
-                                        row: 5,
-                                        column: 17,
-                                    },
-                                    end_point: Point {
-                                        row: 5,
-                                        column: 21,
-                                    },
-                                },
+                                range: 5:17..5:21,
                                 name: foo,
                             },
                         ],

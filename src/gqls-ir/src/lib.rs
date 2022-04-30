@@ -49,19 +49,51 @@ impl Items {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Item {
     pub name: Name,
     pub range: Range,
     pub kind: ItemKind,
 }
 
+struct RangeDebug(Range);
+
+impl Debug for RangeDebug {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Range { start_point, end_point, .. } = self.0;
+        write!(
+            f,
+            "{}:{}..{}:{}",
+            start_point.row, start_point.column, end_point.row, end_point.column
+        )
+    }
+}
+
+impl Debug for Item {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Item")
+            .field("name", &self.name)
+            .field("range", &RangeDebug(self.range))
+            .field("kind", &self.kind)
+            .finish()
+    }
+}
+
 pub type Directives = Vec<Directive>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Directive {
     pub range: Range,
     pub name: Name,
+}
+
+impl Debug for Directive {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Directive")
+            .field("range", &RangeDebug(self.range))
+            .field("name", &self.name)
+            .finish()
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
