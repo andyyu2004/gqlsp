@@ -16,7 +16,7 @@ pub struct Range {
 
 impl Debug for Range {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}..{}", self.start, self.end)
+        write!(f, "{}:{}..{}:{}", self.start.row, self.start.column, self.end.row, self.end.column)
     }
 }
 

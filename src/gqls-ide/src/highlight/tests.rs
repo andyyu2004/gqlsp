@@ -11,7 +11,7 @@ fn test(fixture: Fixture, expect: Expect) {
 }
 
 #[test]
-fn test_highlight() {
+fn test_highlight_simple() {
     let fixture = fixture!("" => "
     type Foo {
         x: Int!
@@ -21,23 +21,43 @@ fn test_highlight() {
         fixture,
         expect![[r#"
             [
-                SemanticToken {
-                    range: (1, 4)..(1, 8),
-                    kind: Keyword,
-                },
-                SemanticToken {
-                    range: (1, 9)..(1, 12),
-                    kind: Type,
-                },
-                SemanticToken {
-                    range: (2, 8)..(2, 9),
-                    kind: Type,
-                },
-                SemanticToken {
-                    range: (2, 11)..(2, 15),
-                    kind: Type,
-                },
+                1:4..1:8 :: Keyword,
+                1:9..1:12 :: Object,
+                2:8..2:9 :: Field,
+                2:11..2:15 :: Type,
             ]
         "#]],
     );
 }
+
+// #[test]
+// fn test_highlight() {
+//     let fixture = fixture!("" => "
+//     type Object {
+//         x: Object!
+//     }
+//     ");
+//     test(
+//         fixture,
+//         expect![[r#"
+//             [
+//                 SemanticToken {
+//                     range: (1, 4)..(1, 8),
+//                     kind: Keyword,
+//                 },
+//                 SemanticToken {
+//                     range: (1, 9)..(1, 12),
+//                     kind: Type,
+//                 },
+//                 SemanticToken {
+//                     range: (2, 8)..(2, 9),
+//                     kind: Type,
+//                 },
+//                 SemanticToken {
+//                     range: (2, 11)..(2, 15),
+//                     kind: Type,
+//                 },
+//             ]
+//         "#]],
+//     );
+// }

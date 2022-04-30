@@ -24,6 +24,7 @@ pub trait DefDatabase: SourceDatabase {
     fn resolve(&self, file: FileId, at: Point) -> Option<Res>;
     fn resolve_item(&self, file: FileId, name: Name) -> ItemResolutions;
     fn type_at(&self, file: FileId, at: Point) -> Option<Ty>;
+    fn typedef(&self, file: FileId, idx: Idx<TypeDefinition>) -> TypeDefinition;
 }
 
 fn implementations(db: &dyn DefDatabase, file: FileId, interface: Name) -> Vec<ItemRes> {
@@ -195,4 +196,8 @@ fn references(db: &dyn DefDatabase, res: Res) -> References {
         Res::Item(item) => db.item_references(item),
         Res::Field(_) => todo!(),
     }
+}
+
+fn typedef(db: &dyn DefDatabase, file: FileId, idx: Idx<TypeDefinition>) -> TypeDefinition {
+    db.items(file).typedefs[idx].clone()
 }

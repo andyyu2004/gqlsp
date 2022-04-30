@@ -48,12 +48,12 @@ fn test_document_symbols() {
                 Symbol {
                     name: Foo,
                     kind: Struct,
-                    range: (1, 12)..(4, 13),
+                    range: 1:12..4:13,
                     children: [
                         Symbol {
                             name: bar,
                             kind: Field,
-                            range: (2, 16)..(2, 24),
+                            range: 2:16..2:24,
                             children: [],
                             detail: Some(
                                 "Bar",
@@ -62,7 +62,7 @@ fn test_document_symbols() {
                         Symbol {
                             name: baz,
                             kind: Field,
-                            range: (3, 16)..(3, 24),
+                            range: 3:16..3:24,
                             children: [],
                             detail: Some(
                                 "Int",
@@ -74,12 +74,12 @@ fn test_document_symbols() {
                 Symbol {
                     name: Bar,
                     kind: Struct,
-                    range: (6, 12)..(8, 13),
+                    range: 6:12..8:13,
                     children: [
                         Symbol {
                             name: foo,
                             kind: Field,
-                            range: (7, 16)..(7, 24),
+                            range: 7:16..7:24,
                             children: [],
                             detail: Some(
                                 "Foo",
@@ -91,12 +91,12 @@ fn test_document_symbols() {
                 Symbol {
                     name: Interface,
                     kind: Struct,
-                    range: (10, 12)..(12, 13),
+                    range: 10:12..12:13,
                     children: [
                         Symbol {
                             name: foo,
                             kind: Field,
-                            range: (11, 16)..(11, 24),
+                            range: 11:16..11:24,
                             children: [],
                             detail: Some(
                                 "Foo",
@@ -108,12 +108,12 @@ fn test_document_symbols() {
                 Symbol {
                     name: Input,
                     kind: Struct,
-                    range: (14, 12)..(16, 13),
+                    range: 14:12..16:13,
                     children: [
                         Symbol {
                             name: i,
                             kind: Field,
-                            range: (15, 16)..(15, 22),
+                            range: 15:16..15:22,
                             children: [],
                             detail: Some(
                                 "Int",
@@ -125,12 +125,12 @@ fn test_document_symbols() {
                 Symbol {
                     name: Extension,
                     kind: Struct,
-                    range: (18, 12)..(20, 13),
+                    range: 18:12..20:13,
                     children: [
                         Symbol {
                             name: foo,
                             kind: Field,
-                            range: (19, 16)..(19, 24),
+                            range: 19:16..19:24,
                             children: [],
                             detail: Some(
                                 "Foo",

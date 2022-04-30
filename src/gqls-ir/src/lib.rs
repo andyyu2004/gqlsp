@@ -23,21 +23,21 @@ use vfs::FileId;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Items {
     pub items: Arena<Item>,
-    pub types: Arena<TypeDefinition>,
+    pub typedefs: Arena<TypeDefinition>,
     pub directives: Arena<DirectiveDefinition>,
 }
 
 impl Items {
     pub fn directives(&self, idx: Idx<Item>) -> Option<&Directives> {
         match self.items[idx].kind {
-            ItemKind::TypeDefinition(typedef) => Some(&self.types[typedef].directives),
+            ItemKind::TypeDefinition(typedef) => Some(&self.typedefs[typedef].directives),
             ItemKind::DirectiveDefinition(_) => None,
         }
     }
 
     pub fn implements(&self, idx: Idx<Item>, interface: &Name) -> bool {
         match self.items[idx].kind {
-            ItemKind::TypeDefinition(typedef) => &self.types[typedef].implementations,
+            ItemKind::TypeDefinition(typedef) => &self.typedefs[typedef].implementations,
             ItemKind::DirectiveDefinition(_) => return false,
         }
         .as_ref()
@@ -103,10 +103,10 @@ pub type Implementations = HashSet<Name>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeDefinition {
-    directives: Directives,
-    implementations: Option<Implementations>,
-    kind: TypeDefinitionKind,
-    is_ext: bool,
+    pub directives: Directives,
+    pub implementations: Option<Implementations>,
+    pub kind: TypeDefinitionKind,
+    pub is_ext: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -2,6 +2,7 @@
 
 use std::io::Write;
 
+// TODO use the `node_ids` instead of the string representation for efficiency
 #[test]
 fn generate_node_kinds() -> std::io::Result<()> {
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -1,15 +1,23 @@
+use std::fmt::{self, Debug};
+
 use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::ItemKind;
+use gqls_ir::{ItemKind, TypeDefinitionKind};
 use gqls_syntax::{Node, NodeExt, NodeKind, Traverse, TraverseEvent};
 use vfs::FileId;
 
 use crate::edit::RangeExt;
 use crate::{Range, Snapshot};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct SemanticToken {
     range: Range,
     kind: SemanticTokenKind,
+}
+
+impl Debug for SemanticToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?} :: {:?}", self.range, self.kind)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -17,6 +25,8 @@ pub enum SemanticTokenKind {
     Comment,
     Directive,
     Enum,
+    Field,
+    InputObject,
     Interface,
     Keyword,
     Number,
@@ -24,6 +34,7 @@ pub enum SemanticTokenKind {
     Scalar,
     String,
     Type,
+    Union,
 }
 
 impl Snapshot {
@@ -42,7 +53,17 @@ struct Highlighter<'a, 'tree> {
     file: FileId,
     nodes: Traverse<'tree>,
     tokens: Vec<SemanticToken>,
-    scopes: Vec<&'static str>,
+    scopes: Vec<Scope>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
+enum Scope {
+    Object,
+    Interface,
+    Enum,
+    Union,
+    InputObject,
+    Field,
 }
 
 macro_rules! next {
@@ -64,6 +85,10 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
         self.tokens
     }
 
+    fn scope(&self) -> Scope {
+        *self.scopes.last().unwrap()
+    }
+
     fn highlight_document(&mut self) {
         let mut skip_until = None;
         loop {
@@ -72,7 +97,14 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
             let node = event.node();
 
             let scope = match node.kind() {
-                NodeKind::FIELD_DEFINITION => Some(node.kind()),
+                NodeKind::FIELD_DEFINITION => Some(Scope::Field),
+                NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
+                    Some(Scope::Object),
+                NodeKind::INTERFACE_TYPE_DEFINITION | NodeKind::INTERFACE_TYPE_EXTENSION =>
+                    Some(Scope::Interface),
+                NodeKind::ENUM_TYPE_DEFINITION | NodeKind::ENUM_TYPE_EXTENSION => Some(Scope::Enum),
+                NodeKind::INPUT_OBJECT_TYPE_DEFINITION | NodeKind::INPUT_OBJECT_TYPE_EXTENSION =>
+                    Some(Scope::InputObject),
                 _ => None,
             };
 
@@ -99,12 +131,27 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                 NodeKind::TYPE => match self.snapshot.resolve_type_at(self.file, at)[..] {
                     [] => SemanticTokenKind::Type,
                     [x, ..] => match self.snapshot.item(x).kind {
-                        ItemKind::TypeDefinition(_) => SemanticTokenKind::Object,
-                        ItemKind::DirectiveDefinition(_) => SemanticTokenKind::Directive,
+                        ItemKind::TypeDefinition(typedef) =>
+                            match self.snapshot.typedef(self.file, typedef).kind {
+                                TypeDefinitionKind::Object => SemanticTokenKind::Object,
+                                TypeDefinitionKind::Interface => SemanticTokenKind::Interface,
+                                TypeDefinitionKind::Input => SemanticTokenKind::InputObject,
+                                TypeDefinitionKind::Scalar => SemanticTokenKind::Scalar,
+                                TypeDefinitionKind::Enum => SemanticTokenKind::Enum,
+                                TypeDefinitionKind::Union => SemanticTokenKind::Union,
+                            },
+                        ItemKind::DirectiveDefinition(_) => unreachable!(),
                     },
                 },
                 // FIXME
-                NodeKind::NAME => SemanticTokenKind::Type,
+                NodeKind::NAME => match self.scope() {
+                    Scope::Object => SemanticTokenKind::Object,
+                    Scope::Field => SemanticTokenKind::Field,
+                    Scope::Interface => SemanticTokenKind::Interface,
+                    Scope::Enum => SemanticTokenKind::Enum,
+                    Scope::Union => SemanticTokenKind::Union,
+                    Scope::InputObject => SemanticTokenKind::InputObject,
+                },
                 _ => continue,
             };
 

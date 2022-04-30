@@ -201,7 +201,7 @@ fn test_definitions() {
                     },
                 ],
             },
-            types: Arena {
+            typedefs: Arena {
                 len: 8,
                 data: [
                     TypeDefinition {
@@ -322,7 +322,7 @@ fn test_definitions() {
                     },
                 ],
             },
-            types: Arena {
+            typedefs: Arena {
                 len: 2,
                 data: [
                     TypeDefinition {
