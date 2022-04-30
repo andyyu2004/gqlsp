@@ -145,6 +145,7 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                     SemanticTokenKind::Keyword,
                 // TODO builtin types (ID, String, Int should be defaultLibrary types)
                 NodeKind::TYPE => self.highlight_type(at),
+                NodeKind::DIRECTIVE => SemanticTokenKind::Directive,
                 NodeKind::ENUM_VALUE => SemanticTokenKind::EnumValue,
                 NodeKind::NAME => match self.scope() {
                     Scope::Enum => SemanticTokenKind::Enum,
