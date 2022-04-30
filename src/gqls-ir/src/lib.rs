@@ -105,7 +105,18 @@ pub type Implementations = HashSet<Name>;
 pub struct TypeDefinition {
     directives: Directives,
     implementations: Option<Implementations>,
+    kind: TypeDefinitionKind,
     is_ext: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TypeDefinitionKind {
+    Object,
+    Interface,
+    Input,
+    Scalar,
+    Enum,
+    Union,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

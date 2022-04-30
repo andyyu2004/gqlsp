@@ -139,16 +139,17 @@ impl ItemCtxt {
         let (name, kind) = match def.kind() {
             NodeKind::TYPE_DEFINITION => {
                 let typedef = def.sole_named_child();
-                let name_node = match typedef.kind() {
-                    NodeKind::OBJECT_TYPE_DEFINITION
-                    | NodeKind::INTERFACE_TYPE_DEFINITION
-                    | NodeKind::SCALAR_TYPE_DEFINITION
-                    | NodeKind::ENUM_TYPE_DEFINITION
-                    | NodeKind::UNION_TYPE_DEFINITION
-                    | NodeKind::INPUT_OBJECT_TYPE_DEFINITION => typedef.name_node()?,
+                let kind = match typedef.kind() {
+                    NodeKind::OBJECT_TYPE_DEFINITION => TypeDefinitionKind::Object,
+                    NodeKind::INTERFACE_TYPE_DEFINITION => TypeDefinitionKind::Interface,
+                    NodeKind::SCALAR_TYPE_DEFINITION => TypeDefinitionKind::Scalar,
+                    NodeKind::ENUM_TYPE_DEFINITION => TypeDefinitionKind::Enum,
+                    NodeKind::UNION_TYPE_DEFINITION => TypeDefinitionKind::Union,
+                    NodeKind::INPUT_OBJECT_TYPE_DEFINITION => TypeDefinitionKind::Input,
                     _ =>
                         unreachable!("invalid node kind for type definition: {:?}", typedef.kind()),
                 };
+                let name_node = typedef.name_node()?;
                 let name = Name::new(self, name_node);
                 let directives = self.lower_directives_of(typedef);
                 let implementations = self.try_lower_implementations_of(typedef);
@@ -156,6 +157,7 @@ impl ItemCtxt {
                     name,
                     ItemKind::TypeDefinition(self.typedefs.alloc(TypeDefinition {
                         is_ext: false,
+                        kind,
                         directives,
                         implementations,
                     })),
@@ -163,11 +165,12 @@ impl ItemCtxt {
             }
             NodeKind::TYPE_EXTENSION => {
                 let type_ext = def.sole_named_child();
-                let name_node = match type_ext.kind() {
-                    NodeKind::OBJECT_TYPE_EXTENSION => type_ext.name_node()?,
+                let kind = match type_ext.kind() {
+                    NodeKind::OBJECT_TYPE_EXTENSION => TypeDefinitionKind::Object,
                     // TODO
                     _ => return None,
                 };
+                let name_node = type_ext.name_node()?;
                 let name = Name::new(self, name_node);
                 let directives = self.lower_directives_of(type_ext);
                 let implementations = self.try_lower_implementations_of(type_ext);
@@ -175,6 +178,7 @@ impl ItemCtxt {
                     name,
                     ItemKind::TypeDefinition(self.typedefs.alloc(TypeDefinition {
                         is_ext: true,
+                        kind,
                         directives,
                         implementations,
                     })),

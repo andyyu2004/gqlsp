@@ -212,16 +212,19 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        kind: Object,
                         is_ext: false,
                     },
                     TypeDefinition {
                         directives: [],
                         implementations: None,
+                        kind: Object,
                         is_ext: false,
                     },
                     TypeDefinition {
                         directives: [],
                         implementations: None,
+                        kind: Object,
                         is_ext: false,
                     },
                     TypeDefinition {
@@ -231,6 +234,7 @@ fn test_definitions() {
                                 Iface,
                             },
                         ),
+                        kind: Object,
                         is_ext: true,
                     },
                     TypeDefinition {
@@ -241,6 +245,7 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        kind: Scalar,
                         is_ext: false,
                     },
                     TypeDefinition {
@@ -251,6 +256,7 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        kind: Union,
                         is_ext: false,
                     },
                     TypeDefinition {
@@ -261,6 +267,7 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        kind: Input,
                         is_ext: false,
                     },
                     TypeDefinition {
@@ -271,6 +278,7 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        kind: Interface,
                         is_ext: false,
                     },
                 ],
@@ -320,6 +328,7 @@ fn test_definitions() {
                     TypeDefinition {
                         directives: [],
                         implementations: None,
+                        kind: Object,
                         is_ext: false,
                     },
                     TypeDefinition {
@@ -330,6 +339,7 @@ fn test_definitions() {
                             },
                         ],
                         implementations: None,
+                        kind: Object,
                         is_ext: false,
                     },
                 ],
