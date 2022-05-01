@@ -69,7 +69,7 @@ macro_rules! build_request {
 macro_rules! fixture_path {
     ($name:literal) => {{
         let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/lsp/fixtures")
+            .join("tests/lsp/fixtures/")
             .join($name);
         assert!(path.exists(), "fixture `{}` does not exist (path `{}`)", $name, path.display());
         path
@@ -77,7 +77,7 @@ macro_rules! fixture_path {
 }
 
 macro_rules! fixture {
-    ($name:literal) => {{ lsp_types::Url::from_file_path(fixture_path!($name)).unwrap() }};
+    ($name:literal) => {{ lsp_types::Url::from_directory_path(fixture_path!($name)).unwrap() }};
 }
 
 macro_rules! url {
@@ -118,6 +118,14 @@ impl ResponseExt for Response {
 #[test]
 fn test_fixture_path_macro() {
     assert!(fixture_path!("simple").ends_with("tests/lsp/fixtures/simple"));
+    assert!(fixture!("simple").as_str().ends_with("tests/lsp/fixtures/simple/"));
+}
+
+#[test]
+fn test_url_macro() {
+    assert!(
+        url!("simple"."test.graphql").as_str().ends_with("tests/lsp/fixtures/simple/test.graphql")
+    );
 }
 
 #[tokio::test]
@@ -200,6 +208,22 @@ async fn test_lsp_configuration() -> Result<()> {
     let (service, _) = make_service!();
     request_init!(service: "config");
     let _foo = url!("config"."foo.graphql");
+
+    Ok(())
+}
+
+#[tokio::test]
+#[tracing_test::traced_test]
+async fn test_lsp_semantic_tokens() -> Result<()> {
+    let (service, _) = make_service!();
+    request_init!(service: "highlight");
+    let url = url!("highlight"."highlight.graphql");
+    let x = request!(service: "textDocument/semanticTokens/full", json!({
+        "textDocument": {
+            "uri": url,
+        },
+    }))
+    .unwrap();
 
     Ok(())
 }

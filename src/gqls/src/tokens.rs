@@ -15,6 +15,7 @@ pub const TYPES: &[SemanticTokenType] = &[
     SemanticTokenType::NUMBER,
     SemanticTokenType::OPERATOR,
     SemanticTokenType::PARAMETER,
+    SemanticTokenType::PROPERTY,
     SemanticTokenType::STRING,
     SemanticTokenType::STRUCT,
     SemanticTokenType::TYPE,
@@ -35,7 +36,7 @@ pub(crate) fn convert(ts: &[gqls_ide::SemanticToken]) -> Vec<SemanticToken> {
             } else {
                 (range.start_point.row - ts[i - 1].range.end_point.row) as u32
             },
-            delta_start: if i == 0 || range.start_point.row == ts[i - 1].range.end_point.row {
+            delta_start: if i == 0 || range.start_point.row != ts[i - 1].range.end_point.row {
                 range.start_point.column as u32
             } else {
                 (range.start_point.column - ts[i - 1].range.end_point.column) as u32
@@ -44,7 +45,8 @@ pub(crate) fn convert(ts: &[gqls_ide::SemanticToken]) -> Vec<SemanticToken> {
             token_type: TYPES
                 .iter()
                 .position(|k| k == &token.kind.convert())
-                .expect("missing token in legend") as u32,
+                .unwrap_or_else(|| panic!("missing token in legend `{:?}`", token.kind.convert()))
+                as u32,
             token_modifiers_bitset: 0,
         });
     }

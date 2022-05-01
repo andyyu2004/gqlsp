@@ -1,0 +1,22 @@
+type Foo {
+  bar: String
+}
+
+extend type Foo {
+  baz: String
+}
+
+interface I {
+  bar: String
+}
+
+type Bar implements I {
+  bar: String
+}
+
+union U @foo = Foo | Bar
+
+enum E {
+  A
+  B
+}
