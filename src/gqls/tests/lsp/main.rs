@@ -1,4 +1,5 @@
 use anyhow::Result;
+use expect_test::expect;
 use futures::StreamExt;
 use gqls::{Convert, Gqls};
 use gqls_ide::DiagnosticKind;
@@ -218,12 +219,198 @@ async fn test_lsp_semantic_tokens() -> Result<()> {
     let (service, _) = make_service!();
     request_init!(service: "highlight");
     let url = url!("highlight"."highlight.graphql");
-    let x = request!(service: "textDocument/semanticTokens/full", json!({
+    let response = request!(service: "textDocument/semanticTokens/full", json!({
         "textDocument": {
             "uri": url,
         },
     }))
     .unwrap();
+
+    let tokens = match response {
+        SemanticTokensResult::Tokens(tokens) => tokens,
+        SemanticTokensResult::Partial(_) => panic!(),
+    };
+
+    expect![[r#"
+        [
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 0,
+                length: 4,
+                token_type: 4,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 5,
+                length: 3,
+                token_type: 11,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 1,
+                delta_start: 2,
+                length: 3,
+                token_type: 9,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 5,
+                length: 6,
+                token_type: 12,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 3,
+                delta_start: 7,
+                length: 4,
+                token_type: 4,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 5,
+                length: 3,
+                token_type: 11,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 1,
+                delta_start: 2,
+                length: 3,
+                token_type: 9,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 5,
+                length: 6,
+                token_type: 12,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 3,
+                delta_start: 0,
+                length: 9,
+                token_type: 4,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 10,
+                length: 1,
+                token_type: 3,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 1,
+                delta_start: 2,
+                length: 3,
+                token_type: 9,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 5,
+                length: 6,
+                token_type: 12,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 3,
+                delta_start: 0,
+                length: 4,
+                token_type: 4,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 5,
+                length: 3,
+                token_type: 11,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 15,
+                length: 1,
+                token_type: 11,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 1,
+                delta_start: 2,
+                length: 3,
+                token_type: 9,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 5,
+                length: 6,
+                token_type: 12,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 3,
+                delta_start: 0,
+                length: 5,
+                token_type: 4,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 6,
+                length: 1,
+                token_type: 13,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 2,
+                length: 4,
+                token_type: 5,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 7,
+                length: 3,
+                token_type: 11,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 0,
+                delta_start: 6,
+                length: 3,
+                token_type: 11,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 2,
+                delta_start: 5,
+                length: 1,
+                token_type: 1,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 1,
+                delta_start: 2,
+                length: 1,
+                token_type: 2,
+                token_modifiers_bitset: 0,
+            },
+            SemanticToken {
+                delta_line: 1,
+                delta_start: 2,
+                length: 1,
+                token_type: 2,
+                token_modifiers_bitset: 0,
+            },
+        ]
+    "#]]
+    .assert_debug_eq(&tokens.data);
 
     Ok(())
 }

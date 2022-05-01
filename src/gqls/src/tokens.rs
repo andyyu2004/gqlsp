@@ -39,7 +39,7 @@ pub(crate) fn convert(ts: &[gqls_ide::SemanticToken]) -> Vec<SemanticToken> {
             delta_start: if i == 0 || range.start_point.row != ts[i - 1].range.end_point.row {
                 range.start_point.column as u32
             } else {
-                (range.start_point.column - ts[i - 1].range.end_point.column) as u32
+                (range.start_point.column - ts[i - 1].range.start_point.column) as u32
             },
             length: (token.range.end_byte - token.range.start_byte) as u32,
             token_type: TYPES
