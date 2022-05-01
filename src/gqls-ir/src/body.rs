@@ -1,9 +1,9 @@
 use std::fmt::{self, Debug};
 
-use gqls_syntax::Range;
+use gqls_syntax::{Range, RangeExt};
 use la_arena::{Arena, ArenaMap, Idx};
 
-use crate::{ArenaExt, Directives, Name, RangeDebug, Ty};
+use crate::{ArenaExt, Directives, Name, Ty};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemBody {
@@ -78,7 +78,7 @@ pub struct Field {
 impl Debug for Field {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Field")
-            .field("range", &RangeDebug(self.range))
+            .field("range", &self.range.debug())
             .field("name", &self.name)
             .field("ty", &self.ty)
             .field("directives", &self.directives)

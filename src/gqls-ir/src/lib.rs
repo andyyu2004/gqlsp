@@ -10,7 +10,7 @@ pub use self::ty::*;
 pub use db::{DefDatabase, DefDatabaseStorage};
 pub use la_arena::{Arena, Idx, RawIdx};
 
-use gqls_syntax::{Node, NodeExt, Range};
+use gqls_syntax::{Node, NodeExt, Range, RangeExt};
 use la_arena::IdxRange;
 use smallvec::SmallVec;
 use smol_str::SmolStr;
@@ -53,24 +53,11 @@ pub struct Item {
     pub kind: ItemKind,
 }
 
-struct RangeDebug(Range);
-
-impl Debug for RangeDebug {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let Range { start_point, end_point, .. } = self.0;
-        write!(
-            f,
-            "{}:{}..{}:{}",
-            start_point.row, start_point.column, end_point.row, end_point.column
-        )
-    }
-}
-
 impl Debug for Item {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Item")
             .field("name", &self.name)
-            .field("range", &RangeDebug(self.range))
+            .field("range", &self.range.debug())
             .field("kind", &self.kind)
             .finish()
     }
@@ -87,7 +74,7 @@ pub struct Directive {
 impl Debug for Directive {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Directive")
-            .field("range", &RangeDebug(self.range))
+            .field("range", &self.range.debug())
             .field("name", &self.name)
             .finish()
     }

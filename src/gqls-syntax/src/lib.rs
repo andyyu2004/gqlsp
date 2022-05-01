@@ -8,6 +8,8 @@ pub use self::traverse::{Traverse, TraverseEvent};
 
 pub use tree_sitter::{Language, Node, Parser, Point, Query, Range, Tree, TreeCursor};
 
+use std::fmt::{self, Debug};
+
 pub fn traverse(tree: &Tree) -> Traverse<'_> {
     Traverse::new(tree.walk())
 }
@@ -35,6 +37,20 @@ pub type NodeIterator<'a, 'tree> = Box<dyn Iterator<Item = Node<'tree>> + 'a>;
 pub trait RangeExt {
     fn contains(&self, point: Point) -> bool;
     fn intersects(&self, other: Self) -> bool;
+    fn debug(&self) -> RangeDebug;
+}
+
+pub struct RangeDebug(Range);
+
+impl Debug for RangeDebug {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Range { start_point, end_point, .. } = self.0;
+        write!(
+            f,
+            "{}:{}..{}:{}",
+            start_point.row, start_point.column, end_point.row, end_point.column
+        )
+    }
 }
 
 impl RangeExt for Range {
@@ -43,7 +59,11 @@ impl RangeExt for Range {
     }
 
     fn intersects(&self, other: Self) -> bool {
-        self.start_byte.max(other.start_byte) > self.end_byte.min(other.end_byte)
+        self.end_byte.min(other.end_byte) > self.start_byte.max(other.start_byte)
+    }
+
+    fn debug(&self) -> RangeDebug {
+        RangeDebug(*self)
     }
 }
 

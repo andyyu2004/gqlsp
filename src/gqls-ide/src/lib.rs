@@ -11,7 +11,7 @@ mod symbols;
 mod typedef;
 
 pub use self::edit::{Change, ChangeKind, Changeset, Patch, Point, Range};
-pub use self::highlight::SemanticToken;
+pub use self::highlight::{SemanticToken, SemanticTokenKind};
 pub use self::symbols::{Symbol, SymbolKind, SymbolTree};
 pub use tree_sitter;
 pub use vfs::{FileId, Vfs};

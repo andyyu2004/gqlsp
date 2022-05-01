@@ -2,21 +2,20 @@ use std::fmt::{self, Debug};
 
 use gqls_db::{DefDatabase, SourceDatabase};
 use gqls_ir::{ItemKind, TypeDefinitionKind};
-use gqls_syntax::{Node, NodeExt, NodeKind, Point, Traverse, TraverseEvent};
+use gqls_syntax::{Node, NodeKind, Point, Range, RangeExt, Traverse, TraverseEvent};
 use vfs::FileId;
 
-use crate::edit::RangeExt;
-use crate::{Range, Snapshot};
+use crate::Snapshot;
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct SemanticToken {
-    range: Range,
-    kind: SemanticTokenKind,
+    pub range: Range,
+    pub kind: SemanticTokenKind,
 }
 
 impl Debug for SemanticToken {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?} :: {:?}", self.range, self.kind)
+        write!(f, "{:?} :: {:?}", self.range.debug(), self.kind)
     }
 }
 
@@ -165,7 +164,10 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
             let token = SemanticToken { range, kind };
             #[cfg(debug_assertions)]
             if let Some(prev) = self.tokens.last() {
-                assert!(prev.range.end <= range.start, "token range overlap {prev:?}, {token:?}",);
+                assert!(
+                    prev.range.end_byte <= range.start_byte,
+                    "token range overlap {prev:?}, {token:?}",
+                );
                 assert!(!prev.range.intersects(range));
             }
             skip_until = Some(node);

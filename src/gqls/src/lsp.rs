@@ -257,7 +257,7 @@ impl LanguageServer for Gqls {
             let snapshot = ide.snapshot();
             let path = ide.path(&uri)?;
             Ok(Some(SemanticTokensResult::Tokens(SemanticTokens {
-                data: snapshot.semantic_tokens(path).convert(),
+                data: tokens::convert(&snapshot.semantic_tokens(path)),
                 result_id: None,
             })))
         })
@@ -281,20 +281,23 @@ impl Gqls {
 
     async fn handle_did_change(&self, params: DidChangeTextDocumentParams) -> Result<()> {
         let path = params.text_document.uri.to_path()?;
-        let mut ide = self.ide.lock();
-        let path = ide.intern_path(path);
-        let changes = params
-            .content_changes
-            .into_iter()
-            .map(|change| match change.range {
-                Some(range) =>
-                    ChangeKind::Patch(Patch { range: range.convert(), with: change.text }),
-                None => ChangeKind::Set(change.text),
-            })
-            .map(|kind| Change::new(path, kind))
-            .collect();
-        let changeset = Changeset::new(changes);
-        let changeset_summary = ide.apply_changeset(changeset);
+        let changeset_summary = self.with_ide(|ide| {
+            let path = ide.intern_path(path.clone());
+            let changes = params
+                .content_changes
+                .iter()
+                .map(|change| match change.range {
+                    Some(range) => ChangeKind::Patch(Patch {
+                        range: range.convert(),
+                        with: change.text.clone(),
+                    }),
+                    None => ChangeKind::Set(change.text.clone()),
+                })
+                .map(|kind| Change::new(path, kind))
+                .collect();
+            let changeset = Changeset::new(changes);
+            Ok(ide.apply_changeset(changeset))
+        })?;
         self.diagnostics(changeset_summary).await;
         Ok(())
     }

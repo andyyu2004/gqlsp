@@ -1,6 +1,8 @@
 use std::path::{Path, PathBuf};
 use tower_lsp::jsonrpc;
 
+use crate::tokens;
+
 // Conversions to and from lsp types
 pub trait Convert {
     type Converted;
@@ -112,16 +114,25 @@ impl Convert for gqls_ide::Symbol {
     }
 }
 
-impl Convert for gqls_ide::SemanticToken {
-    type Converted = lsp_types::SemanticToken;
+impl Convert for gqls_ide::SemanticTokenKind {
+    type Converted = lsp_types::SemanticTokenType;
 
     fn convert(&self) -> Self::Converted {
-        lsp_types::SemanticToken {
-            delta_line: todo!(),
-            delta_start: todo!(),
-            length: todo!(),
-            token_type: todo!(),
-            token_modifiers_bitset: todo!(),
+        match self {
+            gqls_ide::SemanticTokenKind::Comment => lsp_types::SemanticTokenType::COMMENT,
+            gqls_ide::SemanticTokenKind::Directive => lsp_types::SemanticTokenType::MACRO,
+            gqls_ide::SemanticTokenKind::Enum => lsp_types::SemanticTokenType::ENUM,
+            gqls_ide::SemanticTokenKind::EnumValue => lsp_types::SemanticTokenType::ENUM_MEMBER,
+            gqls_ide::SemanticTokenKind::Field => lsp_types::SemanticTokenType::PROPERTY,
+            gqls_ide::SemanticTokenKind::InputObject => lsp_types::SemanticTokenType::STRUCT,
+            gqls_ide::SemanticTokenKind::Interface => lsp_types::SemanticTokenType::INTERFACE,
+            gqls_ide::SemanticTokenKind::Keyword => lsp_types::SemanticTokenType::KEYWORD,
+            gqls_ide::SemanticTokenKind::Number => lsp_types::SemanticTokenType::NUMBER,
+            gqls_ide::SemanticTokenKind::Object => lsp_types::SemanticTokenType::STRUCT,
+            gqls_ide::SemanticTokenKind::String => lsp_types::SemanticTokenType::STRING,
+            gqls_ide::SemanticTokenKind::Type => lsp_types::SemanticTokenType::TYPE,
+            gqls_ide::SemanticTokenKind::Scalar => tokens::TOKEN_TYPE_SCALAR,
+            gqls_ide::SemanticTokenKind::Union => tokens::TOKEN_TYPE_UNION,
         }
     }
 }
