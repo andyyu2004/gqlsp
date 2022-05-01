@@ -69,7 +69,7 @@ enum Scope {
 impl Scope {
     fn from_node_kind(kind: &'static str) -> Option<Self> {
         match kind {
-            NodeKind::FIELD_DEFINITION => Some(Scope::Field),
+            NodeKind::FIELD_DEFINITION | NodeKind::INPUT_FIELDS_DEFINITION => Some(Scope::Field),
             NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
                 Some(Scope::Object),
             NodeKind::INTERFACE_TYPE_DEFINITION | NodeKind::INTERFACE_TYPE_EXTENSION =>

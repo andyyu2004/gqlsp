@@ -127,7 +127,7 @@ fn test_highlight_directive() {
 }
 
 #[test]
-fn test_highlight() {
+fn test_highlight_fields() {
     let fixture = fixture!("" => "
     interface I {
         x: Int!
@@ -135,6 +135,10 @@ fn test_highlight() {
 
     type Object {
         iface: I
+    }
+
+    input Input {
+        x: Int!
     }
 
     ");
@@ -150,6 +154,9 @@ fn test_highlight() {
                 5:9..5:15 :: Object,
                 6:8..6:13 :: Field,
                 6:15..6:16 :: Interface,
+                9:10..9:15 :: InputObject,
+                10:8..10:9 :: Field,
+                10:11..10:15 :: Type,
             ]
         "#]],
     );

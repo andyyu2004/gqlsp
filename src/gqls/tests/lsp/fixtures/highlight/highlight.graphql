@@ -20,3 +20,8 @@ enum E {
   A
   B
 }
+
+input I {
+  a: String
+  b: Bar
+}
