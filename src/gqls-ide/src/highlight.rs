@@ -61,8 +61,9 @@ enum Scope {
     Interface,
     Object,
     Scalar,
-    Union,
     Type,
+    Union,
+    UnionMember,
 }
 
 impl Scope {
@@ -78,6 +79,8 @@ impl Scope {
                 Some(Scope::InputObject),
             NodeKind::SCALAR_TYPE_DEFINITION | NodeKind::SCALAR_TYPE_EXTENSION =>
                 Some(Scope::Scalar),
+            NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_TYPE_EXTENSION => Some(Scope::Union),
+            NodeKind::UNION_MEMBER_TYPES => Some(Scope::UnionMember),
             NodeKind::TYPE => Some(Scope::Type),
             _ => None,
         }
@@ -154,8 +157,8 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                     Scope::Object => SemanticTokenKind::Object,
                     Scope::Scalar => SemanticTokenKind::Scalar,
                     Scope::Union => SemanticTokenKind::Union,
-                    Scope::Type => self.highlight_type(at),
-                    Scope::Document => unreachable!(),
+                    Scope::Type | Scope::UnionMember => self.highlight_type(at),
+                    Scope::Document => unreachable!("found name node outside of any scope"),
                 },
                 _ => continue,
             };

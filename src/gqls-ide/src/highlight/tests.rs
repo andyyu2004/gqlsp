@@ -33,18 +33,18 @@ fn test_highlight_simple() {
 #[test]
 fn test_highlight_scalars_and_enums() {
     let fixture = fixture!("" => "
-    scalar scalar
+    scalar Scalar
 
-    enum e {
-        a
-        b
+    enum E {
+        A
+        B
     }
 
-    type object {
-        x: object!
-        s: scalar
-        list: [scalar!]!
-        enums: [e]
+    type Object {
+        x: Object!
+        s: Scalar
+        list: [Scalar!]!
+        enums: [E]
     }
     ");
     test(
@@ -88,6 +88,8 @@ fn test_highlight_directive() {
             A @qux
             B @qux
         }
+
+        union U @qux = Foo | SomethingUnresolved
     ");
     test(
         fixture,
@@ -114,6 +116,11 @@ fn test_highlight_directive() {
                 12:14..12:18 :: Directive,
                 13:12..13:13 :: EnumValue,
                 13:14..13:18 :: Directive,
+                16:8..16:13 :: Keyword,
+                16:14..16:15 :: Union,
+                16:16..16:20 :: Directive,
+                16:23..16:26 :: Object,
+                16:29..16:48 :: Type,
             ]
         "#]],
     );

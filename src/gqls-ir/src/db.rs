@@ -96,12 +96,10 @@ fn type_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Ty> {
     let root = data.tree.root_node();
     let node = root.named_node_at(at)?;
     let type_node = match node.kind() {
-        NodeKind::NON_NULL_TYPE | NodeKind::LIST_TYPE | NodeKind::NAMED_TYPE => node
-            .parent_of_kind(NodeKind::TYPE)
-            .expect("these nodes to have a parent of kind `type`"),
-        NodeKind::TYPE => node,
+        NodeKind::TYPE | NodeKind::NON_NULL_TYPE | NodeKind::LIST_TYPE | NodeKind::NAMED_TYPE =>
+            node,
         NodeKind::NAME => match node.parent_of_kind(NodeKind::NAMED_TYPE) {
-            Some(type_node) => type_node.parent_of_kind(NodeKind::TYPE).unwrap(),
+            Some(type_node) => type_node,
             None => return None,
         },
         _ => return None,

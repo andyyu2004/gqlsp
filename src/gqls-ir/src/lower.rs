@@ -232,8 +232,11 @@ pub(crate) trait LowerCtxt: HasText {
     }
 
     fn lower_type(&mut self, node: Node<'_>) -> Option<Ty> {
-        assert_eq!(node.kind(), NodeKind::TYPE);
-        let ty = node.sole_named_child();
+        assert!(matches!(
+            node.kind(),
+            NodeKind::TYPE | NodeKind::NAMED_TYPE | NodeKind::LIST_TYPE | NodeKind::NON_NULL_TYPE
+        ));
+        let ty = if matches!(node.kind(), NodeKind::TYPE) { node.sole_named_child() } else { node };
         let kind = match ty.kind() {
             NodeKind::NAMED_TYPE => return Some(self.lower_named_type(ty)),
             NodeKind::LIST_TYPE => TyKind::List(self.lower_type(ty.sole_named_child())?),
