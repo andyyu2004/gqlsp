@@ -181,9 +181,9 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
     fn highlight_type(&self, at: Point) -> SemanticTokenKind {
         match self.snapshot.resolve_type_at(self.file, at)[..] {
             [] => SemanticTokenKind::Type,
-            [x, ..] => match self.snapshot.item(x).kind {
+            [res, ..] => match self.snapshot.item(res).kind {
                 ItemKind::TypeDefinition(typedef) =>
-                    match self.snapshot.typedef(self.file, typedef).kind {
+                    match self.snapshot.typedef(res.file, typedef).kind {
                         TypeDefinitionKind::Object => SemanticTokenKind::Object,
                         TypeDefinitionKind::Interface => SemanticTokenKind::Interface,
                         TypeDefinitionKind::Input => SemanticTokenKind::InputObject,
