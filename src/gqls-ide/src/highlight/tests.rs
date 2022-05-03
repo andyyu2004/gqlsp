@@ -173,3 +173,44 @@ fn test_highlight_fields() {
         },
     );
 }
+
+#[test]
+fn test_highlight_cross_file() {
+    let fixture = fixture! {
+        "bar" => "
+            type Foo {
+                a: A
+                b: B
+            }
+        "
+
+        "foo" => "
+            scalar A
+            enum B { B1 B2 }
+        "
+    };
+    test(
+        fixture,
+        hashmap! {
+            "bar" => expect![[r#"
+                [
+                    1:12..1:16 :: Keyword,
+                    1:17..1:20 :: Object,
+                    2:16..2:17 :: Field,
+                    2:19..2:20 :: Scalar,
+                    3:16..3:17 :: Field,
+                    3:19..3:20 :: Enum,
+                ]
+            "#]],
+            "foo" => expect![[r#"
+                [
+                    1:12..1:18 :: Keyword,
+                    1:19..1:20 :: Scalar,
+                    2:17..2:18 :: Enum,
+                    2:21..2:23 :: EnumValue,
+                    2:24..2:26 :: EnumValue,
+                ]
+            "#]]
+        },
+    );
+}
