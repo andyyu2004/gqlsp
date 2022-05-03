@@ -54,6 +54,7 @@ struct Highlighter<'a, 'tree> {
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 enum Scope {
+    Directive,
     Document,
     Enum,
     Field,
@@ -69,6 +70,7 @@ enum Scope {
 impl Scope {
     fn from_node_kind(kind: &'static str) -> Option<Self> {
         match kind {
+            NodeKind::DIRECTIVE_DEFINITION => Some(Scope::Directive),
             NodeKind::FIELD_DEFINITION | NodeKind::INPUT_FIELDS_DEFINITION => Some(Scope::Field),
             NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
                 Some(Scope::Object),
@@ -143,13 +145,15 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
             let at = node.range().start_point;
             let kind = match node.kind() {
                 //TODO missing anonymous symbols
-                "type" | "scalar" | "interface" | "union" if !node.is_named() =>
+                "type" | "scalar" | "interface" | "union" | "directive" | "on"
+                    if !node.is_named() =>
                     SemanticTokenKind::Keyword,
                 // TODO builtin types (ID, String, Int should be defaultLibrary types)
                 NodeKind::TYPE => self.highlight_type(at),
                 NodeKind::DIRECTIVE => SemanticTokenKind::Directive,
                 NodeKind::ENUM_VALUE => SemanticTokenKind::EnumValue,
                 NodeKind::NAME => match self.scope() {
+                    Scope::Directive => SemanticTokenKind::Directive,
                     Scope::Enum => SemanticTokenKind::Enum,
                     Scope::Field => SemanticTokenKind::Field,
                     Scope::InputObject => SemanticTokenKind::InputObject,
@@ -158,7 +162,10 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                     Scope::Scalar => SemanticTokenKind::Scalar,
                     Scope::Union => SemanticTokenKind::Union,
                     Scope::Type | Scope::UnionMember => self.highlight_type(at),
-                    Scope::Document => unreachable!("found name node outside of any scope"),
+                    Scope::Document => unreachable!(
+                        "found name node outside of any scope: {}",
+                        node.parent().expect("name always has a parent").to_sexp()
+                    ),
                 },
                 _ => continue,
             };

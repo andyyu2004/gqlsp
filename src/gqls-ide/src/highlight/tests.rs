@@ -82,6 +82,7 @@ fn test_highlight_scalars_and_enums() {
 #[test]
 fn test_highlight_directive() {
     let fixture = fixture!("foo" => "
+        directive @qux on FIELD_DEFINITION | OBJECT | INTERFACE | UNION | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
         scalar Scalar @qux
 
         type Foo @qux {
@@ -98,38 +99,50 @@ fn test_highlight_directive() {
         }
 
         union U @qux = Foo | SomethingUnresolved
+
+        input I @qux {
+            i: Scalar @qux
+        }
     ");
     test(
         fixture,
         hashmap! {
             "foo" => expect![[r#"
                 [
-                    1:8..1:14 :: Keyword,
-                    1:15..1:21 :: Scalar,
-                    1:22..1:26 :: Directive,
-                    3:8..3:12 :: Keyword,
-                    3:13..3:16 :: Object,
-                    3:17..3:21 :: Directive,
-                    4:12..4:13 :: Field,
-                    4:15..4:21 :: Scalar,
-                    4:22..4:26 :: Directive,
-                    7:8..7:17 :: Keyword,
-                    7:18..7:21 :: Interface,
-                    7:22..7:26 :: Directive,
-                    8:12..8:13 :: Field,
-                    8:15..8:21 :: Scalar,
+                    1:8..1:17 :: Keyword,
+                    1:19..1:22 :: Directive,
+                    1:23..1:25 :: Keyword,
+                    2:8..2:14 :: Keyword,
+                    2:15..2:21 :: Scalar,
+                    2:22..2:26 :: Directive,
+                    4:8..4:12 :: Keyword,
+                    4:13..4:16 :: Object,
+                    4:17..4:21 :: Directive,
+                    5:12..5:13 :: Field,
+                    5:15..5:21 :: Scalar,
+                    5:22..5:26 :: Directive,
+                    8:8..8:17 :: Keyword,
+                    8:18..8:21 :: Interface,
                     8:22..8:26 :: Directive,
-                    11:13..11:14 :: Enum,
-                    11:15..11:19 :: Directive,
-                    12:12..12:13 :: EnumValue,
-                    12:14..12:18 :: Directive,
+                    9:12..9:13 :: Field,
+                    9:15..9:21 :: Scalar,
+                    9:22..9:26 :: Directive,
+                    12:13..12:14 :: Enum,
+                    12:15..12:19 :: Directive,
                     13:12..13:13 :: EnumValue,
                     13:14..13:18 :: Directive,
-                    16:8..16:13 :: Keyword,
-                    16:14..16:15 :: Union,
-                    16:16..16:20 :: Directive,
-                    16:23..16:26 :: Object,
-                    16:29..16:48 :: Type,
+                    14:12..14:13 :: EnumValue,
+                    14:14..14:18 :: Directive,
+                    17:8..17:13 :: Keyword,
+                    17:14..17:15 :: Union,
+                    17:16..17:20 :: Directive,
+                    17:23..17:26 :: Object,
+                    17:29..17:48 :: Type,
+                    19:14..19:15 :: InputObject,
+                    19:16..19:20 :: Directive,
+                    20:12..20:13 :: Field,
+                    20:15..20:21 :: Scalar,
+                    20:22..20:26 :: Directive,
                 ]
             "#]],
         },
