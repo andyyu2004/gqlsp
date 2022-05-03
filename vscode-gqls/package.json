@@ -2,7 +2,7 @@
   "name": "gqls",
   "displayName": "gqls",
   "description": "",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "publisher": "andyyu2004",
   "icon": "assets/graphql.png",
   "repository": {
@@ -22,14 +22,17 @@
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
-      "rust-analyzer.server.path": {
-        "type": [
-          "null",
-          "string"
-        ],
-        "scope": "machine-overridable",
-        "default": null,
-        "markdownDescription": "Path to `gqls` executable (will automatically download server if null)"
+      "title": "gqls",
+      "properties": {
+        "gqls.path": {
+          "type": [
+            "null",
+            "string"
+          ],
+          "scope": "machine-overridable",
+          "default": null,
+          "markdownDescription": "Path to `gqls` executable (will automatically download server if null)"
+        }
       }
     },
     "commands": [
