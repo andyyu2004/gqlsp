@@ -419,7 +419,7 @@ async fn test_lsp_semantic_tokens() -> Result<()> {
                 delta_line: 1,
                 delta_start: 2,
                 length: 1,
-                token_type: 11,
+                token_type: 9,
                 token_modifiers_bitset: 0,
             },
             SemanticToken {
@@ -433,7 +433,7 @@ async fn test_lsp_semantic_tokens() -> Result<()> {
                 delta_line: 1,
                 delta_start: 2,
                 length: 1,
-                token_type: 11,
+                token_type: 9,
                 token_modifiers_bitset: 0,
             },
             SemanticToken {
