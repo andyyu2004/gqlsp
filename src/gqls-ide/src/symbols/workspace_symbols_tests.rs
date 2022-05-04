@@ -39,10 +39,10 @@ fn test_workspace_symbols() {
         "",
         expect![[r#"
             [
-                qux :: Constant @ bar:1:12..1:55,
-                Foo :: Struct @ bar:3:12..5:13,
-                Foo :: Struct @ foo:1:12..3:13,
                 Bar :: Struct @ foo:5:12..9:13,
+                Foo :: Struct @ foo:1:12..3:13,
+                Foo :: Struct @ bar:3:12..5:13,
+                qux :: Constant @ bar:1:12..1:55,
             ]
         "#]],
     );
@@ -65,8 +65,8 @@ fn test_workspace_symbols_filtered() {
         "foo",
         expect![[r#"
             [
-                FooFighters :: Struct @ foo:1:12..1:30,
                 FooBars :: Struct @ foo:2:12..2:26,
+                FooFighters :: Struct @ foo:1:12..1:30,
             ]
         "#]],
     );

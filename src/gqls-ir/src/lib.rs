@@ -110,10 +110,10 @@ pub enum TypeDefinitionKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DirectiveDefinition {}
 
-#[derive(Clone, Eq)]
+#[derive(Clone, Ord, PartialOrd, Eq)]
 pub struct Name {
-    pub range: Range,
     name: SmolStr,
+    pub range: Range,
 }
 
 impl Deref for Name {

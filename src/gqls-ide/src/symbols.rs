@@ -20,13 +20,44 @@ impl Debug for WorkspaceSymbol {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct DocumentSymbol {
     pub name: Name,
     pub kind: SymbolKind,
     pub range: Range,
     pub children: SymbolTree,
     pub detail: Option<String>,
+}
+
+impl Debug for DocumentSymbol {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        #[derive(Default)]
+        struct Fmt {
+            indent: String,
+        }
+
+        impl Fmt {
+            fn fmt(&mut self, f: &mut fmt::Formatter<'_>, sym: &DocumentSymbol) -> fmt::Result {
+                write!(f, "{}{} :: {:?} @ {:?}", self.indent, sym.name, sym.kind, sym.range)?;
+                if let Some(detail) = &sym.detail {
+                    write!(f, " ({})", detail)?;
+                }
+
+                let mut this = self.next_indent();
+                for child in &sym.children {
+                    writeln!(f)?;
+                    this.fmt(f, child)?;
+                }
+                Ok(())
+            }
+
+            fn next_indent(&self) -> Self {
+                Self { indent: self.indent.clone() + "  " }
+            }
+        }
+
+        Fmt::default().fmt(f, self)
+    }
 }
 
 impl DocumentSymbol {
@@ -81,6 +112,7 @@ impl Snapshot {
                 });
             workspace_symbols.extend(symbols);
         }
+        workspace_symbols.sort_by(|a, b| a.name.cmp(&b.name));
         workspace_symbols
     }
 
