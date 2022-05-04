@@ -39,32 +39,6 @@ impl Fixture {
             .flat_map(|(&path, file)| std::iter::repeat(path).zip(file.ranges.iter().cloned()))
     }
 
-    pub fn sole_point(&self) -> (FileId, Point) {
-        let mut sole_point = None;
-        for (&file, file_fixture) in self.files() {
-            if let Some(point) = file_fixture.sole_point() {
-                if sole_point.is_some() {
-                    panic!("multiple points in fixture");
-                }
-                sole_point = Some((file, point));
-            }
-        }
-        sole_point.expect("no point in fixture")
-    }
-
-    pub fn sole_range(&self) -> (FileId, std::ops::Range<Point>) {
-        let mut sole_range = None;
-        for (&file, file_fixture) in self.files() {
-            if let Some(range) = file_fixture.sole_range() {
-                if sole_range.is_some() {
-                    panic!("multiple ranges in fixture");
-                }
-                sole_range = Some((file, range));
-            }
-        }
-        sole_range.expect("no range in fixture")
-    }
-
     pub fn fileset(&self) -> HashSet<FileId> {
         self.files.keys().copied().collect()
     }
@@ -135,20 +109,6 @@ impl FixtureFile {
             }
         }
         Self { points, ranges, text: fixture.to_owned() }
-    }
-
-    fn sole_point(&self) -> Option<Point> {
-        if self.points.len() > 1 {
-            panic!("more than one point in file fixture")
-        }
-        (self.points.len() == 1).then(|| self.points[0])
-    }
-
-    fn sole_range(&self) -> Option<std::ops::Range<Point>> {
-        if self.ranges.len() > 1 {
-            panic!("more than one range in file fixture")
-        }
-        (self.ranges.len() == 1).then(|| self.ranges[0].clone())
     }
 }
 
