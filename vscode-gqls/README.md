@@ -1,3 +1,3 @@
 # gqls
 
-Graphql Language Server
+Graphql SDL Language Server

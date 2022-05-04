@@ -64,7 +64,11 @@ pub fn capabilities() -> ServerCapabilities {
             }),
         }),
         // hover_provider: Some(HoverProviderCapability::Simple(true)),
-        // completion_provider: Some(CompletionOptions::default()),
+        completion_provider: Some(CompletionOptions {
+            // resolve_provider: Some(true),
+            trigger_characters: Some(vec![":".to_owned()]),
+            ..Default::default()
+        }),
         ..Default::default()
     }
 }
@@ -261,6 +265,24 @@ impl LanguageServer for Gqls {
                 result_id: None,
             })))
         })
+    }
+
+    async fn completion(
+        &self,
+        params: CompletionParams,
+    ) -> jsonrpc::Result<Option<CompletionResponse>> {
+        let position = params.text_document_position;
+        self.with_ide(|ide| {
+            let uri = ide.path(&position.text_document.uri)?;
+            let snapshot = ide.snapshot();
+            let completions = snapshot.completions(uri, position.position.convert());
+            Ok(Some(CompletionResponse::Array(completions.convert())))
+        })
+    }
+
+    async fn completion_resolve(&self, params: CompletionItem) -> jsonrpc::Result<CompletionItem> {
+        let _ = params;
+        todo!()
     }
 }
 

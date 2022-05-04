@@ -1,5 +1,6 @@
 #![deny(rust_2018_idioms)]
 
+mod completions;
 mod def;
 mod edit;
 mod highlight;
@@ -10,6 +11,7 @@ mod resolve;
 mod symbols;
 mod typedef;
 
+pub use self::completions::Completion;
 pub use self::edit::{Change, ChangeKind, Changeset, Patch, Point, Range};
 pub use self::highlight::{SemanticToken, SemanticTokenKind};
 pub use self::symbols::{Symbol, SymbolKind, SymbolTree};

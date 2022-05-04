@@ -114,6 +114,18 @@ impl Convert for gqls_ide::Symbol {
     }
 }
 
+impl Convert for gqls_ide::Completion {
+    type Converted = lsp_types::CompletionItem;
+
+    fn convert(&self) -> Self::Converted {
+        lsp_types::CompletionItem {
+            label: self.label.clone(),
+            // TODO
+            ..Default::default()
+        }
+    }
+}
+
 impl Convert for gqls_ide::SemanticTokenKind {
     type Converted = lsp_types::SemanticTokenType;
 
