@@ -27,7 +27,7 @@ use gqls_db::{FileData, GqlsDatabase, ParallelDatabase, Project, SourceDatabase}
 use gqls_syntax::query;
 use once_cell::sync::Lazy;
 use ropey::Rope;
-use std::fmt::{self, Display};
+use std::fmt::{self, Debug, Display};
 use tree_sitter::{Query, QueryCursor, TextProvider};
 
 #[derive(Default)]
@@ -186,7 +186,7 @@ impl<'a> TextProvider<'a> for RopeText<'a> {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[derive(Eq, PartialEq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct Location {
     pub file: FileId,
     pub range: Range,
@@ -195,6 +195,12 @@ pub struct Location {
 impl Location {
     pub fn new(file: FileId, range: Range) -> Self {
         Self { file, range }
+    }
+}
+
+impl Debug for Location {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}:{:?}", self.file.display(), self.range)
     }
 }
 

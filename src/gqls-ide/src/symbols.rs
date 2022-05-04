@@ -1,16 +1,23 @@
 use gqls_db::{DefDatabase, SourceDatabase};
 use gqls_ir::{ItemKind, ItemRes, Name};
+use std::fmt::{self, Debug};
 use vfs::FileId;
 
 use crate::{Location, Range, Snapshot};
 
 pub type SymbolTree = Vec<DocumentSymbol>;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct WorkspaceSymbol {
     pub name: Name,
     pub kind: SymbolKind,
     pub location: Location,
+}
+
+impl Debug for WorkspaceSymbol {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} :: {:?} @ {:?}", self.name, self.kind, self.location)
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -109,3 +116,6 @@ impl Snapshot {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod workspace_symbols_tests;
