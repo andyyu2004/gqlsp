@@ -40,13 +40,10 @@ fn project_items(db: &dyn DefDatabase, file: FileId) -> Arc<HashMap<FileId, Arc<
 
 fn implementations(db: &dyn DefDatabase, file: FileId, interface: Name) -> Vec<ItemRes> {
     let mut implementations = vec![];
-    for project in db.projects_of(file) {
-        for &file in db.project_files(project).iter() {
-            let items = db.items(file);
-            for (idx, _) in items.items.iter() {
-                if items.implements(idx, &interface) {
-                    implementations.push(ItemRes { file, idx });
-                }
+    for (&file, items) in db.project_items(file).iter() {
+        for (idx, _) in items.items.iter() {
+            if items.implements(idx, &interface) {
+                implementations.push(ItemRes { file, idx });
             }
         }
     }
@@ -167,38 +164,31 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
     let mut references = vec![];
     let res_item = db.item(res);
     let name = res_item.name;
-    for project in db.projects_of(res.file) {
-        for &file in db.project_files(project).iter() {
-            let items = db.items(file);
-            for (idx, _) in items.items.iter() {
-                let body = db.item_body(ItemRes { file, idx });
+    for (&file, items) in db.project_items(res.file).iter() {
+        for (idx, _) in items.items.iter() {
+            let body = db.item_body(ItemRes { file, idx });
 
-                if let Some(ItemBody::UnionTypeDefinition(union)) = body.as_deref() {
-                    references.extend(
-                        union
-                            .types
-                            .iter()
-                            .filter(|ty| ty.name() == name)
-                            .map(|ty| (file, ty.range)),
-                    )
-                }
-
-                let fields = body.as_deref().and_then(|b| b.fields_slice()).unwrap_or(&[]).iter();
-                match res_item.kind {
-                    ItemKind::TypeDefinition(_) => references.extend(
-                        fields
-                            .filter(|field| field.ty.name() == name)
-                            .map(|field| (file, field.ty.name().range)),
-                    ),
-                    ItemKind::DirectiveDefinition(_) => references.extend(
-                        fields
-                            .flat_map(|field| &field.directives)
-                            .chain(items.directives(idx).map(Vec::as_slice).unwrap_or(&[]))
-                            .filter(|directive| directive.name == name)
-                            .map(|directive| (file, directive.range)),
-                    ),
-                };
+            if let Some(ItemBody::UnionTypeDefinition(union)) = body.as_deref() {
+                references.extend(
+                    union.types.iter().filter(|ty| ty.name() == name).map(|ty| (file, ty.range)),
+                )
             }
+
+            let fields = body.as_deref().and_then(|b| b.fields_slice()).unwrap_or(&[]).iter();
+            match res_item.kind {
+                ItemKind::TypeDefinition(_) => references.extend(
+                    fields
+                        .filter(|field| field.ty.name() == name)
+                        .map(|field| (file, field.ty.name().range)),
+                ),
+                ItemKind::DirectiveDefinition(_) => references.extend(
+                    fields
+                        .flat_map(|field| &field.directives)
+                        .chain(items.directives(idx).map(Vec::as_slice).unwrap_or(&[]))
+                        .filter(|directive| directive.name == name)
+                        .map(|directive| (file, directive.range)),
+                ),
+            };
         }
     }
     references
