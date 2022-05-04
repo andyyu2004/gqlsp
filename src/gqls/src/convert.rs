@@ -96,7 +96,7 @@ impl Convert for gqls_ide::SymbolKind {
     }
 }
 
-impl Convert for gqls_ide::Symbol {
+impl Convert for gqls_ide::DocumentSymbol {
     type Converted = lsp_types::DocumentSymbol;
 
     fn convert(&self) -> Self::Converted {
@@ -110,6 +110,22 @@ impl Convert for gqls_ide::Symbol {
             children: Some(self.children.convert()),
             tags: None,
             deprecated: None,
+        }
+    }
+}
+
+impl Convert for gqls_ide::WorkspaceSymbol {
+    type Converted = lsp_types::SymbolInformation;
+
+    fn convert(&self) -> Self::Converted {
+        #[allow(deprecated)]
+        lsp_types::SymbolInformation {
+            name: self.name.to_string(),
+            kind: self.kind.convert(),
+            tags: None,
+            deprecated: None,
+            location: self.location.convert(),
+            container_name: None,
         }
     }
 }

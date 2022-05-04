@@ -35,6 +35,7 @@ pub fn capabilities() -> ServerCapabilities {
         definition_provider: Some(OneOf::Left(true)),
         references_provider: Some(OneOf::Left(true)),
         document_symbol_provider: Some(OneOf::Left(true)),
+        workspace_symbol_provider: Some(OneOf::Left(true)),
         type_definition_provider: Some(TypeDefinitionProviderCapability::Simple(true)),
         implementation_provider: Some(ImplementationProviderCapability::Simple(true)),
         semantic_tokens_provider: Some(
@@ -249,6 +250,17 @@ impl LanguageServer for Gqls {
             let path = ide.path(&params.text_document.uri)?;
             let symbols = snapshot.document_symbols(path);
             Ok(Some(DocumentSymbolResponse::Nested(symbols.convert())))
+        })
+    }
+
+    async fn symbol(
+        &self,
+        params: WorkspaceSymbolParams,
+    ) -> jsonrpc::Result<Option<Vec<SymbolInformation>>> {
+        self.with_ide(|ide| {
+            let snapshot = ide.snapshot();
+            let symbols = snapshot.workspace_symbols();
+            Ok(Some(symbols.convert()))
         })
     }
 
