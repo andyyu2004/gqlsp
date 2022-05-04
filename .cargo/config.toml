@@ -1,13 +1,3 @@
-[build]
-# rustc-wrapper = '/home/andyyu/.cargo/bin/sccache'
-
-[target.x86_64-unknown-linux-gnu]
-rustflags = [
-    '-Clink-arg=-fuse-ld=lld',
-    # '-Zshare-generics=y',
-]
-linker = '/usr/bin/clang'
-
 [profile.dev]
 opt-level = 0
 debug = 2
@@ -19,4 +9,3 @@ opt-level = 3
 debug = 0
 incremental = false
 codegen-units = 256
-# split-debuginfo = '...'
