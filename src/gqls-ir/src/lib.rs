@@ -17,6 +17,7 @@ use smol_str::SmolStr;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Debug, Display};
 use std::hash::{Hash, Hasher};
+use std::ops::Deref;
 use std::sync::Arc;
 use vfs::FileId;
 
@@ -113,6 +114,14 @@ pub struct DirectiveDefinition {}
 pub struct Name {
     pub range: Range,
     name: SmolStr,
+}
+
+impl Deref for Name {
+    type Target = SmolStr;
+
+    fn deref(&self) -> &Self::Target {
+        &self.name
+    }
 }
 
 impl PartialEq for Name {

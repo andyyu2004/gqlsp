@@ -3,11 +3,11 @@ use gqls_fixture::{fixture, Fixture};
 
 use crate::Ide;
 
-fn test(fixture: Fixture, expect: Expect) {
+fn test(fixture: &Fixture, query: &str, expect: Expect) {
     let mut ide = Ide::default();
-    ide.setup_fixture(&fixture);
+    ide.setup_fixture(fixture);
     let snapshot = ide.snapshot();
-    let symbols = snapshot.workspace_symbols();
+    let symbols = snapshot.workspace_symbols(query);
     expect.assert_debug_eq(&symbols);
 }
 
@@ -35,13 +35,48 @@ fn test_workspace_symbols() {
         "
     };
     test(
-        fixture,
+        &fixture,
+        "",
         expect![[r#"
             [
                 qux :: Constant @ bar:1:12..1:55,
                 Foo :: Struct @ bar:3:12..5:13,
                 Foo :: Struct @ foo:1:12..3:13,
                 Bar :: Struct @ foo:5:12..9:13,
+            ]
+        "#]],
+    );
+}
+
+#[test]
+fn test_workspace_symbols_filtered() {
+    let fixture = fixture! {
+        "foo" => "
+            scalar FooFighters
+            scalar FooBars
+        "
+
+        "bar" => "
+            scalar BarFighters
+        "
+    };
+    test(
+        &fixture,
+        "foo",
+        expect![[r#"
+            [
+                FooFighters :: Struct @ foo:1:12..1:30,
+                FooBars :: Struct @ foo:2:12..2:26,
+            ]
+        "#]],
+    );
+    test(
+        &fixture,
+        "bar",
+        expect![[r#"
+            [
+                BarFighters :: Struct @ bar:1:12..1:30,
+                FooBars :: Struct @ foo:2:12..2:26,
             ]
         "#]],
     );

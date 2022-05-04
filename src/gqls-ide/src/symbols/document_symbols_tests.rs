@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use expect_test::{expect, Expect};
 use gqls_fixture::{fixture, Fixture};
 
@@ -9,7 +7,7 @@ fn test(fixture: Fixture, file: &'static str, expect: Expect) {
     let mut ide = Ide::default();
     ide.setup_fixture(&fixture);
     let snapshot = ide.snapshot();
-    let symbols = snapshot.document_symbols(Path::new(file));
+    let symbols = snapshot.document_symbols(file.as_ref());
     expect.assert_debug_eq(&symbols);
 }
 

@@ -63,20 +63,25 @@ impl From<ItemKind> for SymbolKind {
 
 impl Snapshot {
     // Symbols are not scoped to a project but across all of them
-    pub fn workspace_symbols(&self) -> Vec<WorkspaceSymbol> {
-        let mut symbols = vec![];
+    pub fn workspace_symbols(&self, query: &str) -> Vec<WorkspaceSymbol> {
+        let query = query.to_uppercase();
+        let mut workspace_symbols = vec![];
         for (file, items) in
             self.projects().iter().flat_map(|(_, fs)| fs).map(|file| (file, self.items(file)))
         {
-            for (_, item) in items.items.iter() {
-                symbols.push(WorkspaceSymbol {
+            let symbols = items
+                .items
+                .iter()
+                .map(|(_, item)| item)
+                .filter(|item| item.name.to_uppercase().contains(&query))
+                .map(|item| WorkspaceSymbol {
                     name: item.name.clone(),
                     kind: item.kind.into(),
                     location: Location::new(file, item.range.into()),
                 });
-            }
+            workspace_symbols.extend(symbols);
         }
-        symbols
+        workspace_symbols
     }
 
     pub fn document_symbols(&self, file: FileId) -> SymbolTree {
@@ -115,7 +120,7 @@ impl Snapshot {
 }
 
 #[cfg(test)]
-mod tests;
+mod document_symbols_tests;
 
 #[cfg(test)]
 mod workspace_symbols_tests;

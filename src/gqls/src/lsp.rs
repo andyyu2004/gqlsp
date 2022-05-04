@@ -259,7 +259,7 @@ impl LanguageServer for Gqls {
     ) -> jsonrpc::Result<Option<Vec<SymbolInformation>>> {
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            let symbols = snapshot.workspace_symbols();
+            let symbols = snapshot.workspace_symbols(&params.query);
             Ok(Some(symbols.convert()))
         })
     }
