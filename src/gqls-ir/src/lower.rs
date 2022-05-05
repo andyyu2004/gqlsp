@@ -135,10 +135,10 @@ impl ItemCtxt {
 
     fn lower_item(&mut self, node: Node<'_>) -> Option<Item> {
         assert_eq!(node.kind(), NodeKind::ITEM);
-        let def = node.sole_named_child();
+        let def = node.sole_named_child()?;
         let (name, kind) = match def.kind() {
             NodeKind::TYPE_DEFINITION => {
-                let typedef = def.sole_named_child();
+                let typedef = def.sole_named_child()?;
                 let kind = match typedef.kind() {
                     NodeKind::OBJECT_TYPE_DEFINITION => TypeDefinitionKind::Object,
                     NodeKind::INTERFACE_TYPE_DEFINITION => TypeDefinitionKind::Interface,
@@ -164,7 +164,7 @@ impl ItemCtxt {
                 )
             }
             NodeKind::TYPE_EXTENSION => {
-                let type_ext = def.sole_named_child();
+                let type_ext = def.sole_named_child()?;
                 let kind = match type_ext.kind() {
                     NodeKind::OBJECT_TYPE_EXTENSION => TypeDefinitionKind::Object,
                     // TODO
@@ -236,12 +236,13 @@ pub(crate) trait LowerCtxt: HasText {
             node.kind(),
             NodeKind::TYPE | NodeKind::NAMED_TYPE | NodeKind::LIST_TYPE | NodeKind::NON_NULL_TYPE
         ));
-        let ty = if matches!(node.kind(), NodeKind::TYPE) { node.sole_named_child() } else { node };
+        let ty =
+            if matches!(node.kind(), NodeKind::TYPE) { node.sole_named_child()? } else { node };
         let kind = match ty.kind() {
             NodeKind::NAMED_TYPE => return Some(self.lower_named_type(ty)),
-            NodeKind::LIST_TYPE => TyKind::List(self.lower_type(ty.sole_named_child())?),
+            NodeKind::LIST_TYPE => TyKind::List(self.lower_type(ty.sole_named_child()?)?),
             NodeKind::NON_NULL_TYPE => {
-                let inner = ty.sole_named_child();
+                let inner = ty.sole_named_child()?;
                 match inner.kind() {
                     NodeKind::NAMED_TYPE => TyKind::NonNull(self.lower_named_type(inner)),
                     NodeKind::LIST_TYPE => TyKind::NonNull(self.lower_list_type(inner)?),
@@ -255,7 +256,7 @@ pub(crate) trait LowerCtxt: HasText {
 
     fn lower_list_type(&mut self, node: Node<'_>) -> Option<Ty> {
         assert_eq!(node.kind(), NodeKind::LIST_TYPE);
-        let kind = TyKind::List(self.lower_type(node.sole_named_child())?);
+        let kind = TyKind::List(self.lower_type(node.sole_named_child()?)?);
         Some(Box::new(Type { range: node.range(), kind }))
     }
 

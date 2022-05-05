@@ -71,7 +71,7 @@ impl RangeExt for Range {
 pub trait NodeExt<'tree>: Sized {
     fn parents(self) -> Parents<'tree>;
     fn parent_of_kind(self, kind: &'static str) -> Option<Self>;
-    fn sole_named_child(self) -> Node<'tree>;
+    fn sole_named_child(self) -> Option<Node<'tree>>;
     fn text(self, text: &str) -> &str;
     fn find_descendant(self, f: impl FnMut(&Self) -> bool) -> Option<Self>;
     fn name_node(self) -> Option<Self>;
@@ -96,9 +96,9 @@ impl<'tree> NodeExt<'tree> for Node<'tree> {
     }
 
     #[track_caller]
-    fn sole_named_child(self) -> Node<'tree> {
-        assert_eq!(self.named_child_count(), 1);
-        self.named_child(0).unwrap()
+    fn sole_named_child(self) -> Option<Node<'tree>> {
+        assert!(self.named_child_count() <= 1);
+        self.named_child(0)
     }
 
     fn text(self, source: &str) -> &str {
