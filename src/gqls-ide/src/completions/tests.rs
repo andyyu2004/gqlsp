@@ -13,6 +13,26 @@ fn test(fixture: &Fixture, expect: Expect) {
 }
 
 #[test]
+fn test_toplevel_keyword_completions() {
+    let fixture = fixture! {
+        "foo" => "
+            type Foo {
+               bar: $
+            }
+        "
+    };
+    // FIXME
+    test(
+        &fixture,
+        expect![[r#"
+            [
+                Foo :: Object,
+            ]
+        "#]],
+    );
+}
+
+#[test]
 fn test_field_completions() {
     let fixture = fixture! {
         "foo" => "
