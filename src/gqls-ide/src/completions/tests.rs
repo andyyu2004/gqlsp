@@ -18,18 +18,19 @@ fn test_field_completions() {
         "foo" => "
             type Foo {
                bar:
-               #   ^^^^^
+               #   ^
             }
         "
     };
     test(
         &fixture,
         expect![[r#"
-        [
-            Completion {
-                label: "Foo",
-            },
-        ]
-    "#]],
+            [
+                CompletionItem {
+                    label: "Foo",
+                    kind: Object,
+                },
+            ]
+        "#]],
     );
 }

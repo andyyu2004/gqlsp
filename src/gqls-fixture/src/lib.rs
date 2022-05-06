@@ -71,6 +71,7 @@ impl FixtureFile {
             if !line.trim_start().starts_with('#') {
                 continue;
             }
+
             let mut range_start = None;
             for (column, char) in line.char_indices() {
                 if char == '{' {
@@ -92,6 +93,10 @@ impl FixtureFile {
                     ranges.push(start..Point { row: row - 1, column })
                 }
 
+                if char == '$' {
+                    points.push(Point { row, column });
+                }
+
                 if char == '^' {
                     if row == 0 {
                         panic!("cannot contain `^` in the first line");
@@ -108,7 +113,8 @@ impl FixtureFile {
                 ranges.push(start..Point { row: row - 1, column: line.len() });
             }
         }
-        Self { points, ranges, text: fixture.to_owned() }
+
+        Self { points, ranges, text: fixture.replace('$', " ") }
     }
 }
 

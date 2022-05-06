@@ -11,7 +11,7 @@ mod resolve;
 mod symbols;
 mod typedef;
 
-pub use self::completions::Completion;
+pub use self::completions::{CompletionItem, CompletionItemKind};
 pub use self::edit::{Change, ChangeKind, Changeset, Patch, Point, Range};
 pub use self::highlight::{SemanticToken, SemanticTokenKind};
 pub use self::symbols::{DocumentSymbol, SymbolKind, SymbolTree, WorkspaceSymbol};

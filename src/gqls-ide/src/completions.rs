@@ -1,23 +1,48 @@
 use gqls_db::DefDatabase;
+use gqls_ir::{ItemKind, TypeDefinitionKind};
 use tree_sitter::Point;
 use vfs::FileId;
 
 use crate::Snapshot;
 
 #[derive(Debug)]
-pub struct Completion {
+pub struct CompletionItem {
     pub label: String,
+    pub kind: CompletionItemKind,
+}
+
+#[derive(Debug)]
+pub enum CompletionItemKind {
+    Object,
+    Interface,
+    Enum,
+    Scalar,
+    Union,
+    Directive,
 }
 
 impl Snapshot {
-    pub fn completions(&self, file: FileId, _at: Point) -> Vec<Completion> {
+    pub fn completions(&self, file: FileId, _at: Point) -> Vec<CompletionItem> {
         // FIXME just random implementation for now
         let project_items = self.project_items(file);
-        project_items
-            .values()
-            .flat_map(|items| items.items.iter())
-            .map(|(_, item)| Completion { label: item.name.to_string() })
-            .collect()
+        let mut completions = vec![];
+        for items in project_items.values() {
+            for (_, item) in items.items.iter() {
+                let kind = match item.kind {
+                    ItemKind::TypeDefinition(idx) => match items.typedefs[idx].kind {
+                        TypeDefinitionKind::Object | TypeDefinitionKind::Input =>
+                            CompletionItemKind::Object,
+                        TypeDefinitionKind::Interface => CompletionItemKind::Interface,
+                        TypeDefinitionKind::Scalar => CompletionItemKind::Scalar,
+                        TypeDefinitionKind::Enum => CompletionItemKind::Enum,
+                        TypeDefinitionKind::Union => CompletionItemKind::Union,
+                    },
+                    ItemKind::DirectiveDefinition(_) => CompletionItemKind::Directive,
+                };
+                completions.push(CompletionItem { label: item.name.to_string(), kind });
+            }
+        }
+        completions
     }
 }
 

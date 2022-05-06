@@ -130,14 +130,30 @@ impl Convert for gqls_ide::WorkspaceSymbol {
     }
 }
 
-impl Convert for gqls_ide::Completion {
+impl Convert for gqls_ide::CompletionItem {
     type Converted = lsp_types::CompletionItem;
 
     fn convert(&self) -> Self::Converted {
         lsp_types::CompletionItem {
             label: self.label.clone(),
+            kind: Some(self.kind.convert()),
             // TODO
             ..Default::default()
+        }
+    }
+}
+
+impl Convert for gqls_ide::CompletionItemKind {
+    type Converted = lsp_types::CompletionItemKind;
+
+    fn convert(&self) -> Self::Converted {
+        match self {
+            gqls_ide::CompletionItemKind::Object => lsp_types::CompletionItemKind::STRUCT,
+            gqls_ide::CompletionItemKind::Interface => lsp_types::CompletionItemKind::INTERFACE,
+            gqls_ide::CompletionItemKind::Enum => lsp_types::CompletionItemKind::ENUM,
+            gqls_ide::CompletionItemKind::Scalar => lsp_types::CompletionItemKind::CONSTANT,
+            gqls_ide::CompletionItemKind::Union => lsp_types::CompletionItemKind::CLASS,
+            gqls_ide::CompletionItemKind::Directive => lsp_types::CompletionItemKind::FUNCTION,
         }
     }
 }
