@@ -51,3 +51,15 @@ scalar Foo
         ],
     );
 }
+
+#[test]
+fn test_parse_fixture_with_invalid_graphql() {
+    test(
+        r#"
+scalar
+#      ^^^
+    "#,
+        vec![Point { row: 1, column: 7 }, Point { row: 1, column: 8 }, Point { row: 1, column: 9 }],
+        vec![],
+    );
+}

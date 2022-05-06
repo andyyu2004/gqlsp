@@ -2,7 +2,7 @@ use expect_test::expect;
 use gqls_fixture::Fixture;
 use maplit::{hashmap, hashset};
 
-use crate::{range, ChangeSummary, Changeset, Diagnostic, Ide};
+use crate::{range, ChangeSummary, Changeset, ChangesetSummary, Diagnostic, Ide};
 
 macro_rules! idx {
     ($idx:expr) => {
@@ -48,13 +48,7 @@ pub(crate) use setup;
 
 impl Ide {
     pub fn setup_fixture(&mut self, fixture: &Fixture) {
-        let mut changeset = Changeset::default().with_projects(hashmap! {
-            "default" => fixture.fileset()
-        });
-        for (file, fixture_file) in fixture.files() {
-            changeset = changeset.with_change(change!(file => fixture_file.text));
-        }
-        let summary = self.apply_changeset(changeset);
+        let summary = self.setup_fixture_allow_errors(fixture);
         for file in fixture.fileset() {
             assert!(
                 summary[file].diagnostics.is_empty(),
@@ -63,6 +57,16 @@ impl Ide {
                 summary[file].diagnostics
             );
         }
+    }
+
+    pub fn setup_fixture_allow_errors(&mut self, fixture: &Fixture) -> ChangesetSummary {
+        let mut changeset = Changeset::default().with_projects(hashmap! {
+            "default" => fixture.fileset()
+        });
+        for (file, fixture_file) in fixture.files() {
+            changeset = changeset.with_change(change!(file => fixture_file.text));
+        }
+        self.apply_changeset(changeset)
     }
 }
 
