@@ -86,8 +86,9 @@ impl<'s> CompletionCtxt<'s> {
         match self.context {
             Context::Field => self.complete_fields(),
             Context::Document => self.complete_document(),
-            Context::Union => todo!(),
-            Context::InputField => todo!(),
+            //TODO
+            Context::Union => {}
+            Context::InputField => {}
         }
         self.completions
     }

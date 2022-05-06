@@ -291,11 +291,6 @@ impl LanguageServer for Gqls {
             Ok(Some(CompletionResponse::Array(completions.convert())))
         })
     }
-
-    async fn completion_resolve(&self, params: CompletionItem) -> jsonrpc::Result<CompletionItem> {
-        let _ = params;
-        todo!()
-    }
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
@@ -372,6 +367,7 @@ fn discover_projects(
     for workspace in workspaces {
         let path = workspace.uri.to_path()?;
         let config = read_config(&path)?;
+        // FIXME drop this dependency
         for entry in walkdir::WalkDir::new(&path)
             .into_iter()
             .filter_entry(|entry| !entry.path().ends_with(".git"))
