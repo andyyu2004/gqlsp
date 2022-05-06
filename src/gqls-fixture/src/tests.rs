@@ -6,6 +6,7 @@ fn test(fixture: &str, points: Vec<Point>, ranges: Vec<std::ops::Range<Point>>) 
     let actual = FixtureFile::parse(fixture);
     assert_eq!(actual.points, points);
     assert_eq!(actual.ranges, ranges);
+    assert_eq!(actual.text, fixture.replace('$', " "));
 }
 
 #[test]
@@ -53,12 +54,11 @@ scalar Foo
 }
 
 #[test]
-fn test_parse_fixture_with_invalid_graphql() {
+fn test_inline_points() {
     test(
         r#"
-scalar
-#      ^^^
-    "#,
+scalar $$$
+        "#,
         vec![Point { row: 1, column: 7 }, Point { row: 1, column: 8 }, Point { row: 1, column: 9 }],
         vec![],
     );

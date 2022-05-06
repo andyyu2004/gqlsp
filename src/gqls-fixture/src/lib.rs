@@ -68,12 +68,16 @@ impl FixtureFile {
         for (row, (line, prev_line)) in
             fixture.lines().zip(std::iter::once("").chain(fixture.lines())).enumerate()
         {
-            if !line.trim_start().starts_with('#') {
-                continue;
-            }
-
             let mut range_start = None;
             for (column, char) in line.char_indices() {
+                if char == '$' {
+                    points.push(Point { row, column });
+                }
+
+                if !line.trim_start().starts_with('#') {
+                    continue;
+                }
+
                 if char == '{' {
                     stack.push(Point { row: row + 1, column: 0 });
                 } else if char == '}' {
@@ -91,10 +95,6 @@ impl FixtureFile {
                     }
                 } else if let Some(start) = range_start.take() {
                     ranges.push(start..Point { row: row - 1, column })
-                }
-
-                if char == '$' {
-                    points.push(Point { row, column });
                 }
 
                 if char == '^' {
