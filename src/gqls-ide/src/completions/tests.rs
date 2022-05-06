@@ -41,9 +41,13 @@ fn test_object_field_completions() {
                bar: $
             }
 
-            input IgnoreInputs {
-                bar: Int
-            }
+            interface Interface { bar: Int }
+            scalar Scalar
+            enum Enum { A, B }
+            union Union = Foo | Foo
+            input IgnoreInputs { bar: Int }
+            directive @qux ON FIELD
+            type Bar { bar: Int }
         "
     };
     test(
@@ -51,6 +55,11 @@ fn test_object_field_completions() {
         expect![[r#"
             [
                 Foo :: Object,
+                Interface :: Interface,
+                Scalar :: Scalar,
+                Enum :: Enum,
+                Union :: Union,
+                Bar :: Object,
             ]
         "#]],
     );
@@ -63,6 +72,12 @@ fn test_input_object_field_completions() {
             type IgnoreObject {
                bar: Int
             }
+            interface IgnoreInterface { bar: Int }
+            scalar Scalar
+            enum Enum { A, B }
+            union IgnoreUnion = Foo | Foo
+            input AnotherInput { bar: Int }
+            directive @qux ON FIELD
 
             input Input {
                 bar: $
@@ -73,6 +88,9 @@ fn test_input_object_field_completions() {
         &fixture,
         expect![[r#"
             [
+                Scalar :: Scalar,
+                Enum :: Enum,
+                AnotherInput :: InputObject,
                 Input :: InputObject,
             ]
         "#]],
