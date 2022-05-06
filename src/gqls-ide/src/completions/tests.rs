@@ -25,10 +25,7 @@ fn test_field_completions() {
         &fixture,
         expect![[r#"
             [
-                CompletionItem {
-                    label: "Foo",
-                    kind: Object,
-                },
+                Foo :: Object,
             ]
         "#]],
     );

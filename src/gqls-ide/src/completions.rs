@@ -1,3 +1,5 @@
+use std::fmt::{self, Debug};
+
 use gqls_db::DefDatabase;
 use gqls_ir::{ItemKind, TypeDefinitionKind};
 use tree_sitter::Point;
@@ -5,10 +7,15 @@ use vfs::FileId;
 
 use crate::Snapshot;
 
-#[derive(Debug)]
 pub struct CompletionItem {
     pub label: String,
     pub kind: CompletionItemKind,
+}
+
+impl Debug for CompletionItem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} :: {:?}", self.label, self.kind)
+    }
 }
 
 #[derive(Debug)]
