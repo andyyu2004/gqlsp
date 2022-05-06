@@ -105,8 +105,8 @@ impl<'s> CompletionCtxt<'s> {
             for (_, item) in items.items.iter() {
                 let kind = match item.kind {
                     ItemKind::TypeDefinition(idx) => match items.typedefs[idx].kind {
-                        TypeDefinitionKind::Object | TypeDefinitionKind::Input =>
-                            CompletionItemKind::Object,
+                        TypeDefinitionKind::Input => continue,
+                        TypeDefinitionKind::Object => CompletionItemKind::Object,
                         TypeDefinitionKind::Interface => CompletionItemKind::Interface,
                         TypeDefinitionKind::Scalar => CompletionItemKind::Scalar,
                         TypeDefinitionKind::Enum => CompletionItemKind::Enum,

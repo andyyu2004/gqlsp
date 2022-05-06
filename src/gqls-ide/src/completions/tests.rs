@@ -40,6 +40,10 @@ fn test_field_completions() {
             type Foo {
                bar: $
             }
+
+            input IgnoreInputs {
+                bar: Int
+            }
         "
     };
     test(
