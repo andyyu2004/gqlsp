@@ -17,8 +17,7 @@ fn test_field_completions() {
     let fixture = fixture! {
         "foo" => "
             type Foo {
-               bar:
-               #   ^
+               bar: $
             }
         "
     };
