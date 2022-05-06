@@ -184,6 +184,7 @@ impl HasText for str {
     }
 }
 
+pub type ProjectItems = HashMap<FileId, Arc<Items>>;
 pub type ItemMap = HashMap<Name, SmallVec<[Idx<Item>; 1]>>;
 pub type ItemResolutions = SmallVec<[ItemRes; 1]>;
 pub type Resolutions = SmallVec<[Res; 1]>;

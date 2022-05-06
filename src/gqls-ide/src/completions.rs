@@ -19,9 +19,10 @@ impl Debug for CompletionItem {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum CompletionItemKind {
     Object,
+    InputObject,
     Interface,
     Enum,
     Scalar,
@@ -88,7 +89,7 @@ impl<'s> CompletionCtxt<'s> {
             Context::Document => self.complete_document(),
             //TODO
             Context::Union => {}
-            Context::InputField => {}
+            Context::InputField => self.complete_input_fields(),
         }
         self.completions
     }
@@ -100,14 +101,16 @@ impl<'s> CompletionCtxt<'s> {
             ));
     }
 
-    fn complete_fields(&mut self) {
+    fn items(&self) -> impl Iterator<Item = CompletionItem> {
+        // FIXME use a proper iterative approach
         let project_items = self.snapshot.project_items(self.file);
+        let mut completions = vec![];
         for items in project_items.values() {
             for (_, item) in items.items.iter() {
                 let kind = match item.kind {
                     ItemKind::TypeDefinition(idx) => match items.typedefs[idx].kind {
-                        TypeDefinitionKind::Input => continue,
                         TypeDefinitionKind::Object => CompletionItemKind::Object,
+                        TypeDefinitionKind::Input => CompletionItemKind::InputObject,
                         TypeDefinitionKind::Interface => CompletionItemKind::Interface,
                         TypeDefinitionKind::Scalar => CompletionItemKind::Scalar,
                         TypeDefinitionKind::Enum => CompletionItemKind::Enum,
@@ -115,9 +118,36 @@ impl<'s> CompletionCtxt<'s> {
                     },
                     ItemKind::DirectiveDefinition(_) => CompletionItemKind::Directive,
                 };
-                self.completions.push(CompletionItem { label: item.name.to_string(), kind });
+                completions.push(CompletionItem { label: item.name.to_string(), kind });
             }
         }
+        completions.into_iter()
+    }
+
+    fn complete_input_fields(&mut self) {
+        self.completions.extend(self.items().filter(|item| match item.kind {
+            CompletionItemKind::InputObject
+            | CompletionItemKind::Enum
+            | CompletionItemKind::Scalar => true,
+            CompletionItemKind::Object
+            | CompletionItemKind::Interface
+            | CompletionItemKind::Union
+            | CompletionItemKind::Directive
+            | CompletionItemKind::Keyword => false,
+        }));
+    }
+
+    fn complete_fields(&mut self) {
+        self.completions.extend(self.items().filter(|item| match item.kind {
+            CompletionItemKind::Object
+            | CompletionItemKind::Interface
+            | CompletionItemKind::Enum
+            | CompletionItemKind::Scalar
+            | CompletionItemKind::Union => true,
+            CompletionItemKind::Directive
+            | CompletionItemKind::InputObject
+            | CompletionItemKind::Keyword => false,
+        }));
     }
 }
 

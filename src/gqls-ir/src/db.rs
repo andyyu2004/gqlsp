@@ -19,7 +19,7 @@ pub trait DefDatabase: SourceDatabase {
     fn item_map(&self, file: FileId) -> Arc<ItemMap>;
     fn item_references(&self, res: ItemRes) -> References;
     fn items(&self, file: FileId) -> Arc<Items>;
-    fn project_items(&self, file: FileId) -> Arc<HashMap<FileId, Arc<Items>>>;
+    fn project_items(&self, file: FileId) -> Arc<ProjectItems>;
     fn name_at(&self, file: FileId, at: Point) -> Option<Name>;
     fn references(&self, res: Res) -> References;
     fn resolve(&self, file: FileId, at: Point) -> Option<Res>;
@@ -28,7 +28,7 @@ pub trait DefDatabase: SourceDatabase {
     fn typedef(&self, file: FileId, idx: Idx<TypeDefinition>) -> TypeDefinition;
 }
 
-fn project_items(db: &dyn DefDatabase, file: FileId) -> Arc<HashMap<FileId, Arc<Items>>> {
+fn project_items(db: &dyn DefDatabase, file: FileId) -> Arc<ProjectItems> {
     let data = db
         .projects_of(file)
         .iter()

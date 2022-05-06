@@ -34,7 +34,7 @@ fn test_toplevel_keyword_completions() {
 }
 
 #[test]
-fn test_field_completions() {
+fn test_object_field_completions() {
     let fixture = fixture! {
         "foo" => "
             type Foo {
@@ -51,6 +51,29 @@ fn test_field_completions() {
         expect![[r#"
             [
                 Foo :: Object,
+            ]
+        "#]],
+    );
+}
+
+#[test]
+fn test_input_object_field_completions() {
+    let fixture = fixture! {
+        "foo" => "
+            type IgnoreObject {
+               bar: Int
+            }
+
+            input Input {
+                bar: $
+            }
+        "
+    };
+    test(
+        &fixture,
+        expect![[r#"
+            [
+                Input :: InputObject,
             ]
         "#]],
     );
