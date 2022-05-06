@@ -65,7 +65,8 @@ impl<'s> CompletionCtxt<'s> {
             match node.kind() {
                 NodeKind::INPUT_FIELDS_DEFINITION => return Context::InputField,
                 NodeKind::FIELDS_DEFINITION | NodeKind::FIELD_DEFINITION => return Context::Field,
-                NodeKind::UNION_MEMBER_TYPES => return Context::Union,
+                NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_MEMBER_TYPES =>
+                    return Context::Union,
                 _ => {
                     if at.column == 0 {
                         break;
@@ -87,8 +88,7 @@ impl<'s> CompletionCtxt<'s> {
         match self.context {
             Context::Field => self.complete_fields(),
             Context::Document => self.complete_document(),
-            //TODO
-            Context::Union => {}
+            Context::Union => self.complete_union_member(),
             Context::InputField => self.complete_input_fields(),
         }
         self.completions
@@ -148,6 +148,11 @@ impl<'s> CompletionCtxt<'s> {
             | CompletionItemKind::InputObject
             | CompletionItemKind::Keyword => false,
         }));
+    }
+
+    fn complete_union_member(&mut self) {
+        self.completions
+            .extend(self.items().filter(|item| matches!(item.kind, CompletionItemKind::Object)))
     }
 }
 

@@ -58,9 +58,15 @@ fn test_infer_top_level_context() {
 #[test]
 fn test_infer_union_member_types_context() {
     let fixture = fixture! {
-        "foo" => "
-            union Union = $ Foo $ | $ Bar $ | $ Baz $$$
-        "
+        "foo" => "union Union = $ Foo $ | $ Bar $ | $ Baz $$$"
+    };
+    test(&fixture, Context::Union);
+}
+
+#[test]
+fn test_infer_union_member_types_context_first_member() {
+    let fixture = fixture! {
+        "foo" => "union Union = $"
     };
     test(&fixture, Context::Union);
 }

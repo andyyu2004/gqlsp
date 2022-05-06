@@ -97,5 +97,31 @@ fn test_input_object_field_completions() {
     );
 }
 
+#[test]
+fn test_union_member_field_completions() {
+    let fixture = fixture! {
+        "foo" => "
+            type OnlyObjects {
+               bar: Int
+            }
+            interface IgnoreInterface { bar: Int }
+            scalar IgnoreScalar
+            enum IgnoreEnum { A, B }
+            union IgnoreUnion = Foo | Foo
+            directive @qux ON FIELD
+
+            union Union = Foo | $
+        "
+    };
+    test(
+        &fixture,
+        expect![[r#"
+            [
+                OnlyObjects :: Object,
+            ]
+        "#]],
+    );
+}
+
 #[cfg(test)]
 mod infer_context;
