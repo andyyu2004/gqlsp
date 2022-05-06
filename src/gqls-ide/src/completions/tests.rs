@@ -50,3 +50,6 @@ fn test_field_completions() {
         "#]],
     );
 }
+
+#[cfg(test)]
+mod infer_context;

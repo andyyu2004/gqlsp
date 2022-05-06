@@ -1,7 +1,8 @@
 use std::fmt::{self, Debug};
 
-use gqls_db::DefDatabase;
+use gqls_db::{DefDatabase, SourceDatabase};
 use gqls_ir::{ItemKind, TypeDefinitionKind};
+use gqls_syntax::{NodeExt, NodeKind};
 use tree_sitter::Point;
 use vfs::FileId;
 
@@ -26,6 +27,7 @@ pub enum CompletionItemKind {
     Scalar,
     Union,
     Directive,
+    Keyword,
 }
 
 impl Snapshot {
@@ -37,22 +39,67 @@ impl Snapshot {
 struct CompletionCtxt<'s> {
     snapshot: &'s Snapshot,
     file: FileId,
-    at: Point,
+    context: Context,
     completions: Vec<CompletionItem>,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+enum Context {
+    Document,
+    InputField,
+    Field,
+    Union,
+}
+
 impl<'s> CompletionCtxt<'s> {
+    fn context(snapshot: &'s Snapshot, file: FileId, mut at: Point) -> Context {
+        let data = snapshot.file_data(file);
+        // NOTE maybe we could make use of treesitter's query api to do this better
+        // HACK look backwards a few columns to try and find a notable node
+        for _ in 0..10 {
+            let node = match data.tree.root_node().named_node_at(at) {
+                Some(node) => node,
+                None => return Context::Document,
+            };
+            match node.kind() {
+                NodeKind::INPUT_FIELDS_DEFINITION => return Context::InputField,
+                NodeKind::FIELDS_DEFINITION | NodeKind::FIELD_DEFINITION => return Context::Field,
+                NodeKind::UNION_MEMBER_TYPES => return Context::Union,
+                _ => {
+                    if at.column == 0 {
+                        break;
+                    }
+                    at.column -= 1;
+                }
+            }
+        }
+
+        return Context::Document;
+    }
+
     fn new(snapshot: &'s Snapshot, file: FileId, at: Point) -> Self {
-        Self { snapshot, file, at, completions: Default::default() }
+        let context = Self::context(snapshot, file, at);
+        Self { snapshot, file, context, completions: Default::default() }
     }
 
     pub fn completions(mut self) -> Vec<CompletionItem> {
-        self.complete_fields();
+        match self.context {
+            Context::Field => self.complete_fields(),
+            Context::Document => self.complete_document(),
+            Context::Union => todo!(),
+            Context::InputField => todo!(),
+        }
         self.completions
     }
 
+    fn complete_document(&mut self) {
+        self.completions
+            .extend(["scalar", "enum", "struct", "union", "interface", "directive", "input"].map(
+                |s| CompletionItem { label: s.to_owned(), kind: CompletionItemKind::Keyword },
+            ));
+    }
+
     fn complete_fields(&mut self) {
-        // FIXME just random implementation for now
         let project_items = self.snapshot.project_items(self.file);
         for items in project_items.values() {
             for (_, item) in items.items.iter() {
