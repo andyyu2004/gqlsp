@@ -162,10 +162,7 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                     Scope::Scalar => SemanticTokenKind::Scalar,
                     Scope::Union => SemanticTokenKind::Union,
                     Scope::Type | Scope::UnionMember => self.highlight_type(at),
-                    Scope::Document => unreachable!(
-                        "found name node outside of any scope: {}",
-                        node.parent().expect("name always has a parent").to_sexp()
-                    ),
+                    Scope::Document => continue,
                 },
                 _ => continue,
             };
