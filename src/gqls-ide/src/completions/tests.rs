@@ -15,18 +15,19 @@ fn test(fixture: &Fixture, expect: Expect) {
 #[test]
 fn test_toplevel_keyword_completions() {
     let fixture = fixture! {
-        "foo" => "
-            type Foo {
-               bar: $
-            }
-        "
+        "foo" => "$"
     };
-    // FIXME
     test(
         &fixture,
         expect![[r#"
             [
-                Foo :: Object,
+                scalar :: Keyword,
+                enum :: Keyword,
+                struct :: Keyword,
+                union :: Keyword,
+                interface :: Keyword,
+                directive :: Keyword,
+                input :: Keyword,
             ]
         "#]],
     );
