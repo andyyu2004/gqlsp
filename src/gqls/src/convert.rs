@@ -148,7 +148,7 @@ impl Convert for gqls_ide::CompletionItemKind {
 
     fn convert(&self) -> Self::Converted {
         match self {
-            gqls_ide::CompletionItemKind::Directive => lsp_types::CompletionItemKind::FUNCTION,
+            gqls_ide::CompletionItemKind::Directive(..) => lsp_types::CompletionItemKind::FUNCTION,
             gqls_ide::CompletionItemKind::Enum => lsp_types::CompletionItemKind::ENUM,
             gqls_ide::CompletionItemKind::Interface => lsp_types::CompletionItemKind::INTERFACE,
             gqls_ide::CompletionItemKind::Keyword => lsp_types::CompletionItemKind::KEYWORD,

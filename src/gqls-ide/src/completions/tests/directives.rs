@@ -37,9 +37,9 @@ fn test_complete_directives() {
         "type Foo $",
         expect![[r#"
             [
-                onFieldAndObject :: Directive,
-                onObjectAndInterface :: Directive,
-                onObject :: Directive,
+                onFieldAndObject :: Directive(FIELD_DEFINITION | OBJECT),
+                onObjectAndInterface :: Directive(INTERFACE | OBJECT),
+                onObject :: Directive(OBJECT),
             ]
         "#]]
     );
@@ -48,8 +48,8 @@ fn test_complete_directives() {
         "interface Foo $",
         expect![[r#"
             [
-                onObjectAndInterface :: Directive,
-                onInterface :: Directive,
+                onObjectAndInterface :: Directive(INTERFACE | OBJECT),
+                onInterface :: Directive(INTERFACE),
             ]
         "#]]
     );
@@ -58,7 +58,7 @@ fn test_complete_directives() {
         "enum Foo $",
         expect![[r#"
             [
-                onEnum :: Directive,
+                onEnum :: Directive(ENUM),
             ]
         "#]]
     );
@@ -67,7 +67,7 @@ fn test_complete_directives() {
         "enum Foo { A, B $ }",
         expect![[r#"
             [
-                onEnumValue :: Directive,
+                onEnumValue :: Directive(ENUM_VALUE),
             ]
         "#]]
     );
@@ -76,7 +76,7 @@ fn test_complete_directives() {
         "union Foo $",
         expect![[r#"
             [
-                onUnion :: Directive,
+                onUnion :: Directive(UNION),
             ]
         "#]]
     );
@@ -85,7 +85,7 @@ fn test_complete_directives() {
         "input Foo $",
         expect![[r#"
             [
-                onInputObject :: Directive,
+                onInputObject :: Directive(INPUT_OBJECT),
             ]
         "#]]
     );
@@ -94,7 +94,28 @@ fn test_complete_directives() {
         "scalar Foo $",
         expect![[r#"
             [
-                onScalar :: Directive,
+                onScalar :: Directive(SCALAR),
+            ]
+        "#]]
+    );
+
+    test!(
+        "input Foo { bar: Foo $ }",
+        expect![[r#"
+            [
+                onInputFieldDefinition :: Directive(INPUT_FIELD_DEFINITION),
+                Foo :: InputObject,
+            ]
+        "#]]
+    );
+
+    test!(
+        "type Foo { bar: Foo $ }",
+        expect![[r#"
+            [
+                onFieldAndObject :: Directive(FIELD_DEFINITION | OBJECT),
+                onField :: Directive(FIELD_DEFINITION),
+                Foo :: Object,
             ]
         "#]]
     );

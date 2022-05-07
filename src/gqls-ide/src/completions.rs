@@ -27,8 +27,8 @@ pub enum CompletionItemKind {
     Enum,
     Scalar,
     Union,
-    Directive,
     Keyword,
+    Directive(DirectiveLocations),
 }
 
 impl Snapshot {
@@ -44,7 +44,7 @@ struct CompletionCtxt<'s> {
     completions: Vec<CompletionItem>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Context {
     Document,
     InputField,
@@ -70,7 +70,6 @@ impl<'s> CompletionCtxt<'s> {
                 Some(node) => node,
                 None => return Context::Document,
             };
-            dbg!(node.to_sexp());
             match node.kind() {
                 NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
                     return Context::Directive(DirectiveLocations::OBJECT),
@@ -141,7 +140,8 @@ impl<'s> CompletionCtxt<'s> {
                         TypeDefinitionKind::Enum => CompletionItemKind::Enum,
                         TypeDefinitionKind::Union => CompletionItemKind::Union,
                     },
-                    ItemKind::DirectiveDefinition(_) => CompletionItemKind::Directive,
+                    ItemKind::DirectiveDefinition(idx) =>
+                        CompletionItemKind::Directive(items.directives[idx].locations),
                 };
                 completions.push(CompletionItem { label: item.name.to_string(), kind });
             }
@@ -151,27 +151,28 @@ impl<'s> CompletionCtxt<'s> {
 
     fn complete_input_fields(&mut self) {
         self.completions.extend(self.items().filter(|item| match item.kind {
+            CompletionItemKind::Directive(loc) =>
+                loc.contains(DirectiveLocations::INPUT_FIELD_DEFINITION),
             CompletionItemKind::InputObject
             | CompletionItemKind::Enum
             | CompletionItemKind::Scalar => true,
             CompletionItemKind::Object
             | CompletionItemKind::Interface
             | CompletionItemKind::Union
-            | CompletionItemKind::Directive
             | CompletionItemKind::Keyword => false,
         }));
     }
 
     fn complete_fields(&mut self) {
         self.completions.extend(self.items().filter(|item| match item.kind {
+            CompletionItemKind::Directive(loc) =>
+                loc.contains(DirectiveLocations::FIELD_DEFINITION),
             CompletionItemKind::Object
             | CompletionItemKind::Interface
             | CompletionItemKind::Enum
             | CompletionItemKind::Scalar
             | CompletionItemKind::Union => true,
-            CompletionItemKind::Directive
-            | CompletionItemKind::InputObject
-            | CompletionItemKind::Keyword => false,
+            CompletionItemKind::InputObject | CompletionItemKind::Keyword => false,
         }));
     }
 
@@ -181,22 +182,8 @@ impl<'s> CompletionCtxt<'s> {
     }
 
     fn complete_directives(&mut self, location: DirectiveLocations) {
-        for items in self.snapshot.project_items(self.file).values() {
-            let completions = items
-                .items
-                .iter()
-                .filter_map(|(_, item)| match item.kind {
-                    ItemKind::DirectiveDefinition(idx)
-                        if items.directives[idx].locations.contains(location) =>
-                        Some(item),
-                    _ => None,
-                })
-                .map(|item| CompletionItem {
-                    label: item.name.to_string(),
-                    kind: CompletionItemKind::Directive,
-                });
-            self.completions.extend(completions)
-        }
+        let completions = self.items().filter(|item| matches!(item.kind, CompletionItemKind::Directive(locations) if locations.contains(location)));
+        self.completions.extend(completions);
     }
 }
 
