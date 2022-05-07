@@ -128,3 +128,6 @@ mod infer_context;
 
 #[cfg(test)]
 mod queries;
+
+#[cfg(test)]
+mod directives;

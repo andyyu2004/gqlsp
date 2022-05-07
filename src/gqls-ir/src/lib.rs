@@ -126,7 +126,7 @@ pub enum TypeDefinitionKind {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DirectiveDefinition {
-    locations: DirectiveLocations,
+    pub locations: DirectiveLocations,
 }
 
 #[derive(Clone, Ord, PartialOrd, Eq)]

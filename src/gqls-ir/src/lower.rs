@@ -130,6 +130,7 @@ impl ItemCtxt {
             .relevant_children(&mut node.walk())
             .filter_map(|node| self.lower_item(node))
             .collect();
+
         Arc::new(Items { items, typedefs: self.typedefs, directives: self.directives })
     }
 

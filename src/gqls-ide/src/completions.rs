@@ -135,7 +135,6 @@ impl<'s> CompletionCtxt<'s> {
                 let kind = match item.kind {
                     ItemKind::TypeDefinition(idx) => match items.typedefs[idx].kind {
                         TypeDefinitionKind::Object => CompletionItemKind::Object,
-
                         TypeDefinitionKind::Input => CompletionItemKind::InputObject,
                         TypeDefinitionKind::Interface => CompletionItemKind::Interface,
                         TypeDefinitionKind::Scalar => CompletionItemKind::Scalar,
@@ -182,7 +181,22 @@ impl<'s> CompletionCtxt<'s> {
     }
 
     fn complete_directives(&mut self, location: DirectiveLocations) {
-        // TODO
+        for items in self.snapshot.project_items(self.file).values() {
+            let completions = items
+                .items
+                .iter()
+                .filter_map(|(_, item)| match item.kind {
+                    ItemKind::DirectiveDefinition(idx)
+                        if items.directives[idx].locations.contains(location) =>
+                        Some(item),
+                    _ => None,
+                })
+                .map(|item| CompletionItem {
+                    label: item.name.to_string(),
+                    kind: CompletionItemKind::Directive,
+                });
+            self.completions.extend(completions)
+        }
     }
 }
 

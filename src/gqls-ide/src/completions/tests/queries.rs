@@ -1,7 +1,7 @@
 use super::super::Queries;
 use gqls_syntax::{parse_fresh, Query, QueryCursor, QueryExt};
 
-fn test(query: &Query, source: &str, should_match: bool) {
+fn _test(query: &Query, source: &str, should_match: bool) {
     let tree = parse_fresh(source);
     dbg!(tree.root_node().to_sexp());
     let mut cursor = QueryCursor::new();
@@ -10,5 +10,5 @@ fn test(query: &Query, source: &str, should_match: bool) {
 
 #[test]
 fn test_queries() {
-    let queries = Queries::default();
+    let _queries = Queries::default();
 }

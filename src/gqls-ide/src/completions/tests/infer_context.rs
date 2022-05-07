@@ -24,6 +24,12 @@ fn test_infer_field_context() {
                 bar:$$$
             }
         "
+
+        "bar" => "
+            type Foo {
+                bar: Foo$$$
+            }
+        "
     };
     test(&fixture, Context::Field);
 }
