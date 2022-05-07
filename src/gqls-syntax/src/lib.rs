@@ -107,7 +107,11 @@ impl<'tree> NodeExt<'tree> for Node<'tree> {
 
     #[track_caller]
     fn sole_named_child(self) -> Option<Node<'tree>> {
-        assert!(self.named_child_count() <= 1);
+        assert!(
+            self.named_child_count() <= 1,
+            "node `{}` had more than one named child",
+            self.to_sexp()
+        );
         self.named_child(0)
     }
 
