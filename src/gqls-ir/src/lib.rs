@@ -72,6 +72,21 @@ pub struct Directive {
     pub name: Name,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DirectiveLocation {
+    ArgumentDefinition,
+    Enum,
+    EnumValue,
+    FieldDefinition,
+    InputFieldDefinition,
+    InputObject,
+    Interface,
+    Object,
+    Scalar,
+    Schema,
+    Union,
+}
+
 impl Debug for Directive {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Directive")

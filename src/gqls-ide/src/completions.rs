@@ -1,8 +1,8 @@
 use std::fmt::{self, Debug};
 
 use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::{ItemKind, TypeDefinitionKind};
-use gqls_syntax::{query, NodeExt, NodeKind, Query};
+use gqls_ir::{DirectiveLocation, ItemKind, TypeDefinitionKind};
+use gqls_syntax::{NodeExt, NodeKind};
 use tree_sitter::Point;
 use vfs::FileId;
 
@@ -50,7 +50,7 @@ enum Context {
     InputField,
     Field,
     UnionMembers,
-    Directive(),
+    Directive(DirectiveLocation),
 }
 
 struct Queries {}
@@ -73,18 +73,20 @@ impl<'s> CompletionCtxt<'s> {
             dbg!(node.to_sexp());
             match node.kind() {
                 NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
-                    return Context::Directive(),
+                    return Context::Directive(DirectiveLocation::Object),
                 NodeKind::ENUM_TYPE_DEFINITION | NodeKind::ENUM_TYPE_EXTENSION =>
-                    return Context::Directive(),
+                    return Context::Directive(DirectiveLocation::Enum),
                 NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_TYPE_EXTENSION =>
-                    return Context::Directive(),
+                    return Context::Directive(DirectiveLocation::Union),
                 NodeKind::INTERFACE_TYPE_DEFINITION | NodeKind::INTERFACE_TYPE_EXTENSION =>
-                    return Context::Directive(),
+                    return Context::Directive(DirectiveLocation::Interface),
                 NodeKind::SCALAR_TYPE_DEFINITION | NodeKind::SCALAR_TYPE_EXTENSION =>
-                    return Context::Directive(),
+                    return Context::Directive(DirectiveLocation::Scalar),
                 NodeKind::INPUT_OBJECT_TYPE_DEFINITION | NodeKind::INPUT_OBJECT_TYPE_EXTENSION =>
-                    return Context::Directive(),
-                NodeKind::ENUM_VALUE_DEFINITION => return Context::Directive(),
+                    return Context::Directive(DirectiveLocation::InputObject),
+                NodeKind::ENUM_VALUES_DEFINITION
+                | NodeKind::ENUM_VALUE_DEFINITION
+                | NodeKind::ENUM_VALUE => return Context::Directive(DirectiveLocation::EnumValue),
                 NodeKind::INPUT_FIELDS_DEFINITION => return Context::InputField,
                 NodeKind::FIELDS_DEFINITION | NodeKind::FIELD_DEFINITION => return Context::Field,
                 NodeKind::UNION_MEMBER_TYPES => return Context::UnionMembers,
@@ -111,7 +113,7 @@ impl<'s> CompletionCtxt<'s> {
             Context::Document => self.complete_document(),
             Context::UnionMembers => self.complete_union_member(),
             Context::InputField => self.complete_input_fields(),
-            Context::Directive() => self.complete_directives(),
+            Context::Directive(location) => self.complete_directives(location),
         }
         self.completions
     }
@@ -132,6 +134,7 @@ impl<'s> CompletionCtxt<'s> {
                 let kind = match item.kind {
                     ItemKind::TypeDefinition(idx) => match items.typedefs[idx].kind {
                         TypeDefinitionKind::Object => CompletionItemKind::Object,
+
                         TypeDefinitionKind::Input => CompletionItemKind::InputObject,
                         TypeDefinitionKind::Interface => CompletionItemKind::Interface,
                         TypeDefinitionKind::Scalar => CompletionItemKind::Scalar,
@@ -177,7 +180,7 @@ impl<'s> CompletionCtxt<'s> {
             .extend(self.items().filter(|item| matches!(item.kind, CompletionItemKind::Object)))
     }
 
-    fn complete_directives(&mut self) {
+    fn complete_directives(&mut self, location: DirectiveLocation) {
         // TODO
     }
 }
