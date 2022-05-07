@@ -53,8 +53,6 @@ impl NodeKind {
     pub const DIRECTIVE_DEFINITION: &'static str = "directive_definition";
     pub const DIRECTIVE_LOCATIONS: &'static str = "directive_locations";
     pub const DIRECTIVE_LOCATION: &'static str = "directive_location";
-    pub const EXECUTABLE_DIRECTIVE_LOCATION: &'static str = "executable_directive_location";
-    pub const TYPE_SYSTEM_DIRECTIVE_LOCATION: &'static str = "type_system_directive_location";
     pub const TYPE: &'static str = "type";
     pub const NAMED_TYPE: &'static str = "named_type";
     pub const LIST_TYPE: &'static str = "list_type";

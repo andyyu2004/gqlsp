@@ -331,6 +331,7 @@ dependencies = [
 name = "gqls-ir"
 version = "0.1.0"
 dependencies = [
+ "bitflags",
  "expect-test",
  "gqls-base-db",
  "gqls-syntax",

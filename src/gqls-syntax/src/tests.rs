@@ -37,6 +37,16 @@ fn test_parse_empty_type() {
 }
 
 #[test]
+fn test_parse_directive_definition() {
+    test(
+        "directive @qux on OBJECT | FIELD_DEFINITION",
+        expect![[
+            r#"(document (item (directive_definition (name) (directive_locations (directive_location) (directive_location)))))"#
+        ]],
+    );
+}
+
+#[test]
 fn test_parse_implements_interface() {
     test(
         "type Foo implements Bar {}",
@@ -106,7 +116,9 @@ fn test_resilience() {
 
     test(
         "union U =",
-        expect![[r#"(document (item (type_definition (union_type_definition (name) (union_member_types)))))"#]],
+        expect![[
+            r#"(document (item (type_definition (union_type_definition (name) (union_member_types)))))"#
+        ]],
     );
 }
 

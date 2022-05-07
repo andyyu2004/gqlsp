@@ -72,19 +72,21 @@ pub struct Directive {
     pub name: Name,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum DirectiveLocation {
-    ArgumentDefinition,
-    Enum,
-    EnumValue,
-    FieldDefinition,
-    InputFieldDefinition,
-    InputObject,
-    Interface,
-    Object,
-    Scalar,
-    Schema,
-    Union,
+bitflags::bitflags! {
+    #[derive(Default)]
+    pub struct DirectiveLocations: u16 {
+        const ARGUMENT_DEFINITION = 1 << 0;
+        const ENUM = 1 << 1;
+        const ENUM_VALUE = 1 << 2;
+        const FIELD_DEFINITION = 1 << 3;
+        const INPUT_FIELD_DEFINITION = 1 << 4;
+        const INPUT_OBJECT = 1 << 5;
+        const INTERFACE = 1 << 6;
+        const OBJECT = 1 << 7;
+        const SCALAR = 1 << 8;
+        const SCHEMA = 1 << 9;
+        const UNION = 1 << 10;
+    }
 }
 
 impl Debug for Directive {
@@ -123,7 +125,9 @@ pub enum TypeDefinitionKind {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DirectiveDefinition {}
+pub struct DirectiveDefinition {
+    locations: DirectiveLocations,
+}
 
 #[derive(Clone, Ord, PartialOrd, Eq)]
 pub struct Name {

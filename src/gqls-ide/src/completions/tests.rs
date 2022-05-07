@@ -46,7 +46,7 @@ fn test_object_field_completions() {
             enum Enum { A, B }
             union Union = Foo | Foo
             input IgnoreInputs { bar: Int }
-            directive @qux ON FIELD
+            directive @qux on FIELD_DEFINITION
             type Bar { bar: Int }
         "
     };

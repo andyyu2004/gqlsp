@@ -1749,32 +1749,27 @@
           ]
         },
         {
-          "type": "STRING",
-          "value": "on"
-        },
-        {
           "type": "SYMBOL",
           "name": "directive_locations"
         }
       ]
     },
     "directive_locations": {
-      "type": "CHOICE",
+      "type": "SEQ",
       "members": [
         {
-          "type": "SEQ",
+          "type": "STRING",
+          "value": "on"
+        },
+        {
+          "type": "CHOICE",
           "members": [
-            {
-              "type": "SYMBOL",
-              "name": "directive_locations"
-            },
             {
               "type": "STRING",
               "value": "|"
             },
             {
-              "type": "SYMBOL",
-              "name": "directive_location"
+              "type": "BLANK"
             }
           ]
         },
@@ -1782,76 +1777,30 @@
           "type": "SEQ",
           "members": [
             {
-              "type": "CHOICE",
-              "members": [
-                {
-                  "type": "STRING",
-                  "value": "|"
-                },
-                {
-                  "type": "BLANK"
-                }
-              ]
-            },
-            {
               "type": "SYMBOL",
               "name": "directive_location"
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "|"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "directive_location"
+                  }
+                ]
+              }
             }
           ]
         }
       ]
     },
     "directive_location": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "executable_directive_location"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "type_system_directive_location"
-        }
-      ]
-    },
-    "executable_directive_location": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "QUERY"
-        },
-        {
-          "type": "STRING",
-          "value": "MUTATION"
-        },
-        {
-          "type": "STRING",
-          "value": "SUBSCRIPTION"
-        },
-        {
-          "type": "STRING",
-          "value": "FIELD"
-        },
-        {
-          "type": "STRING",
-          "value": "FRAGMENT_DEFINITION"
-        },
-        {
-          "type": "STRING",
-          "value": "FRAGMENT_SPREAD"
-        },
-        {
-          "type": "STRING",
-          "value": "INLINE_FRAGMENT"
-        },
-        {
-          "type": "STRING",
-          "value": "VARIABLE_DEFINITION"
-        }
-      ]
-    },
-    "type_system_directive_location": {
       "type": "CHOICE",
       "members": [
         {

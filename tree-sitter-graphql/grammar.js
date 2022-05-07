@@ -129,7 +129,7 @@ module.exports = grammar({
     enum_value_definition: ($) =>
       seq(optional($.description), $.enum_value, optional($.directives)),
     implements_interfaces: ($) =>
-      seq("implements", optional("&"), sepBy1($.named_type, "&")),
+      seq("implements", optional("&"), sepBy1("&", $.named_type)),
     implements_interfaces: ($) =>
       choice(
         seq($.implements_interfaces, "&", $.named_type),
@@ -286,28 +286,11 @@ module.exports = grammar({
         $.name,
         optional($.arguments_definition),
         optional("repeatable"),
-        "on",
         $.directive_locations
       ),
     directive_locations: ($) =>
-      choice(
-        seq($.directive_locations, "|", $.directive_location),
-        seq(optional("|"), $.directive_location)
-      ),
-    directive_location: ($) =>
-      choice($.executable_directive_location, $.type_system_directive_location),
-    executable_directive_location: ($) =>
-      choice(
-        "QUERY",
-        "MUTATION",
-        "SUBSCRIPTION",
-        "FIELD",
-        "FRAGMENT_DEFINITION",
-        "FRAGMENT_SPREAD",
-        "INLINE_FRAGMENT",
-        "VARIABLE_DEFINITION"
-      ),
-    type_system_directive_location: ($) =>
+      seq("on", optional("|"), sepBy1("|", $.directive_location)),
+    directive_location: () =>
       choice(
         "SCHEMA",
         "SCALAR",

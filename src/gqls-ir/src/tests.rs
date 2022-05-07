@@ -64,7 +64,7 @@ fn test_definitions() {
             i: Int! @qux
         }
 
-        directive @qux on FIELD_DEFINITION | OBJECT
+        directive @qux on FIELD_DEFINITION | OBJECT | INPUT_OBJECT
 
         scalar S @qux
 
@@ -89,7 +89,7 @@ fn test_definitions() {
             foo: Foo
         }
 
-        directive @d on FIELD
+        directive @d on FIELD_DEFINITION
     "#;
 
     setup!(db: {
@@ -166,7 +166,7 @@ fn test_definitions() {
                     },
                     Item {
                         name: qux,
-                        range: 17:8..17:51,
+                        range: 17:8..17:66,
                         kind: DirectiveDefinition(
                             Idx::<DirectiveDefinition>(0),
                         ),
@@ -286,7 +286,9 @@ fn test_definitions() {
             directives: Arena {
                 len: 1,
                 data: [
-                    DirectiveDefinition,
+                    DirectiveDefinition {
+                        locations: FIELD_DEFINITION | INPUT_OBJECT | OBJECT,
+                    },
                 ],
             },
         }
@@ -315,7 +317,7 @@ fn test_definitions() {
                     },
                     Item {
                         name: d,
-                        range: 9:8..9:29,
+                        range: 9:8..9:40,
                         kind: DirectiveDefinition(
                             Idx::<DirectiveDefinition>(0),
                         ),
@@ -347,7 +349,9 @@ fn test_definitions() {
             directives: Arena {
                 len: 1,
                 data: [
-                    DirectiveDefinition,
+                    DirectiveDefinition {
+                        locations: FIELD_DEFINITION,
+                    },
                 ],
             },
         }

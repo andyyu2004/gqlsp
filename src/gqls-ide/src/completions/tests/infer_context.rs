@@ -1,5 +1,5 @@
 use gqls_fixture::{fixture, Fixture};
-use gqls_ir::DirectiveLocation;
+use gqls_ir::DirectiveLocations;
 
 use crate::Ide;
 
@@ -81,7 +81,7 @@ fn test_infer_type_directive_context() {
     };
     // TODO interface context after implements
     // suggest implements keyword in this context too for types?
-    test(&fixture, Context::Directive(DirectiveLocation::Object));
+    test(&fixture, Context::Directive(DirectiveLocations::OBJECT));
 }
 
 #[test]
@@ -90,7 +90,7 @@ fn test_infer_enum_directive_context() {
         "foo" => "enum Foo $"
         "bar" => "extend enum Foo $"
     };
-    test(&fixture, Context::Directive(DirectiveLocation::Enum));
+    test(&fixture, Context::Directive(DirectiveLocations::ENUM));
 }
 
 #[test]
@@ -99,7 +99,7 @@ fn test_infer_union_directive_context() {
         "foo" => "union Foo $"
         "bar" => "extend union Foo $"
     };
-    test(&fixture, Context::Directive(DirectiveLocation::Union));
+    test(&fixture, Context::Directive(DirectiveLocations::UNION));
 }
 
 #[test]
@@ -108,7 +108,7 @@ fn test_infer_interface_directive_context() {
         "foo" => "interface Foo $"
         "bar" => "extend interface Foo $"
     };
-    test(&fixture, Context::Directive(DirectiveLocation::Interface));
+    test(&fixture, Context::Directive(DirectiveLocations::INTERFACE));
 }
 
 #[test]
@@ -117,7 +117,7 @@ fn test_infer_scalar_directive_context() {
         "foo" => "scalar Foo $"
         "bar" => "extend scalar Foo $"
     };
-    test(&fixture, Context::Directive(DirectiveLocation::Scalar));
+    test(&fixture, Context::Directive(DirectiveLocations::SCALAR));
 }
 
 #[test]
@@ -126,7 +126,7 @@ fn test_infer_scalar_input_object_context() {
         "foo" => "input Foo $"
         "bar" => "extend input Foo $"
     };
-    test(&fixture, Context::Directive(DirectiveLocation::InputObject));
+    test(&fixture, Context::Directive(DirectiveLocations::INPUT_OBJECT));
 }
 
 #[test]
@@ -134,5 +134,5 @@ fn test_infer_scalar_enum_value_context() {
     let fixture = fixture! {
         "foo" => "enum Foo { A $ "
     };
-    test(&fixture, Context::Directive(DirectiveLocation::EnumValue));
+    test(&fixture, Context::Directive(DirectiveLocations::ENUM_VALUE));
 }

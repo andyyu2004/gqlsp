@@ -186,7 +186,30 @@ impl ItemCtxt {
             }
             NodeKind::DIRECTIVE_DEFINITION => {
                 let name = Name::new(self, def.name_node()?);
-                (name, ItemKind::DirectiveDefinition(self.directives.alloc(DirectiveDefinition {})))
+                let locations_node = def.child_of_kind(NodeKind::DIRECTIVE_LOCATIONS)?;
+                let locations = locations_node
+                    .children_of_kind(&mut locations_node.walk(), NodeKind::DIRECTIVE_LOCATION)
+                    .map(|child| match child.text(self.text()) {
+                        "ARGUMENT_DEFINITION" => DirectiveLocations::ARGUMENT_DEFINITION,
+                        "ENUM" => DirectiveLocations::ENUM,
+                        "ENUM_VALUE" => DirectiveLocations::ENUM_VALUE,
+                        "FIELD_DEFINITION" => DirectiveLocations::FIELD_DEFINITION,
+                        "INPUT_FIELD_DEFINITION" => DirectiveLocations::INPUT_FIELD_DEFINITION,
+                        "INPUT_OBJECT" => DirectiveLocations::INPUT_OBJECT,
+                        "INTERFACE" => DirectiveLocations::INTERFACE,
+                        "OBJECT" => DirectiveLocations::OBJECT,
+                        "SCALAR" => DirectiveLocations::SCALAR,
+                        "SCHEMA" => DirectiveLocations::SCHEMA,
+                        "UNION" => DirectiveLocations::UNION,
+                        location => unreachable!("found invalid directive location: {location}",),
+                    })
+                    .fold(DirectiveLocations::default(), |acc, location| acc | location);
+                (
+                    name,
+                    ItemKind::DirectiveDefinition(
+                        self.directives.alloc(DirectiveDefinition { locations }),
+                    ),
+                )
             }
             // TODO
             _ => return None,
