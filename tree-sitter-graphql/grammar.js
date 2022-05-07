@@ -40,7 +40,9 @@ module.exports = grammar({
         $.enum_type_extension,
         $.input_object_type_extension
       ),
-    scalar_type_extension: ($) => seq("extend", "scalar", $.name, $.directives),
+    // TODO diagnostics (directives are not optional for scalar extension)
+    scalar_type_extension: ($) =>
+      seq("extend", "scalar", $.name, optional($.directives)),
     object_type_extension: ($) =>
       prec.right(
         choice(

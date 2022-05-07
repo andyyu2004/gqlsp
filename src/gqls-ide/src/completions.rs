@@ -78,6 +78,13 @@ impl<'s> CompletionCtxt<'s> {
                     return Context::Directive(),
                 NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_TYPE_EXTENSION =>
                     return Context::Directive(),
+                NodeKind::INTERFACE_TYPE_DEFINITION | NodeKind::INTERFACE_TYPE_EXTENSION =>
+                    return Context::Directive(),
+                NodeKind::SCALAR_TYPE_DEFINITION | NodeKind::SCALAR_TYPE_EXTENSION =>
+                    return Context::Directive(),
+                NodeKind::INPUT_OBJECT_TYPE_DEFINITION | NodeKind::INPUT_OBJECT_TYPE_EXTENSION =>
+                    return Context::Directive(),
+                NodeKind::ENUM_VALUE_DEFINITION => return Context::Directive(),
                 NodeKind::INPUT_FIELDS_DEFINITION => return Context::InputField,
                 NodeKind::FIELDS_DEFINITION | NodeKind::FIELD_DEFINITION => return Context::Field,
                 NodeKind::UNION_MEMBER_TYPES => return Context::UnionMembers,

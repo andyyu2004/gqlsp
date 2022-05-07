@@ -163,8 +163,16 @@
           "name": "name"
         },
         {
-          "type": "SYMBOL",
-          "name": "directives"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "directives"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         }
       ]
     },

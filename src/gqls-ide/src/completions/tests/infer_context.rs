@@ -99,3 +99,38 @@ fn test_infer_union_directive_context() {
     };
     test(&fixture, Context::Directive());
 }
+
+#[test]
+fn test_infer_interface_directive_context() {
+    let fixture = fixture! {
+        "foo" => "interface Foo $"
+        "bar" => "extend interface Foo $"
+    };
+    test(&fixture, Context::Directive());
+}
+
+#[test]
+fn test_infer_scalar_directive_context() {
+    let fixture = fixture! {
+        "foo" => "scalar Foo $"
+        "bar" => "extend scalar Foo $"
+    };
+    test(&fixture, Context::Directive());
+}
+
+#[test]
+fn test_infer_scalar_input_object_context() {
+    let fixture = fixture! {
+        "foo" => "input Foo $"
+        "bar" => "extend input Foo $"
+    };
+    test(&fixture, Context::Directive());
+}
+
+#[test]
+fn test_infer_scalar_enum_value_context() {
+    let fixture = fixture! {
+        "foo" => "enum Foo { A $ "
+    };
+    test(&fixture, Context::Directive());
+}
