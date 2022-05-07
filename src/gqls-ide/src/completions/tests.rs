@@ -59,7 +59,7 @@ fn test_object_field_completions() {
                 Scalar :: Scalar,
                 Enum :: Enum,
                 Union :: Union,
-                qux :: Directive(FIELD_DEFINITION),
+                @qux :: Directive(FIELD_DEFINITION),
                 Bar :: Object,
             ]
         "#]],

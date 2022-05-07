@@ -143,7 +143,12 @@ impl<'s> CompletionCtxt<'s> {
                     ItemKind::DirectiveDefinition(idx) =>
                         CompletionItemKind::Directive(items.directives[idx].locations),
                 };
-                completions.push(CompletionItem { label: item.name.to_string(), kind });
+
+                let label = match item.kind {
+                    ItemKind::TypeDefinition(_) => item.name.to_string(),
+                    ItemKind::DirectiveDefinition(_) => format!("@{}", item.name),
+                };
+                completions.push(CompletionItem { label, kind });
             }
         }
         completions.into_iter()
