@@ -72,12 +72,30 @@ fn test_infer_union_member_types_context_first_member() {
 }
 
 #[test]
-fn test_infer_union_directive_context() {
+fn test_infer_type_directive_context() {
     let fixture = fixture! {
-        "foo" => "
-            type Foo $ {}
-        "
+        "foo" => "type Foo $"
+        "bar" => "extend type Foo $"
     };
-    // TODO
-    // test(&fixture, Context::Directive());
+    // TODO interface context after implements
+    // suggest implements keyword in this context too for types?
+    test(&fixture, Context::Directive());
 }
+
+#[test]
+fn test_infer_enum_directive_context() {
+    let fixture = fixture! {
+        "foo" => "enum Foo $"
+        "bar" => "extend enum Foo $"
+    };
+    test(&fixture, Context::Directive());
+}
+
+// #[test]
+// fn test_infer_union_directive_context() {
+//     let fixture = fixture! {
+//         "foo" => "union Foo $"
+//         "bar" => "extend union Foo $"
+//     };
+//     test(&fixture, Context::Directive());
+// }

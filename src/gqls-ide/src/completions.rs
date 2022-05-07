@@ -65,6 +65,12 @@ impl<'s> CompletionCtxt<'s> {
             };
             dbg!(node.to_sexp());
             match node.kind() {
+                NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
+                    return Context::Directive(),
+                NodeKind::ENUM_TYPE_DEFINITION | NodeKind::ENUM_TYPE_EXTENSION =>
+                    return Context::Directive(),
+                // NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_TYPE_EXTENSION =>
+                //     return Context::Directive(),
                 NodeKind::INPUT_FIELDS_DEFINITION => return Context::InputField,
                 NodeKind::FIELDS_DEFINITION | NodeKind::FIELD_DEFINITION => return Context::Field,
                 NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_MEMBER_TYPES =>
