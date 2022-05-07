@@ -107,12 +107,20 @@ impl<'tree> NodeExt<'tree> for Node<'tree> {
 
     #[track_caller]
     fn sole_named_child(self) -> Option<Node<'tree>> {
-        assert!(
-            self.named_child_count() <= 1,
-            "node `{}` had more than one named child",
-            self.to_sexp()
-        );
-        self.named_child(0)
+        // ERROR nodes seem to be included in `named_child_count` for whatever reason so we hack around it
+        if self.named_child_count() > 1 {
+            let mut cursor = self.walk();
+            let mut children = self.named_children(&mut cursor).filter(|child| !child.is_error());
+            let child = children.next();
+            assert!(
+                children.next().is_none(),
+                "node `{}` had more than one named child",
+                self.to_sexp()
+            );
+            child
+        } else {
+            self.named_child(0)
+        }
     }
 
     fn text(self, source: &str) -> &str {
