@@ -157,7 +157,7 @@ module.exports = grammar({
       ),
     default_value: ($) => seq("=", $.value),
     union_member_types: ($) =>
-      seq("=", optional("|"), sepBy1("|", $.named_type)),
+      seq("=", optional("|"), sepBy("|", $.named_type)),
     root_operation_type_definition: ($) =>
       seq($.operation_type, ":", $.named_type),
     operation_type: (_) => choice("query", "mutation", "subscription"),

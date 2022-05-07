@@ -103,6 +103,11 @@ fn test_resilience() {
         "union U ",
         expect![[r#"(document (item (type_definition (union_type_definition (name)))))"#]],
     );
+
+    test(
+        "union U =",
+        expect![[r#"(document (item (type_definition (union_type_definition (name) (union_member_types)))))"#]],
+    );
 }
 
 #[test]

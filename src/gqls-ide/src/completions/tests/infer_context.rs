@@ -60,7 +60,7 @@ fn test_infer_union_member_types_context() {
     let fixture = fixture! {
         "foo" => "union Union = $ Foo $ | $ Bar $ | $ Baz $$$"
     };
-    test(&fixture, Context::Union);
+    test(&fixture, Context::UnionMembers);
 }
 
 #[test]
@@ -68,7 +68,7 @@ fn test_infer_union_member_types_context_first_member() {
     let fixture = fixture! {
         "foo" => "union Union = $"
     };
-    test(&fixture, Context::Union);
+    test(&fixture, Context::UnionMembers);
 }
 
 #[test]
@@ -91,11 +91,11 @@ fn test_infer_enum_directive_context() {
     test(&fixture, Context::Directive());
 }
 
-// #[test]
-// fn test_infer_union_directive_context() {
-//     let fixture = fixture! {
-//         "foo" => "union Foo $"
-//         "bar" => "extend union Foo $"
-//     };
-//     test(&fixture, Context::Directive());
-// }
+#[test]
+fn test_infer_union_directive_context() {
+    let fixture = fixture! {
+        "foo" => "union Foo $"
+        "bar" => "extend union Foo $"
+    };
+    test(&fixture, Context::Directive());
+}

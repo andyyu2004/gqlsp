@@ -125,3 +125,6 @@ fn test_union_member_field_completions() {
 
 #[cfg(test)]
 mod infer_context;
+
+#[cfg(test)]
+mod queries;

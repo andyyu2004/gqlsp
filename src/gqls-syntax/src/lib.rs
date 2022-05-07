@@ -6,7 +6,7 @@ mod traverse;
 pub use self::nodes::NodeKind;
 pub use self::traverse::{Traverse, TraverseEvent};
 
-pub use tree_sitter::{Language, Node, Parser, Point, Query, Range, Tree, TreeCursor};
+pub use tree_sitter::{Language, Node, Parser, Point, Query, QueryCursor, Range, Tree, TreeCursor};
 
 use std::fmt::{self, Debug};
 
@@ -64,6 +64,16 @@ impl RangeExt for Range {
 
     fn debug(&self) -> RangeDebug {
         RangeDebug(*self)
+    }
+}
+
+pub trait QueryExt: Sized {
+    fn is_match(&self, cursor: &mut QueryCursor, node: Node<'_>, text_provider: &[u8]) -> bool;
+}
+
+impl QueryExt for Query {
+    fn is_match(&self, cursor: &mut QueryCursor, node: Node<'_>, text_provider: &[u8]) -> bool {
+        cursor.matches(self, node, text_provider).next().is_some()
     }
 }
 

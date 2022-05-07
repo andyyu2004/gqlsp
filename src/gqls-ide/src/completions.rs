@@ -2,7 +2,7 @@ use std::fmt::{self, Debug};
 
 use gqls_db::{DefDatabase, SourceDatabase};
 use gqls_ir::{ItemKind, TypeDefinitionKind};
-use gqls_syntax::{NodeExt, NodeKind};
+use gqls_syntax::{query, NodeExt, NodeKind, Query};
 use tree_sitter::Point;
 use vfs::FileId;
 
@@ -49,10 +49,17 @@ enum Context {
     Document,
     InputField,
     Field,
-    Union,
+    UnionMembers,
     Directive(),
 }
 
+struct Queries {}
+
+impl Default for Queries {
+    fn default() -> Self {
+        Self {}
+    }
+}
 impl<'s> CompletionCtxt<'s> {
     fn infer_context(snapshot: &'s Snapshot, file: FileId, mut at: Point) -> Context {
         let data = snapshot.file_data(file);
@@ -69,12 +76,11 @@ impl<'s> CompletionCtxt<'s> {
                     return Context::Directive(),
                 NodeKind::ENUM_TYPE_DEFINITION | NodeKind::ENUM_TYPE_EXTENSION =>
                     return Context::Directive(),
-                // NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_TYPE_EXTENSION =>
-                //     return Context::Directive(),
+                NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_TYPE_EXTENSION =>
+                    return Context::Directive(),
                 NodeKind::INPUT_FIELDS_DEFINITION => return Context::InputField,
                 NodeKind::FIELDS_DEFINITION | NodeKind::FIELD_DEFINITION => return Context::Field,
-                NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_MEMBER_TYPES =>
-                    return Context::Union,
+                NodeKind::UNION_MEMBER_TYPES => return Context::UnionMembers,
                 _ => {
                     if at.column == 0 {
                         break;
@@ -96,7 +102,7 @@ impl<'s> CompletionCtxt<'s> {
         match self.context {
             Context::Field => self.complete_fields(),
             Context::Document => self.complete_document(),
-            Context::Union => self.complete_union_member(),
+            Context::UnionMembers => self.complete_union_member(),
             Context::InputField => self.complete_input_fields(),
             Context::Directive() => self.complete_directives(),
         }
