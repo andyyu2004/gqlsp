@@ -78,6 +78,34 @@ fn test_parse_union() {
 }
 
 #[test]
+fn test_resilience() {
+    test(
+        "type K ",
+        expect![[r#"(document (item (type_definition (object_type_definition (name)))))"#]],
+    );
+
+    test(
+        "extend type T ",
+        expect![[r#"(document (item (type_extension (object_type_extension (name)))))"#]],
+    );
+
+    test(
+        "interface I ",
+        expect![[r#"(document (item (type_definition (interface_type_definition (name)))))"#]],
+    );
+
+    test(
+        "enum E ",
+        expect![[r#"(document (item (type_definition (enum_type_definition (name)))))"#]],
+    );
+
+    test(
+        "union U ",
+        expect![[r#"(document (item (type_definition (union_type_definition (name)))))"#]],
+    );
+}
+
+#[test]
 fn test_make_parser() {
     make_parser();
 }

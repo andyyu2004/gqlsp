@@ -181,7 +181,7 @@ module.exports = grammar({
         $.name,
         optional($.implements_interfaces),
         optional($.directives),
-        $.fields_definition
+        optional($.fields_definition)
       ),
     interface_type_definition: ($) =>
       prec.right(

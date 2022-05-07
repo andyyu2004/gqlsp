@@ -50,10 +50,11 @@ enum Context {
     InputField,
     Field,
     Union,
+    Directive(),
 }
 
 impl<'s> CompletionCtxt<'s> {
-    fn context(snapshot: &'s Snapshot, file: FileId, mut at: Point) -> Context {
+    fn infer_context(snapshot: &'s Snapshot, file: FileId, mut at: Point) -> Context {
         let data = snapshot.file_data(file);
         // NOTE maybe we could make use of treesitter's query api to do this better
         // HACK look backwards a few columns to try and find a notable node
@@ -62,6 +63,7 @@ impl<'s> CompletionCtxt<'s> {
                 Some(node) => node,
                 None => return Context::Document,
             };
+            dbg!(node.to_sexp());
             match node.kind() {
                 NodeKind::INPUT_FIELDS_DEFINITION => return Context::InputField,
                 NodeKind::FIELDS_DEFINITION | NodeKind::FIELD_DEFINITION => return Context::Field,
@@ -80,7 +82,7 @@ impl<'s> CompletionCtxt<'s> {
     }
 
     fn new(snapshot: &'s Snapshot, file: FileId, at: Point) -> Self {
-        let context = Self::context(snapshot, file, at);
+        let context = Self::infer_context(snapshot, file, at);
         Self { snapshot, file, context, completions: Default::default() }
     }
 
@@ -90,6 +92,7 @@ impl<'s> CompletionCtxt<'s> {
             Context::Document => self.complete_document(),
             Context::Union => self.complete_union_member(),
             Context::InputField => self.complete_input_fields(),
+            Context::Directive() => self.complete_directives(),
         }
         self.completions
     }
@@ -153,6 +156,10 @@ impl<'s> CompletionCtxt<'s> {
     fn complete_union_member(&mut self) {
         self.completions
             .extend(self.items().filter(|item| matches!(item.kind, CompletionItemKind::Object)))
+    }
+
+    fn complete_directives(&mut self) {
+        // TODO
     }
 }
 

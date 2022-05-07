@@ -9,7 +9,7 @@ fn test(fixture: &Fixture, expected: Context) {
     ide.setup_fixture_allow_errors(&fixture);
     let snapshot = ide.snapshot();
     for (file, at) in fixture.all_points() {
-        let context = CompletionCtxt::context(&snapshot, file, at);
+        let context = CompletionCtxt::infer_context(&snapshot, file, at);
         assert_eq!(context, expected);
     }
 }
@@ -69,4 +69,15 @@ fn test_infer_union_member_types_context_first_member() {
         "foo" => "union Union = $"
     };
     test(&fixture, Context::Union);
+}
+
+#[test]
+fn test_infer_union_directive_context() {
+    let fixture = fixture! {
+        "foo" => "
+            type Foo $ {}
+        "
+    };
+    // TODO
+    // test(&fixture, Context::Directive());
 }

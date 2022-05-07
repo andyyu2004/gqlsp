@@ -1051,8 +1051,16 @@
           ]
         },
         {
-          "type": "SYMBOL",
-          "name": "fields_definition"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "fields_definition"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         }
       ]
     },
