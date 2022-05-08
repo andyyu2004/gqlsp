@@ -38,8 +38,8 @@ fn test_complete_directives() {
         expect![[r#"
             [
                 @onFieldAndObject :: Directive(FIELD_DEFINITION | OBJECT),
-                @onObjectAndInterface :: Directive(INTERFACE | OBJECT),
                 @onObject :: Directive(OBJECT),
+                @onObjectAndInterface :: Directive(INTERFACE | OBJECT),
             ]
         "#]]
     );
@@ -48,8 +48,8 @@ fn test_complete_directives() {
         "interface Foo $",
         expect![[r#"
             [
-                @onObjectAndInterface :: Directive(INTERFACE | OBJECT),
                 @onInterface :: Directive(INTERFACE),
+                @onObjectAndInterface :: Directive(INTERFACE | OBJECT),
             ]
         "#]]
     );
@@ -113,8 +113,8 @@ fn test_complete_directives() {
         "type Foo { bar: Foo $ }",
         expect![[r#"
             [
-                @onFieldAndObject :: Directive(FIELD_DEFINITION | OBJECT),
                 @onField :: Directive(FIELD_DEFINITION),
+                @onFieldAndObject :: Directive(FIELD_DEFINITION | OBJECT),
                 Foo :: Object,
             ]
         "#]]

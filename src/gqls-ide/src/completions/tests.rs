@@ -54,13 +54,13 @@ fn test_object_field_completions() {
         &fixture,
         expect![[r#"
             [
+                @qux :: Directive(FIELD_DEFINITION),
+                Bar :: Object,
+                Enum :: Enum,
                 Foo :: Object,
                 Interface :: Interface,
                 Scalar :: Scalar,
-                Enum :: Enum,
                 Union :: Union,
-                @qux :: Directive(FIELD_DEFINITION),
-                Bar :: Object,
             ]
         "#]],
     );
@@ -89,10 +89,10 @@ fn test_input_object_field_completions() {
         &fixture,
         expect![[r#"
             [
-                Scalar :: Scalar,
-                Enum :: Enum,
                 AnotherInput :: InputObject,
+                Enum :: Enum,
                 Input :: InputObject,
+                Scalar :: Scalar,
             ]
         "#]],
     );

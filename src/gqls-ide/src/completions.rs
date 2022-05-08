@@ -9,7 +9,7 @@ use vfs::FileId;
 
 use crate::Snapshot;
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct CompletionItem {
     pub label: String,
     pub kind: CompletionItemKind,
@@ -21,7 +21,7 @@ impl Debug for CompletionItem {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub enum CompletionItemKind {
     Object,
     InputObject,
@@ -128,9 +128,8 @@ impl<'s> CompletionCtxt<'s> {
     }
 
     fn items(&self) -> impl Iterator<Item = CompletionItem> {
-        // FIXME use a proper iterative approach
         let project_items = self.snapshot.project_items(self.file);
-        let mut completions = vec![];
+        let mut completions = HashSet::new();
         for items in project_items.values() {
             for (_, item) in items.items.iter() {
                 let kind = match item.kind {
@@ -150,10 +149,12 @@ impl<'s> CompletionCtxt<'s> {
                     ItemKind::TypeDefinition(_) => item.name.to_string(),
                     ItemKind::DirectiveDefinition(_) => format!("@{}", item.name),
                 };
-                completions.push(CompletionItem { label, kind });
+                completions.insert(CompletionItem { label, kind });
             }
         }
-        completions.into_iter()
+        let mut v = completions.into_iter().collect::<Vec<_>>();
+        v.sort();
+        v.into_iter()
     }
 
     fn complete_input_fields(&mut self) {
