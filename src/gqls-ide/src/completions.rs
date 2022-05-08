@@ -92,6 +92,15 @@ impl<'s> CompletionCtxt<'s> {
                 NodeKind::INPUT_VALUE_DEFINITION => return Context::InputField,
                 NodeKind::FIELD_DEFINITION => return Context::Field,
                 NodeKind::UNION_MEMBER_TYPES => return Context::UnionMembers,
+                NodeKind::NON_NULL_TYPE
+                | NodeKind::LIST_TYPE
+                | NodeKind::NAMED_TYPE
+                | NodeKind::TYPE =>
+                    if node.has_parent_of_kind(NodeKind::FIELDS_DEFINITION) {
+                        return Context::Field;
+                    } else if node.has_parent_of_kind(NodeKind::INPUT_FIELDS_DEFINITION) {
+                        return Context::InputField;
+                    },
                 _ => {
                     if at.column == 0 {
                         break;
@@ -106,6 +115,7 @@ impl<'s> CompletionCtxt<'s> {
 
     fn new(snapshot: &'s Snapshot, file: FileId, at: Point) -> Self {
         let context = Self::infer_context(snapshot, file, at);
+        tracing::info!("inferred completion context: {:?}", context);
         Self { snapshot, file, context, completions: Default::default() }
     }
 

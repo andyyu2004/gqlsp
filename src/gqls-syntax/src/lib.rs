@@ -87,6 +87,7 @@ impl QueryExt for Query {
 pub trait NodeExt<'tree>: Sized {
     fn parents(self) -> Parents<'tree>;
     fn parent_of_kind(self, kind: &'static str) -> Option<Self>;
+    fn has_parent_of_kind(self, kind: &'static str) -> bool;
     fn sole_named_child(self) -> Option<Node<'tree>>;
     fn text(self, text: &str) -> &str;
     fn find_descendant(self, f: impl FnMut(&Self) -> bool) -> Option<Self>;
@@ -109,6 +110,10 @@ impl<'tree> NodeExt<'tree> for Node<'tree> {
 
     fn parent_of_kind(self, kind: &'static str) -> Option<Self> {
         self.parents().find(|node| node.kind() == kind)
+    }
+
+    fn has_parent_of_kind(self, kind: &'static str) -> bool {
+        self.parent_of_kind(kind).is_some()
     }
 
     #[track_caller]

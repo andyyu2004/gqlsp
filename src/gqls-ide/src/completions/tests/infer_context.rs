@@ -21,7 +21,7 @@ fn test_infer_field_context() {
     let fixture = fixture! {
         "foo" => "
             type Foo {
-                bar:$$$
+                bar: $$$
             }
         "
 
@@ -34,6 +34,12 @@ fn test_infer_field_context() {
         "baz" => "
             type Foo {
                 bar: Foo$$$
+        "
+
+        "wrapped types" => "
+            interface EssentialsTrait {
+              id: [TraitID!]! $
+            }
         "
 
         // FIXME
@@ -57,6 +63,13 @@ fn test_infer_input_field_context() {
         "bar" => "
             input Foo {
                 bar: Foo$$$
+            }
+        "
+
+
+        "wrapped_type" => "
+            input Foo {
+                bar: Foo!$$$
             }
         "
 
