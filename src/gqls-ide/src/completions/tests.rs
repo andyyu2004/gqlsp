@@ -99,6 +99,22 @@ fn test_input_object_field_completions() {
 }
 
 #[test]
+fn test_directive_locations_completions() {
+    let fixture = fixture! {
+        "foo" => "
+            directive @qux on $
+        "
+    };
+    test(
+        &fixture,
+        expect![[r#"
+            [
+            ]
+        "#]],
+    );
+}
+
+#[test]
 fn test_union_member_field_completions() {
     let fixture = fixture! {
         "foo" => "

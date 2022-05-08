@@ -17,6 +17,19 @@ fn test(fixture: &Fixture, expected: Context) {
 }
 
 #[test]
+fn test_infer_directive_locations_context() {
+    let fixture = fixture! {
+        "after bar" => "
+            directive @foo on FIELD | $
+        "
+        "after on" => "
+            directive @foo on $
+        "
+    };
+    test(&fixture, Context::DirectiveLocations);
+}
+
+#[test]
 fn test_infer_field_context() {
     let fixture = fixture! {
         "foo" => "
