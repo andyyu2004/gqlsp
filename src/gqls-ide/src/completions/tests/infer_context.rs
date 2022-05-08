@@ -30,6 +30,17 @@ fn test_infer_field_context() {
                 bar: Foo$$$
             }
         "
+
+        "baz" => "
+            type Foo {
+                bar: Foo$$$
+        "
+
+        // FIXME
+        // "qux" => "
+        //     type Foo {
+        //         bar: $$$
+        // "
     };
     test(&fixture, Context::Field);
 }
@@ -42,6 +53,23 @@ fn test_infer_input_field_context() {
                 bar:$$$
             }
         "
+
+        "bar" => "
+            input Foo {
+                bar: Foo$$$
+            }
+        "
+
+        // FIXMEs
+        // "baz" => "
+        //     input Foo {
+        //         bar: Foo$$$
+        // "
+
+        // "qux" => "
+        //     type Foo {
+        //         bar: $$$
+        // "
     };
     test(&fixture, Context::InputField);
 }
@@ -52,13 +80,12 @@ fn test_infer_top_level_context() {
         "bar" => "$"
         "foo" => "
             $
-
-            type Foo {
+            $type Foo {
                 bar: Int!
             }
-
             $
         "
+        //FIXME adding a $ after closing } fails
     };
     test(&fixture, Context::Document);
 }
@@ -82,19 +109,29 @@ fn test_infer_union_member_types_context_first_member() {
 #[test]
 fn test_infer_type_directive_context() {
     let fixture = fixture! {
-        "foo" => "type Foo $"
-        "bar" => "extend type Foo $"
+        "a" => "type Foo $"
+        "b" => "extend type Foo $"
+        "c" => "extend type Foo $ {}"
+        "d" => "extend type Foo$$${
+            bar: Int
+        }"
+        "e" => "type Foo $"
+        "f" => "type Foo $ {}"
+        "g" => "type Foo ${
+            bar: Int
+        }"
     };
     // TODO interface context after implements
-    // suggest implements keyword in this context too for types?
+    // suggest `implements` keyword in this context too for types?
     test(&fixture, Context::Directive(DirectiveLocations::OBJECT));
 }
 
 #[test]
 fn test_infer_enum_directive_context() {
     let fixture = fixture! {
-        "foo" => "enum Foo $"
-        "bar" => "extend enum Foo $"
+        "a" => "enum Foo $"
+        "b" => "enum Foo $ { A B }"
+        "c" => "extend enum Foo $"
     };
     test(&fixture, Context::Directive(DirectiveLocations::ENUM));
 }
@@ -104,6 +141,7 @@ fn test_infer_union_directive_context() {
     let fixture = fixture! {
         "foo" => "union Foo $"
         "bar" => "extend union Foo $"
+        "baz" => "union Foo $ = A | B"
     };
     test(&fixture, Context::Directive(DirectiveLocations::UNION));
 }
@@ -113,6 +151,7 @@ fn test_infer_interface_directive_context() {
     let fixture = fixture! {
         "foo" => "interface Foo $"
         "bar" => "extend interface Foo $"
+        "foobar" => "interface Foo $ { bar: Int }"
     };
     test(&fixture, Context::Directive(DirectiveLocations::INTERFACE));
 }
@@ -131,6 +170,7 @@ fn test_infer_scalar_input_object_context() {
     let fixture = fixture! {
         "foo" => "input Foo $"
         "bar" => "extend input Foo $"
+        "foobar" => "input Foo $ {}"
     };
     test(&fixture, Context::Directive(DirectiveLocations::INPUT_OBJECT));
 }
