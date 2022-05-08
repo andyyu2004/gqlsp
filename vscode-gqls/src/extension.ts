@@ -31,7 +31,10 @@ async function activateInner(context: vscode.ExtensionContext) {
   const serverPath = await bootstrap(context, config);
   console.log("running gqls server at", serverPath);
 
-  const opt: lc.Executable = { command: serverPath };
+  const opt: lc.Executable = {
+    command: serverPath,
+    options: { env: config.env },
+  };
   const serverOptions: lc.ServerOptions = {
     run: opt,
     debug: opt,

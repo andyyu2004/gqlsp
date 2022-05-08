@@ -67,7 +67,7 @@ pub fn capabilities() -> ServerCapabilities {
         // hover_provider: Some(HoverProviderCapability::Simple(true)),
         completion_provider: Some(CompletionOptions {
             // resolve_provider: Some(true),
-            trigger_characters: Some(vec![":".to_owned()]),
+            trigger_characters: Some(["@", ":"].map(ToString::to_string).to_vec()),
             ..Default::default()
         }),
         ..Default::default()

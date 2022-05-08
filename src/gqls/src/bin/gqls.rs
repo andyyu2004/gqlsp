@@ -1,18 +1,30 @@
 use anyhow::Result;
 use gqls::Gqls;
 use tower_lsp::Server;
+use tracing::metadata::LevelFilter;
+use tracing_subscriber::filter::Targets;
+use tracing_subscriber::prelude::*;
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut builder = tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
-        .with_writer(std::io::stderr);
+    Targets::new();
 
+    let mut layer = tracing_subscriber::fmt::layer().with_writer(std::io::stderr);
     if atty::isnt(atty::Stream::Stderr) {
-        builder = builder.with_ansi(false);
+        layer = layer.with_ansi(false);
     }
-    builder.init();
+    let filtered_layer = layer.with_filter(
+        EnvFilter::builder()
+            .with_env_var("GQLS_LOG")
+            .with_default_directive(LevelFilter::INFO.into())
+            .from_env_lossy(),
+    );
+
+    let targets =
+        Targets::new().with_target("salsa", LevelFilter::WARN).with_default(LevelFilter::TRACE);
+    tracing_subscriber::registry().with(filtered_layer).with(targets).init();
+
     let (stdin, stdout) = (tokio::io::stdin(), tokio::io::stdout());
     let (service, socket) = Gqls::service();
     Server::new(stdin, stdout, socket).serve(service).await;
