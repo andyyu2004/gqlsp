@@ -89,8 +89,8 @@ impl<'s> CompletionCtxt<'s> {
                 | NodeKind::ENUM_VALUE_DEFINITION
                 | NodeKind::ENUM_VALUE =>
                     return Context::Directive(DirectiveLocations::ENUM_VALUE),
-                NodeKind::INPUT_FIELDS_DEFINITION => return Context::InputField,
-                NodeKind::FIELDS_DEFINITION | NodeKind::FIELD_DEFINITION => return Context::Field,
+                NodeKind::INPUT_VALUE_DEFINITION => return Context::InputField,
+                NodeKind::FIELD_DEFINITION => return Context::Field,
                 NodeKind::UNION_MEMBER_TYPES => return Context::UnionMembers,
                 _ => {
                     if at.column == 0 {
