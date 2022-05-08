@@ -35,6 +35,7 @@ impl<'tree> Iterator for Parents<'tree> {
 pub type NodeIterator<'a, 'tree> = Box<dyn Iterator<Item = Node<'tree>> + 'a>;
 
 pub trait RangeExt {
+    fn is_empty(&self) -> bool;
     fn contains(&self, point: Point) -> bool;
     fn intersects(&self, other: Self) -> bool;
     fn debug(&self) -> RangeDebug;
@@ -64,6 +65,11 @@ impl RangeExt for Range {
 
     fn debug(&self) -> RangeDebug {
         RangeDebug(*self)
+    }
+
+    fn is_empty(&self) -> bool {
+        assert!(self.start_byte <= self.end_byte);
+        self.start_byte == self.end_byte
     }
 }
 

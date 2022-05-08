@@ -168,6 +168,9 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
             };
 
             let range = Range::from(node.range());
+            if range.is_empty() {
+                continue;
+            }
             let token = SemanticToken { range, kind };
             #[cfg(debug_assertions)]
             if let Some(prev) = self.tokens.last() {

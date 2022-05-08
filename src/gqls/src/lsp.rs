@@ -2,6 +2,7 @@ use crate::config::{Config, DEFAULT_PROJECT};
 use crate::convert::{self, PathExt};
 use crate::{tokens, Convert, UrlExt};
 use anyhow::Result;
+use core::panic::{AssertUnwindSafe, UnwindSafe};
 use gqls_ide::{Change, ChangeKind, Changeset, ChangesetSummary, FileId, Ide, Patch};
 use lsp_types::notification::PublishDiagnostics;
 use lsp_types::*;
@@ -12,14 +13,19 @@ use std::path::{Path, PathBuf};
 use tower_lsp::{jsonrpc, Client, ClientSocket, LanguageServer, LspService};
 
 pub struct Gqls {
-    client: Client,
-    ide: Mutex<Ide>,
+    // FIXME not really a good thing to do as it's not really unwind safe
+    client: AssertUnwindSafe<Client>,
+    ide: AssertUnwindSafe<Mutex<Ide>>,
     workspace_folders: OnceCell<Vec<WorkspaceFolder>>,
 }
 
 impl Gqls {
     pub fn new(client: Client) -> Self {
-        Self { client, workspace_folders: Default::default(), ide: Default::default() }
+        Self {
+            client: AssertUnwindSafe(client),
+            workspace_folders: Default::default(),
+            ide: Default::default(),
+        }
     }
 
     pub fn service() -> (LspService<Gqls>, ClientSocket) {
@@ -121,11 +127,21 @@ impl Gqls {
 
     // dirty hack to retry a request if it fails by reinitializing
     // this is to work around deletions/renames/creations for now
-    fn with_ide<R>(&self, mut f: impl FnMut(&mut Ide) -> jsonrpc::Result<R>) -> jsonrpc::Result<R> {
-        f(&mut self.ide.lock()).or_else(|_| {
-            self.reinit()?;
-            f(&mut self.ide.lock())
-        })
+    // also, this crate shouldn't have a direct dependency on salsa
+    fn with_ide<R: UnwindSafe>(
+        &self,
+        mut f: impl FnMut(&mut Ide) -> jsonrpc::Result<R> + UnwindSafe,
+    ) -> jsonrpc::Result<R> {
+        // FIXME hacking unwind safety
+        match salsa::Cancelled::catch(AssertUnwindSafe(|| {
+            f(&mut self.ide.lock()).or_else(|_| {
+                self.reinit()?;
+                f(&mut self.ide.lock())
+            })
+        })) {
+            Ok(res) => res,
+            Err(_) => Err(jsonrpc::Error::request_cancelled()),
+        }
     }
 }
 
@@ -286,6 +302,7 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position;
         self.with_ide(|ide| {
             let uri = ide.path(&position.text_document.uri)?;
+            tracing::info!("completion `{uri:?}`");
             let snapshot = ide.snapshot();
             let completions = snapshot.completions(uri, position.position.convert());
             Ok(Some(CompletionResponse::Array(completions.convert())))
@@ -310,6 +327,7 @@ impl Gqls {
 
     async fn handle_did_change(&self, params: DidChangeTextDocumentParams) -> Result<()> {
         let path = params.text_document.uri.to_path()?;
+        tracing::info!("did_change: {path:?}");
         let changeset_summary = self.with_ide(|ide| {
             let path = ide.intern_path(path.clone());
             let changes = params

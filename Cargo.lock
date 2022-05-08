@@ -267,6 +267,7 @@ dependencies = [
  "maplit",
  "once_cell",
  "parking_lot 0.12.0",
+ "salsa",
  "serde",
  "serde_json",
  "serde_yaml",

@@ -23,7 +23,7 @@ use std::ops::Deref;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use gqls_db::{FileData, GqlsDatabase, ParallelDatabase, Project, SourceDatabase};
+use gqls_db::{Database, FileData, GqlsDatabase, ParallelDatabase, Project, SourceDatabase};
 use gqls_syntax::query;
 use once_cell::sync::Lazy;
 use ropey::Rope;
@@ -93,6 +93,7 @@ impl Snapshot {
 
 impl Ide {
     pub fn snapshot(&self) -> Snapshot {
+        self.db.unwind_if_cancelled();
         Snapshot { snapshot: self.db.snapshot() }
     }
 
