@@ -54,6 +54,7 @@ enum Context {
     Field,
     UnionMembers,
     DirectiveLocations,
+    Interface,
     Directive(DirectiveLocations),
 }
 
@@ -75,6 +76,7 @@ impl<'s> CompletionCtxt<'s> {
                 None => return Context::Document,
             };
             match node.kind() {
+                NodeKind::IMPLEMENTS_INTERFACES => return Context::Interface,
                 NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION => {
                     return Context::Directive(DirectiveLocations::OBJECT)
                 }
@@ -114,6 +116,8 @@ impl<'s> CompletionCtxt<'s> {
                         return Context::InputField;
                     } else if node.has_parent_of_kind(NodeKind::UNION_MEMBER_TYPES) {
                         return Context::UnionMembers;
+                    } else if node.has_parent_of_kind(NodeKind::IMPLEMENTS_INTERFACES) {
+                        return Context::Interface;
                     }
                 }
                 _ => {
@@ -142,6 +146,7 @@ impl<'s> CompletionCtxt<'s> {
             Context::InputField => self.complete_input_fields(),
             Context::Directive(location) => self.complete_directives(location),
             Context::DirectiveLocations => self.complete_directive_locations(),
+            Context::Interface => self.complete_interfaces(),
         }
         self.completions
     }
@@ -248,6 +253,11 @@ impl<'s> CompletionCtxt<'s> {
                 kind: CompletionItemKind::DirectiveLocation,
             }),
         )
+    }
+
+    fn complete_interfaces(&mut self) {
+        self.completions
+            .extend(self.items().filter(|item| matches!(item.kind, CompletionItemKind::Interface)));
     }
 }
 

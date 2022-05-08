@@ -13,6 +13,26 @@ fn test(fixture: &Fixture, expect: Expect) {
 }
 
 #[test]
+fn test_interface_completions() {
+    let fixture = fixture! {
+        "foo" => "
+            interface Bar { foo: Foo }
+            interface Foo { bar: Bar }
+            type Foo implements Bar & $
+        "
+    };
+    test(
+        &fixture,
+        expect![[r#"
+            [
+                Bar :: Interface,
+                Foo :: Interface,
+            ]
+        "#]],
+    );
+}
+
+#[test]
 fn test_toplevel_keyword_completions() {
     let fixture = fixture! {
         "foo" => "$"
@@ -109,6 +129,17 @@ fn test_directive_locations_completions() {
         &fixture,
         expect![[r#"
             [
+                SCHEMA :: DirectiveLocation,
+                SCALAR :: DirectiveLocation,
+                OBJECT :: DirectiveLocation,
+                FIELD_DEFINITION :: DirectiveLocation,
+                ARGUMENT_DEFINITION :: DirectiveLocation,
+                INTERFACE :: DirectiveLocation,
+                UNION :: DirectiveLocation,
+                ENUM :: DirectiveLocation,
+                ENUM_VALUE :: DirectiveLocation,
+                INPUT_OBJECT :: DirectiveLocation,
+                INPUT_FIELD_DEFINITION :: DirectiveLocation,
             ]
         "#]],
     );

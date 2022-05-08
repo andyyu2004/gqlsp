@@ -17,14 +17,22 @@ fn test(fixture: &Fixture, expected: Context) {
 }
 
 #[test]
+fn test_infer_interface_context() {
+    let fixture = fixture! {
+        "after implements" => "type Foo implements $"
+        "after implements and &" => "type Foo implements Bar & $"
+        // FIXME
+        // "after implements with brace" => "type Foo implements $ {}"
+        // "after implements and & with brace" => "type Foo implements Foo & $ {}"
+    };
+    test(&fixture, Context::Interface);
+}
+
+#[test]
 fn test_infer_directive_locations_context() {
     let fixture = fixture! {
-        "after bar" => "
-            directive @foo on FIELD | $
-        "
-        "after on" => "
-            directive @foo on $
-        "
+        "after bar" => "directive @foo on FIELD | $"
+        "after on" => "directive @foo on $"
     };
     test(&fixture, Context::DirectiveLocations);
 }

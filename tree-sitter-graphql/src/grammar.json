@@ -656,47 +656,54 @@
       ]
     },
     "implements_interfaces": {
-      "type": "CHOICE",
+      "type": "SEQ",
       "members": [
         {
-          "type": "SEQ",
+          "type": "STRING",
+          "value": "implements"
+        },
+        {
+          "type": "CHOICE",
           "members": [
-            {
-              "type": "SYMBOL",
-              "name": "implements_interfaces"
-            },
             {
               "type": "STRING",
               "value": "&"
             },
             {
-              "type": "SYMBOL",
-              "name": "named_type"
+              "type": "BLANK"
             }
           ]
         },
         {
-          "type": "SEQ",
+          "type": "CHOICE",
           "members": [
             {
-              "type": "STRING",
-              "value": "implements"
-            },
-            {
-              "type": "CHOICE",
+              "type": "SEQ",
               "members": [
                 {
-                  "type": "STRING",
-                  "value": "&"
+                  "type": "SYMBOL",
+                  "name": "named_type"
                 },
                 {
-                  "type": "BLANK"
+                  "type": "REPEAT",
+                  "content": {
+                    "type": "SEQ",
+                    "members": [
+                      {
+                        "type": "STRING",
+                        "value": "&"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "named_type"
+                      }
+                    ]
+                  }
                 }
               ]
             },
             {
-              "type": "SYMBOL",
-              "name": "named_type"
+              "type": "BLANK"
             }
           ]
         }

@@ -385,12 +385,8 @@
     "fields": {},
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
-        {
-          "type": "implements_interfaces",
-          "named": true
-        },
         {
           "type": "named_type",
           "named": true
