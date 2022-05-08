@@ -1872,7 +1872,7 @@
     },
     "named_type": {
       "type": "SYMBOL",
-      "name": "name"
+      "name": "_name"
     },
     "list_type": {
       "type": "SEQ",
@@ -1923,6 +1923,10 @@
       ]
     },
     "name": {
+      "type": "SYMBOL",
+      "name": "_name"
+    },
+    "_name": {
       "type": "PATTERN",
       "value": "[_A-Za-z][_0-9A-Za-z]*"
     },

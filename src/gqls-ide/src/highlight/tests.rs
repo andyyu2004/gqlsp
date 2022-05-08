@@ -80,6 +80,30 @@ fn test_highlight_scalars_and_enums() {
 }
 
 #[test]
+fn test_highlight_union() {
+    let fixture = fixture!("foo" => "
+       scalar C
+       union U = A | B | C
+    ");
+    test(
+        fixture,
+        hashmap! {
+            "foo" => expect![[r#"
+                [
+                    1:7..1:13 :: Keyword,
+                    1:14..1:15 :: Scalar,
+                    2:7..2:12 :: Keyword,
+                    2:13..2:14 :: Union,
+                    2:17..2:18 :: Type,
+                    2:21..2:22 :: Type,
+                    2:25..2:26 :: Scalar,
+                ]
+            "#]],
+        },
+    );
+}
+
+#[test]
 fn test_highlight_directive() {
     let fixture = fixture!("foo" => "
         directive @qux on FIELD_DEFINITION | OBJECT | INTERFACE | UNION | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION

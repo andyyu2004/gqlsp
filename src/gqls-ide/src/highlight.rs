@@ -149,7 +149,9 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                     if !node.is_named() =>
                     SemanticTokenKind::Keyword,
                 // TODO builtin types (ID, String, Int should be defaultLibrary types)
-                NodeKind::TYPE => self.highlight_type(at),
+                NodeKind::TYPE if matches!(self.scope(), Scope::Type) => self.highlight_type(at),
+                NodeKind::NAMED_TYPE if matches!(self.scope(), Scope::UnionMember) =>
+                    self.highlight_type(at),
                 NodeKind::DIRECTIVE => SemanticTokenKind::Directive,
                 NodeKind::ENUM_VALUE => SemanticTokenKind::EnumValue,
                 NodeKind::NAME => match self.scope() {
@@ -161,7 +163,7 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                     Scope::Object => SemanticTokenKind::Object,
                     Scope::Scalar => SemanticTokenKind::Scalar,
                     Scope::Union => SemanticTokenKind::Union,
-                    Scope::Type | Scope::UnionMember => self.highlight_type(at),
+                    Scope::Type | Scope::UnionMember => unreachable!(),
                     Scope::Document => continue,
                 },
                 _ => continue,

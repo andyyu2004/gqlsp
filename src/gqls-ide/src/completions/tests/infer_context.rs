@@ -12,7 +12,7 @@ fn test(fixture: &Fixture, expected: Context) {
     let snapshot = ide.snapshot();
     for (file, at) in fixture.all_points() {
         let context = CompletionCtxt::infer_context(&snapshot, file, at);
-        assert_eq!(context, expected);
+        assert_eq!(expected, context);
     }
 }
 
@@ -41,6 +41,13 @@ fn test_infer_field_context() {
               id: [TraitID!]! $
             }
         "
+
+        "long type name" => "
+            type Foo {
+              unit: NameLongerThanLookbehind$
+            }
+        "
+
 
         // FIXME
         // "qux" => "

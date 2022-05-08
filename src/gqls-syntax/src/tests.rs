@@ -17,13 +17,13 @@ type Foo {
     let tree = parse_fresh(s);
     let node = tree.root_node();
     let i = node.named_node_at(Point::new(2, 8)).unwrap();
-    expect![[r#"(name)"#]].assert_eq(&i.to_sexp());
+    expect![[r#"(named_type)"#]].assert_eq(&i.to_sexp());
 
     let xs = node.named_node_at(Point::new(2, 7)).unwrap();
-    expect![[r#"(list_type (type (non_null_type (named_type (name)))))"#]].assert_eq(&xs.to_sexp());
+    expect![[r#"(list_type (type (non_null_type (named_type))))"#]].assert_eq(&xs.to_sexp());
 
     let nn = node.named_node_at(Point::new(2, 11)).unwrap();
-    expect![[r#"(non_null_type (named_type (name)))"#]].assert_eq(&nn.to_sexp());
+    expect![[r#"(non_null_type (named_type))"#]].assert_eq(&nn.to_sexp());
 }
 
 #[test]
@@ -51,21 +51,21 @@ fn test_parse_implements_interface() {
     test(
         "type Foo implements Bar {}",
         expect![[
-            r#"(document (item (type_definition (object_type_definition (name) (implements_interfaces (named_type (name))) (fields_definition)))))"#
+            r#"(document (item (type_definition (object_type_definition (name) (implements_interfaces (named_type)) (fields_definition)))))"#
         ]],
     );
 
     test(
         "type Foo implements Bar & Bar {}",
         expect![[
-            r#"(document (item (type_definition (object_type_definition (name) (implements_interfaces (implements_interfaces (named_type (name))) (named_type (name))) (fields_definition)))))"#
+            r#"(document (item (type_definition (object_type_definition (name) (implements_interfaces (implements_interfaces (named_type)) (named_type)) (fields_definition)))))"#
         ]],
     );
 
     test(
         "type Foo implements & Bar & Bar {}",
         expect![[
-            r#"(document (item (type_definition (object_type_definition (name) (implements_interfaces (implements_interfaces (named_type (name))) (named_type (name))) (fields_definition)))))"#
+            r#"(document (item (type_definition (object_type_definition (name) (implements_interfaces (implements_interfaces (named_type)) (named_type)) (fields_definition)))))"#
         ]],
     );
 }
@@ -75,14 +75,14 @@ fn test_parse_union() {
     test(
         "union U = X | Y | Z",
         expect![[
-            r#"(document (item (type_definition (union_type_definition (name) (union_member_types (named_type (name)) (named_type (name)) (named_type (name)))))))"#
+            r#"(document (item (type_definition (union_type_definition (name) (union_member_types (named_type) (named_type) (named_type))))))"#
         ]],
     );
 
     test(
         "union U = | X | Y",
         expect![[
-            r#"(document (item (type_definition (union_type_definition (name) (union_member_types (named_type (name)) (named_type (name)))))))"#
+            r#"(document (item (type_definition (union_type_definition (name) (union_member_types (named_type) (named_type))))))"#
         ]],
     );
 }

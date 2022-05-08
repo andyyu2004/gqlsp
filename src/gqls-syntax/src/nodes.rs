@@ -5,7 +5,7 @@ impl NodeKind {
     pub const INT_VALUE: &'static str = "int_value";
     pub const FLOAT_VALUE: &'static str = "float_value";
     pub const NULL_VALUE: &'static str = "null_value";
-    pub const NAME: &'static str = "name";
+    pub const _NAME: &'static str = "_name";
     pub const COMMENT: &'static str = "comment";
     pub const COMMA: &'static str = "comma";
     pub const DOCUMENT: &'static str = "document";
@@ -57,5 +57,6 @@ impl NodeKind {
     pub const NAMED_TYPE: &'static str = "named_type";
     pub const LIST_TYPE: &'static str = "list_type";
     pub const NON_NULL_TYPE: &'static str = "non_null_type";
+    pub const NAME: &'static str = "name";
     pub const DESCRIPTION: &'static str = "description";
 }

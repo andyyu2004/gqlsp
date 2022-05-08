@@ -106,10 +106,6 @@ fn type_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Ty> {
     let type_node = match node.kind() {
         NodeKind::TYPE | NodeKind::NON_NULL_TYPE | NodeKind::LIST_TYPE | NodeKind::NAMED_TYPE =>
             node,
-        NodeKind::NAME => match node.parent_of_kind(NodeKind::NAMED_TYPE) {
-            Some(type_node) => type_node,
-            None => return None,
-        },
         _ => return None,
     };
     BodyCtxt::new(data.text).lower_type(type_node)

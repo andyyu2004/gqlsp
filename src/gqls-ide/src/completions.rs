@@ -96,10 +96,12 @@ impl<'s> CompletionCtxt<'s> {
                 | NodeKind::LIST_TYPE
                 | NodeKind::NAMED_TYPE
                 | NodeKind::TYPE =>
-                    if node.has_parent_of_kind(NodeKind::FIELDS_DEFINITION) {
+                    if node.has_parent_of_kind(NodeKind::FIELD_DEFINITION) {
                         return Context::Field;
-                    } else if node.has_parent_of_kind(NodeKind::INPUT_FIELDS_DEFINITION) {
+                    } else if node.has_parent_of_kind(NodeKind::INPUT_VALUE_DEFINITION) {
                         return Context::InputField;
+                    } else if node.has_parent_of_kind(NodeKind::UNION_MEMBER_TYPES) {
+                        return Context::UnionMembers;
                     },
                 _ => {
                     if at.column == 0 {

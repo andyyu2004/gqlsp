@@ -308,10 +308,11 @@ module.exports = grammar({
         )
       ),
     type: ($) => choice($.named_type, $.list_type, $.non_null_type),
-    named_type: ($) => $.name,
+    named_type: ($) => $._name,
     list_type: ($) => seq("[", $.type, "]"),
     non_null_type: ($) => choice(seq($.named_type, "!"), seq($.list_type, "!")),
-    name: ($) => /[_A-Za-z][_0-9A-Za-z]*/,
+    name: ($) => $._name,
+    _name: ($) => /[_A-Za-z][_0-9A-Za-z]*/,
     comment: ($) => token(seq("#", /.*/)),
     comma: ($) => ",",
     description: ($) => $.string_value,
