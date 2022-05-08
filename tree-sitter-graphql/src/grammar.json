@@ -1801,53 +1801,57 @@
       ]
     },
     "directive_location": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "SCHEMA"
-        },
-        {
-          "type": "STRING",
-          "value": "SCALAR"
-        },
-        {
-          "type": "STRING",
-          "value": "OBJECT"
-        },
-        {
-          "type": "STRING",
-          "value": "FIELD_DEFINITION"
-        },
-        {
-          "type": "STRING",
-          "value": "ARGUMENT_DEFINITION"
-        },
-        {
-          "type": "STRING",
-          "value": "INTERFACE"
-        },
-        {
-          "type": "STRING",
-          "value": "UNION"
-        },
-        {
-          "type": "STRING",
-          "value": "ENUM"
-        },
-        {
-          "type": "STRING",
-          "value": "ENUM_VALUE"
-        },
-        {
-          "type": "STRING",
-          "value": "INPUT_OBJECT"
-        },
-        {
-          "type": "STRING",
-          "value": "INPUT_FIELD_DEFINITION"
-        }
-      ]
+      "type": "FIELD",
+      "name": "location",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "SCHEMA"
+          },
+          {
+            "type": "STRING",
+            "value": "SCALAR"
+          },
+          {
+            "type": "STRING",
+            "value": "OBJECT"
+          },
+          {
+            "type": "STRING",
+            "value": "FIELD_DEFINITION"
+          },
+          {
+            "type": "STRING",
+            "value": "ARGUMENT_DEFINITION"
+          },
+          {
+            "type": "STRING",
+            "value": "INTERFACE"
+          },
+          {
+            "type": "STRING",
+            "value": "UNION"
+          },
+          {
+            "type": "STRING",
+            "value": "ENUM"
+          },
+          {
+            "type": "STRING",
+            "value": "ENUM_VALUE"
+          },
+          {
+            "type": "STRING",
+            "value": "INPUT_OBJECT"
+          },
+          {
+            "type": "STRING",
+            "value": "INPUT_FIELD_DEFINITION"
+          }
+        ]
+      }
     },
     "type": {
       "type": "CHOICE",

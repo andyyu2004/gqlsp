@@ -132,7 +132,58 @@
   {
     "type": "directive_location",
     "named": true,
-    "fields": {}
+    "fields": {
+      "location": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "ARGUMENT_DEFINITION",
+            "named": false
+          },
+          {
+            "type": "ENUM",
+            "named": false
+          },
+          {
+            "type": "ENUM_VALUE",
+            "named": false
+          },
+          {
+            "type": "FIELD_DEFINITION",
+            "named": false
+          },
+          {
+            "type": "INPUT_FIELD_DEFINITION",
+            "named": false
+          },
+          {
+            "type": "INPUT_OBJECT",
+            "named": false
+          },
+          {
+            "type": "INTERFACE",
+            "named": false
+          },
+          {
+            "type": "OBJECT",
+            "named": false
+          },
+          {
+            "type": "SCALAR",
+            "named": false
+          },
+          {
+            "type": "SCHEMA",
+            "named": false
+          },
+          {
+            "type": "UNION",
+            "named": false
+          }
+        ]
+      }
+    }
   },
   {
     "type": "directive_locations",

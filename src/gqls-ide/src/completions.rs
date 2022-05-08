@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fmt::{self, Debug};
 
 use gqls_db::{DefDatabase, SourceDatabase};
@@ -8,6 +9,7 @@ use vfs::FileId;
 
 use crate::Snapshot;
 
+#[derive(PartialEq, Eq, Hash)]
 pub struct CompletionItem {
     pub label: String,
     pub kind: CompletionItemKind,
@@ -19,7 +21,7 @@ impl Debug for CompletionItem {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub enum CompletionItemKind {
     Object,
     InputObject,

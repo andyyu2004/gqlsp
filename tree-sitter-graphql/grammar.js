@@ -291,18 +291,21 @@ module.exports = grammar({
     directive_locations: ($) =>
       seq("on", optional("|"), sepBy1("|", $.directive_location)),
     directive_location: () =>
-      choice(
-        "SCHEMA",
-        "SCALAR",
-        "OBJECT",
-        "FIELD_DEFINITION",
-        "ARGUMENT_DEFINITION",
-        "INTERFACE",
-        "UNION",
-        "ENUM",
-        "ENUM_VALUE",
-        "INPUT_OBJECT",
-        "INPUT_FIELD_DEFINITION"
+      field(
+        "location",
+        choice(
+          "SCHEMA",
+          "SCALAR",
+          "OBJECT",
+          "FIELD_DEFINITION",
+          "ARGUMENT_DEFINITION",
+          "INTERFACE",
+          "UNION",
+          "ENUM",
+          "ENUM_VALUE",
+          "INPUT_OBJECT",
+          "INPUT_FIELD_DEFINITION"
+        )
       ),
     type: ($) => choice($.named_type, $.list_type, $.non_null_type),
     named_type: ($) => $.name,
