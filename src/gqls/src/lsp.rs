@@ -24,7 +24,8 @@ impl Gqls {
         Self {
             client: AssertUnwindSafe(client),
             workspace_folders: Default::default(),
-            ide: Default::default(),
+            // FIXME implements default in 1.62
+            ide: AssertUnwindSafe(Default::default()),
         }
     }
 
