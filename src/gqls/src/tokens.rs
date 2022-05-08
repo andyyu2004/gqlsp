@@ -1,3 +1,4 @@
+use gqls_ide::RangeExt;
 use lsp_types::{SemanticToken, SemanticTokenModifier, SemanticTokenType};
 
 use crate::Convert;
@@ -30,6 +31,9 @@ pub(crate) fn convert(ts: &[gqls_ide::SemanticToken]) -> Vec<SemanticToken> {
     for i in 0..ts.len() {
         let token = &ts[i];
         let range = token.range;
+        if range.is_empty() {
+            continue;
+        }
         semantic_tokens.push(SemanticToken {
             delta_line: if i == 0 {
                 range.start_point.row as u32
@@ -41,7 +45,6 @@ pub(crate) fn convert(ts: &[gqls_ide::SemanticToken]) -> Vec<SemanticToken> {
             } else {
                 assert_eq!(range.start_point.row, ts[i - 1].range.end_point.row);
                 assert!(range.start_point.column >= ts[i - 1].range.end_point.column);
-                assert!(ts[i - 1].range.end_point.column > ts[i - 1].range.start_point.column);
                 (range.start_point.column - ts[i - 1].range.start_point.column) as u32
             },
             length: (token.range.end_byte - token.range.start_byte) as u32,
