@@ -7,12 +7,13 @@ mod highlight;
 mod implementation;
 mod macros;
 mod references;
+mod rename;
 mod resolve;
 mod symbols;
 mod typedef;
 
 pub use self::completions::{CompletionItem, CompletionItemKind};
-pub use self::edit::{Change, ChangeKind, Changeset, Patch, Point, Range};
+pub use self::edit::{Change, ChangeKind, Changeset, FilePatches, Patch, Point, Range};
 pub use self::highlight::{SemanticToken, SemanticTokenKind};
 pub use self::symbols::{DocumentSymbol, SymbolKind, SymbolTree, WorkspaceSymbol};
 pub use gqls_syntax::RangeExt;

@@ -73,10 +73,14 @@ pub fn capabilities() -> ServerCapabilities {
         }),
         // hover_provider: Some(HoverProviderCapability::Simple(true)),
         completion_provider: Some(CompletionOptions {
-            // resolve_provider: Some(true),
+            resolve_provider: Some(false),
             trigger_characters: Some(["@", ":", "|"].map(ToString::to_string).to_vec()),
             ..Default::default()
         }),
+        rename_provider: Some(OneOf::Right(RenameOptions {
+            prepare_provider: Some(true),
+            work_done_progress_options: Default::default(),
+        })),
         ..Default::default()
     }
 }
@@ -141,7 +145,7 @@ impl Gqls {
             })
         })) {
             Ok(res) => res,
-            Err(_) => Err(jsonrpc::Error::request_cancelled()),
+            Err(_) => Err(jsonrpc::Error::content_modified()),
         }
     }
 }
@@ -162,16 +166,27 @@ impl LanguageServer for Gqls {
         })
     }
 
-    async fn did_change_workspace_folders(&self, _params: DidChangeWorkspaceFoldersParams) {
-        todo!("did_change_workspace_folders")
-    }
-
     async fn initialized(&self, _: InitializedParams) {
         tracing::info!("gqls initialized");
     }
 
     async fn shutdown(&self) -> jsonrpc::Result<()> {
         Ok(())
+    }
+
+    async fn did_change_workspace_folders(&self, _params: DidChangeWorkspaceFoldersParams) {
+        todo!("did_change_workspace_folders")
+    }
+
+    async fn symbol(
+        &self,
+        params: WorkspaceSymbolParams,
+    ) -> jsonrpc::Result<Option<Vec<SymbolInformation>>> {
+        self.with_ide(|ide| {
+            let snapshot = ide.snapshot();
+            let symbols = snapshot.workspace_symbols(&params.query);
+            Ok(Some(symbols.convert()))
+        })
     }
 
     async fn will_create_files(
@@ -204,6 +219,20 @@ impl LanguageServer for Gqls {
         if let Err(err) = self.handle_did_change(params).await {
             tracing::error!(%err);
         }
+    }
+
+    async fn completion(
+        &self,
+        params: CompletionParams,
+    ) -> jsonrpc::Result<Option<CompletionResponse>> {
+        let position = params.text_document_position;
+        self.with_ide(|ide| {
+            let uri = ide.path(&position.text_document.uri)?;
+            tracing::info!("completion `{uri:?}`");
+            let snapshot = ide.snapshot();
+            let completions = snapshot.completions(uri, position.position.convert());
+            Ok(Some(CompletionResponse::Array(completions.convert())))
+        })
     }
 
     async fn goto_definition(
@@ -270,14 +299,38 @@ impl LanguageServer for Gqls {
         })
     }
 
-    async fn symbol(
+    async fn prepare_rename(
         &self,
-        params: WorkspaceSymbolParams,
-    ) -> jsonrpc::Result<Option<Vec<SymbolInformation>>> {
+        params: TextDocumentPositionParams,
+    ) -> jsonrpc::Result<Option<PrepareRenameResponse>> {
+        let position = params.text_document_position;
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            let symbols = snapshot.workspace_symbols(&params.query);
-            Ok(Some(symbols.convert()))
+            let uri = &position.text_document.uri;
+            let path = ide.path(uri)?;
+            snapshot.rename();
+            todo!()
+        })
+    }
+
+    async fn rename(&self, params: RenameParams) -> jsonrpc::Result<Option<WorkspaceEdit>> {
+        let position = params.text_document_position;
+        self.with_ide(|ide| {
+            let snapshot = ide.snapshot();
+            let uri = &position.text_document.uri;
+            let path = ide.path(uri)?;
+            match snapshot.rename(path, position.position.convert()) {
+                Ok(edits) => Ok(Some(WorkspaceEdit {
+                    document_changes: Some(DocumentChanges::Edits(edits.convert())),
+                    ..Default::default()
+                })),
+                Err(err) => Err(jsonrpc::Error {
+                    // FIXME change to `RequestFailed` when available: https://github.com/microsoft/language-server-protocol/issues/1341
+                    code: jsonrpc::ErrorCode::InvalidParams,
+                    message: err.to_string(),
+                    data: None,
+                }),
+            }
         })
     }
 
@@ -293,20 +346,6 @@ impl LanguageServer for Gqls {
                 data: tokens::convert(&snapshot.semantic_tokens(path)),
                 result_id: None,
             })))
-        })
-    }
-
-    async fn completion(
-        &self,
-        params: CompletionParams,
-    ) -> jsonrpc::Result<Option<CompletionResponse>> {
-        let position = params.text_document_position;
-        self.with_ide(|ide| {
-            let uri = ide.path(&position.text_document.uri)?;
-            tracing::info!("completion `{uri:?}`");
-            let snapshot = ide.snapshot();
-            let completions = snapshot.completions(uri, position.position.convert());
-            Ok(Some(CompletionResponse::Array(completions.convert())))
         })
     }
 }

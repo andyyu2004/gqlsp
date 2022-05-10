@@ -52,6 +52,28 @@ impl Convert for lsp_types::Range {
     }
 }
 
+impl Convert for gqls_ide::FilePatches {
+    type Converted = lsp_types::TextDocumentEdit;
+
+    fn convert(&self) -> Self::Converted {
+        lsp_types::TextDocumentEdit {
+            text_document: lsp_types::OptionalVersionedTextDocumentIdentifier {
+                uri: self.file.to_url(),
+                version: None,
+            },
+            edits: self.patches.convert().into_iter().map(lsp_types::OneOf::Left).collect(),
+        }
+    }
+}
+
+impl Convert for gqls_ide::Patch {
+    type Converted = lsp_types::TextEdit;
+
+    fn convert(&self) -> Self::Converted {
+        lsp_types::TextEdit { range: self.range.convert(), new_text: self.with.clone() }
+    }
+}
+
 impl Convert for gqls_ide::Location {
     type Converted = lsp_types::Location;
 

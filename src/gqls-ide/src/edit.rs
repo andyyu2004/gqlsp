@@ -47,6 +47,12 @@ impl From<tree_sitter::Range> for Range {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct FilePatches {
+    pub file: FileId,
+    pub patches: Vec<Patch>,
+}
+
 #[derive(Debug, Eq, PartialEq, Clone, Default)]
 pub struct Patch {
     pub range: Range,
