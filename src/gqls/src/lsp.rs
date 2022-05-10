@@ -3,7 +3,7 @@ use crate::convert::{self, PathExt};
 use crate::{tokens, Convert, UrlExt};
 use anyhow::Result;
 use core::panic::{AssertUnwindSafe, UnwindSafe};
-use gqls_ide::{Change, ChangeKind, Changeset, ChangesetSummary, FileId, Ide, Patch};
+use gqls_ide::{Change, ChangeKind, Changeset, ChangesetSummary, FileId, Ide, Patch, Vfs};
 use lsp_types::notification::PublishDiagnostics;
 use lsp_types::*;
 use once_cell::sync::OnceCell;
@@ -85,14 +85,13 @@ pub fn capabilities() -> ServerCapabilities {
     }
 }
 
-pub trait IdeExt {
+pub trait VfsExt {
     fn path(&self, url: &Url) -> jsonrpc::Result<FileId>;
 }
 
-impl IdeExt for Ide {
+impl VfsExt for Vfs {
     fn path(&self, url: &Url) -> jsonrpc::Result<FileId> {
-        self.vfs()
-            .get(url.to_path()?)
+        self.get(url.to_path()?)
             .ok_or_else(|| jsonrpc::Error::invalid_params(format!("unknown file: `{url}`")))
     }
 }
@@ -227,10 +226,8 @@ impl LanguageServer for Gqls {
     ) -> jsonrpc::Result<Option<CompletionResponse>> {
         let position = params.text_document_position;
         self.with_ide(|ide| {
-            let uri = ide.path(&position.text_document.uri)?;
-            tracing::info!("completion `{uri:?}`");
             let snapshot = ide.snapshot();
-            let completions = snapshot.completions(uri, position.position.convert());
+            let completions = snapshot.completions(position.convert());
             Ok(Some(CompletionResponse::Array(completions.convert())))
         })
     }
@@ -241,9 +238,8 @@ impl LanguageServer for Gqls {
     ) -> jsonrpc::Result<Option<GotoDefinitionResponse>> {
         let position = params.text_document_position_params;
         self.with_ide(|ide| {
-            let path = ide.path(&position.text_document.uri)?;
             let snapshot = ide.snapshot();
-            let locations = snapshot.goto_definition(path, position.position.convert());
+            let locations = snapshot.goto_definition(position.convert());
             Ok(convert::locations_to_goto_definition_response(&locations))
         })
     }
@@ -254,9 +250,8 @@ impl LanguageServer for Gqls {
     ) -> jsonrpc::Result<Option<GotoDefinitionResponse>> {
         let position = params.text_document_position_params;
         self.with_ide(|ide| {
-            let path = ide.path(&position.text_document.uri)?;
             let snapshot = ide.snapshot();
-            let locations = snapshot.goto_type_definition(path, position.position.convert());
+            let locations = snapshot.goto_type_definition(position.convert());
             Ok(convert::locations_to_goto_definition_response(&locations))
         })
     }
@@ -267,9 +262,8 @@ impl LanguageServer for Gqls {
     ) -> jsonrpc::Result<Option<GotoDefinitionResponse>> {
         let position = params.text_document_position_params;
         self.with_ide(|ide| {
-            let path = ide.path(&position.text_document.uri)?;
             let snapshot = ide.snapshot();
-            let locations = snapshot.goto_implementation(path, position.position.convert());
+            let locations = snapshot.goto_implementation(position.convert());
             Ok(convert::locations_to_goto_definition_response(&locations))
         })
     }
@@ -277,9 +271,8 @@ impl LanguageServer for Gqls {
     async fn references(&self, params: ReferenceParams) -> jsonrpc::Result<Option<Vec<Location>>> {
         let position = params.text_document_position;
         self.with_ide(|ide| {
-            let path = ide.path(&position.text_document.uri)?;
             let snapshot = ide.snapshot();
-            let locations = snapshot.find_references(path, position.position.convert());
+            let locations = snapshot.find_references(position.convert());
             match &locations[..] {
                 [] => Ok(None),
                 locations => Ok(Some(locations.convert())),
@@ -293,7 +286,7 @@ impl LanguageServer for Gqls {
     ) -> jsonrpc::Result<Option<DocumentSymbolResponse>> {
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            let path = ide.path(&params.text_document.uri)?;
+            let path = ide.vfs().path(&params.text_document.uri)?;
             let symbols = snapshot.document_symbols(path);
             Ok(Some(DocumentSymbolResponse::Nested(symbols.convert())))
         })
@@ -301,14 +294,12 @@ impl LanguageServer for Gqls {
 
     async fn prepare_rename(
         &self,
-        params: TextDocumentPositionParams,
+        _params: TextDocumentPositionParams,
     ) -> jsonrpc::Result<Option<PrepareRenameResponse>> {
-        let position = params.text_document_position;
-        self.with_ide(|ide| {
-            let snapshot = ide.snapshot();
-            let uri = &position.text_document.uri;
-            let path = ide.path(uri)?;
-            snapshot.rename();
+        self.with_ide(|_ide| {
+            // let snapshot = ide.snapshot();
+            // let path = ide.path(uri)?;
+            // snapshot.prepare_rename(params.convert());
             todo!()
         })
     }
@@ -317,9 +308,8 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position;
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            let uri = &position.text_document.uri;
-            let path = ide.path(uri)?;
-            match snapshot.rename(path, position.position.convert()) {
+            let _uri = &position.text_document.uri;
+            match snapshot.rename(position.convert()) {
                 Ok(edits) => Ok(Some(WorkspaceEdit {
                     document_changes: Some(DocumentChanges::Edits(edits.convert())),
                     ..Default::default()
@@ -341,7 +331,7 @@ impl LanguageServer for Gqls {
         let uri = params.text_document.uri;
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            let path = ide.path(&uri)?;
+            let path = ide.vfs().path(&uri)?;
             Ok(Some(SemanticTokensResult::Tokens(SemanticTokens {
                 data: tokens::convert(&snapshot.semantic_tokens(path)),
                 result_id: None,
@@ -359,7 +349,7 @@ struct SyntaxTreeParams {
 impl Gqls {
     async fn syntax_tree(&self, params: SyntaxTreeParams) -> jsonrpc::Result<String> {
         self.with_ide(|ide| {
-            let path = ide.path(&params.text_document.uri)?;
+            let path = ide.vfs().path(&params.text_document.uri)?;
             let snapshot = ide.snapshot();
             Ok(snapshot.syntax_tree(path))
         })

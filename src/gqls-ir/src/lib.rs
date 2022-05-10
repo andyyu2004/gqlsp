@@ -10,7 +10,7 @@ pub use self::ty::*;
 pub use db::{DefDatabase, DefDatabaseStorage};
 pub use la_arena::{Arena, Idx, RawIdx};
 
-use gqls_syntax::{Node, NodeExt, Range, RangeExt};
+use gqls_syntax::{Node, NodeExt, Point, Range, RangeExt};
 use la_arena::IdxRange;
 use smallvec::SmallVec;
 use smol_str::SmolStr;
@@ -52,6 +52,12 @@ pub struct Item {
     pub name: Name,
     pub range: Range,
     pub kind: ItemKind,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Position {
+    pub file: FileId,
+    pub point: Point,
 }
 
 impl Debug for Item {
@@ -173,8 +179,6 @@ impl Name {
     }
 
     pub fn unranged(s: &str) -> Self {
-        use gqls_syntax::Point;
-
         Self {
             name: SmolStr::new(s),
             range: Range {

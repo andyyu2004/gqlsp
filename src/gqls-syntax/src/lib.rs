@@ -7,6 +7,7 @@ pub use self::nodes::NodeKind;
 pub use self::traverse::{Traverse, TraverseEvent};
 
 pub use tree_sitter::{Language, Node, Parser, Point, Query, QueryCursor, Range, Tree, TreeCursor};
+use vfs::FileId;
 
 use std::fmt::{self, Debug};
 
@@ -16,6 +17,18 @@ pub fn traverse(tree: &Tree) -> Traverse<'_> {
 
 pub fn traverse_preorder(tree: &Tree) -> impl Iterator<Item = Node<'_>> {
     tree_sitter_traversal::traverse_tree(tree, tree_sitter_traversal::Order::Pre)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct Position {
+    pub file: FileId,
+    pub point: Point,
+}
+
+impl Position {
+    pub fn new(file: FileId, point: Point) -> Self {
+        Self { file, point }
+    }
 }
 
 pub struct Parents<'tree> {

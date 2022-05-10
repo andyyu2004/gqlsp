@@ -1,17 +1,16 @@
-use gqls_syntax::Point;
-use vfs::FileId;
+use gqls_syntax::Position;
 
 use crate::{FilePatches, Snapshot};
 
 pub type RenameError = &'static str;
 
 impl Snapshot {
-    pub fn prepare_rename(&self, file: FileId, at: Point) -> Result<(), RenameError> {
+    pub fn prepare_rename(&self, _position: Position) -> Result<(), RenameError> {
         Ok(())
     }
 
-    pub fn rename(&self, file: FileId, at: Point) -> Result<Vec<FilePatches>, RenameError> {
-        let res = self.resolve_type_at(file, at);
+    pub fn rename(&self, position: Position) -> Result<Vec<FilePatches>, RenameError> {
+        let res = self.resolve_type_at(position);
         if res.is_empty() {
             return Err("something");
         }

@@ -10,8 +10,8 @@ fn test(fixture: &Fixture, expected: Context) {
     let mut ide = Ide::default();
     ide.setup_fixture_allow_errors(&fixture);
     let snapshot = ide.snapshot();
-    for (file, at) in fixture.all_points() {
-        let context = CompletionCtxt::infer_context(&snapshot, file, at);
+    for position in fixture.all_points() {
+        let context = CompletionCtxt::infer_context(&snapshot, position);
         assert_eq!(expected, context);
     }
 }

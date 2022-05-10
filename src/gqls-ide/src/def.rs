@@ -1,12 +1,11 @@
 use gqls_db::DefDatabase;
-use tree_sitter::Point;
-use vfs::FileId;
+use gqls_syntax::Position;
 
 use crate::{Location, Snapshot};
 
 impl Snapshot {
-    pub fn goto_definition(&self, file: FileId, at: Point) -> Vec<Location> {
-        self.resolve_item_name_at(file, at)
+    pub fn goto_definition(&self, position: Position) -> Vec<Location> {
+        self.resolve_item_name_at(position)
             .into_iter()
             .map(|res| Location::new(res.file, self.item(res).name.range.into()))
             .collect()

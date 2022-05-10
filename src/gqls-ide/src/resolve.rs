@@ -1,31 +1,34 @@
 use gqls_db::DefDatabase;
 use gqls_ir::{FieldRes, ItemRes, ItemResolutions};
-use gqls_syntax::RangeExt;
-use tree_sitter::Point;
-use vfs::FileId;
+use gqls_syntax::{Position, RangeExt};
+
+
 
 use crate::Snapshot;
 
 // TODO resolve logic should be moved to the ir layer
 impl Snapshot {
-    pub(crate) fn resolve_item_name_at(&self, file: FileId, at: Point) -> ItemResolutions {
-        self.name_at(file, at).map(|name| self.resolve_item(file, name)).unwrap_or_default()
+    pub(crate) fn resolve_item_name_at(&self, position: Position) -> ItemResolutions {
+        self.name_at(position)
+            .map(|name| self.resolve_item(position.file, name))
+            .unwrap_or_default()
     }
 
-    pub(crate) fn resolve_type_at(&self, file: FileId, at: Point) -> ItemResolutions {
-        self.type_at(file, at).map(|ty| self.resolve_item(file, ty.name())).unwrap_or_default()
+    pub(crate) fn resolve_type_at(&self, position: Position) -> ItemResolutions {
+        self.type_at(position)
+            .map(|ty| self.resolve_item(position.file, ty.name()))
+            .unwrap_or_default()
     }
 
-    pub(crate) fn resolve_item_at(&self, file: FileId, at: Point) -> Option<ItemRes> {
-        self.item_at(file, at).map(|idx| ItemRes { file, idx })
+    pub(crate) fn resolve_item_at(&self, position: Position) -> Option<ItemRes> {
+        self.item_at(position).map(|idx| ItemRes { file: position.file, idx })
     }
 
-    pub(crate) fn resolve_field_at(&self, file: FileId, at: Point) -> Option<FieldRes> {
-        let item = self.resolve_item_at(file, at)?;
-        self.item_body(item)?
-            .fields()?
-            .iter()
-            .find_map(|(idx, field)| field.range.contains(at).then(|| FieldRes { item, idx }))
+    pub(crate) fn resolve_field_at(&self, position: Position) -> Option<FieldRes> {
+        let item = self.resolve_item_at(position)?;
+        self.item_body(item)?.fields()?.iter().find_map(|(idx, field)| {
+            field.range.contains(position.point).then(|| FieldRes { item, idx })
+        })
     }
 }
 

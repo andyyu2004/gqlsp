@@ -52,6 +52,18 @@ impl Convert for lsp_types::Range {
     }
 }
 
+impl Convert for lsp_types::TextDocumentPositionParams {
+    type Converted = gqls_ide::Position;
+
+    fn convert(&self) -> Self::Converted {
+        todo!();
+        // gqls_ide::Position {
+        //     file: self.text_document.uri.to_path().unwrap(),
+        //     point: self.position.convert(),
+        // }
+    }
+}
+
 impl Convert for gqls_ide::FilePatches {
     type Converted = lsp_types::TextDocumentEdit;
 

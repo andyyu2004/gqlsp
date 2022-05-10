@@ -2,7 +2,7 @@ use std::fmt::{self, Debug};
 
 use gqls_db::{DefDatabase, SourceDatabase};
 use gqls_ir::{ItemKind, TypeDefinitionKind};
-use gqls_syntax::{Node, NodeKind, Point, Range, RangeExt, Traverse, TraverseEvent};
+use gqls_syntax::{Node, NodeKind, Point, Position, Range, RangeExt, Traverse, TraverseEvent};
 use vfs::FileId;
 
 use crate::Snapshot;
@@ -195,7 +195,7 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
     }
 
     fn highlight_type(&self, at: Point) -> SemanticTokenKind {
-        match self.snapshot.resolve_type_at(self.file, at)[..] {
+        match self.snapshot.resolve_type_at(Position::new(self.file, at))[..] {
             [] => SemanticTokenKind::Type,
             [res, ..] => match self.snapshot.item(res).kind {
                 ItemKind::TypeDefinition(typedef) => {

@@ -2,7 +2,7 @@ pub use maplit::hashmap;
 
 use std::collections::{HashMap, HashSet};
 
-use gqls_syntax::Point;
+use gqls_syntax::{Point, Position};
 use vfs::FileId;
 
 #[macro_export]
@@ -27,10 +27,11 @@ impl Fixture {
         Self { files }
     }
 
-    pub fn all_points(&self) -> impl Iterator<Item = (FileId, Point)> + '_ {
+    pub fn all_points(&self) -> impl Iterator<Item = Position> + '_ {
         self.files
             .iter()
             .flat_map(|(&path, file)| std::iter::repeat(path).zip(file.points.iter().copied()))
+            .map(|(file, point)| Position { file, point })
     }
 
     pub fn all_ranges(&self) -> impl Iterator<Item = (FileId, std::ops::Range<Point>)> + '_ {

@@ -352,6 +352,7 @@ dependencies = [
  "expect-test",
  "tree-sitter",
  "tree-sitter-traversal",
+ "vfs",
 ]
 
 [[package]]

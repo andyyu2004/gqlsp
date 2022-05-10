@@ -3,8 +3,7 @@ use std::fmt::{self, Debug};
 
 use gqls_db::{DefDatabase, SourceDatabase};
 use gqls_ir::{DirectiveLocations, ItemKind, TypeDefinitionKind};
-use gqls_syntax::{NodeExt, NodeKind};
-use tree_sitter::Point;
+use gqls_syntax::{NodeExt, NodeKind, Position};
 use vfs::FileId;
 
 use crate::Snapshot;
@@ -35,8 +34,8 @@ pub enum CompletionItemKind {
 }
 
 impl Snapshot {
-    pub fn completions(&self, file: FileId, at: Point) -> Vec<CompletionItem> {
-        CompletionCtxt::new(self, file, at).completions()
+    pub fn completions(&self, position: Position) -> Vec<CompletionItem> {
+        CompletionCtxt::new(self, position).completions()
     }
 }
 
@@ -65,13 +64,15 @@ impl Default for Queries {
         Self {}
     }
 }
+
 impl<'s> CompletionCtxt<'s> {
-    fn infer_context(snapshot: &'s Snapshot, file: FileId, mut at: Point) -> Context {
-        let data = snapshot.file_data(file);
+    fn infer_context(snapshot: &'s Snapshot, position: Position) -> Context {
+        let data = snapshot.file_data(position.file);
         // NOTE maybe we could make use of treesitter's query api to do this better
         // HACK look backwards a few columns to try and find a notable node
+        let mut point = position.point;
         for _ in 0..10 {
-            let node = match data.tree.root_node().named_node_at(at) {
+            let node = match data.tree.root_node().named_node_at(point) {
                 Some(node) => node,
                 None => return Context::Document,
             };
@@ -121,10 +122,10 @@ impl<'s> CompletionCtxt<'s> {
                     }
                 }
                 _ => {
-                    if at.column == 0 {
+                    if point.column == 0 {
                         break;
                     }
-                    at.column -= 1;
+                    point.column -= 1;
                 }
             }
         }
@@ -132,10 +133,10 @@ impl<'s> CompletionCtxt<'s> {
         return Context::Document;
     }
 
-    fn new(snapshot: &'s Snapshot, file: FileId, at: Point) -> Self {
-        let context = Self::infer_context(snapshot, file, at);
+    fn new(snapshot: &'s Snapshot, position: Position) -> Self {
+        let context = Self::infer_context(snapshot, position);
         tracing::info!("inferred completion context: {:?}", context);
-        Self { snapshot, file, context, completions: Default::default() }
+        Self { snapshot, file: position.file, context, completions: Default::default() }
     }
 
     pub fn completions(mut self) -> Vec<CompletionItem> {

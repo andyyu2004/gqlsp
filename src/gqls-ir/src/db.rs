@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::vec;
 
 use gqls_base_db::SourceDatabase;
-use gqls_syntax::{NodeExt, NodeKind, Point, RangeExt};
+use gqls_syntax::{NodeExt, NodeKind, Position, RangeExt};
 use smallvec::smallvec;
 use vfs::FileId;
 
@@ -14,17 +14,17 @@ pub trait DefDatabase: SourceDatabase {
     fn field(&self, res: FieldRes) -> Field;
     fn implementations(&self, file: FileId, name: Name) -> Vec<ItemRes>;
     fn item(&self, res: ItemRes) -> Item;
-    fn item_at(&self, file: FileId, at: Point) -> Option<Idx<Item>>;
+    fn item_at(&self, position: Position) -> Option<Idx<Item>>;
     fn item_body(&self, res: ItemRes) -> Option<Arc<ItemBody>>;
     fn item_map(&self, file: FileId) -> Arc<ItemMap>;
     fn item_references(&self, res: ItemRes) -> References;
     fn items(&self, file: FileId) -> Arc<Items>;
     fn project_items(&self, file: FileId) -> Arc<ProjectItems>;
-    fn name_at(&self, file: FileId, at: Point) -> Option<Name>;
+    fn name_at(&self, position: Position) -> Option<Name>;
     fn references(&self, res: Res) -> References;
-    fn resolve(&self, file: FileId, at: Point) -> Option<Res>;
+    fn resolve(&self, position: Position) -> Option<Res>;
     fn resolve_item(&self, file: FileId, name: Name) -> ItemResolutions;
-    fn type_at(&self, file: FileId, at: Point) -> Option<Ty>;
+    fn type_at(&self, position: Position) -> Option<Ty>;
     fn typedef(&self, file: FileId, idx: Idx<TypeDefinition>) -> TypeDefinition;
 }
 
@@ -55,8 +55,11 @@ fn items(db: &dyn DefDatabase, file: FileId) -> Arc<Items> {
     lower::ItemCtxt::new(data.text).lower(data.tree)
 }
 
-fn item_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Idx<Item>> {
-    db.items(file).items.iter().find_map(|(idx, item)| item.range.contains(at).then(|| idx))
+fn item_at(db: &dyn DefDatabase, position: Position) -> Option<Idx<Item>> {
+    db.items(position.file)
+        .items
+        .iter()
+        .find_map(|(idx, item)| item.range.contains(position.point).then(|| idx))
 }
 
 fn item(db: &dyn DefDatabase, res: ItemRes) -> Item {
@@ -89,32 +92,33 @@ fn item_body(db: &dyn DefDatabase, res: ItemRes) -> Option<Arc<ItemBody>> {
     Some(Arc::new(body))
 }
 
-fn name_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Name> {
-    let data = db.file_data(file);
+fn name_at(db: &dyn DefDatabase, position: Position) -> Option<Name> {
+    let data = db.file_data(position.file);
     let root = data.tree.root_node();
-    let node = root.named_node_at(at)?;
+    let node = root.named_node_at(position.point)?;
     match node.kind() {
         NodeKind::NAME => Some(Name::new(&data.text, node)),
-        _ => db.type_at(file, at).map(|ty| ty.name()),
+        _ => db.type_at(position).map(|ty| ty.name()),
     }
 }
 
-fn type_at(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Ty> {
-    let data = db.file_data(file);
+fn type_at(db: &dyn DefDatabase, position: Position) -> Option<Ty> {
+    let data = db.file_data(position.file);
     let root = data.tree.root_node();
-    let node = root.named_node_at(at)?;
+    let node = root.named_node_at(position.point)?;
     let type_node = match node.kind() {
-        NodeKind::TYPE | NodeKind::NON_NULL_TYPE | NodeKind::LIST_TYPE | NodeKind::NAMED_TYPE =>
-            node,
+        NodeKind::TYPE | NodeKind::NON_NULL_TYPE | NodeKind::LIST_TYPE | NodeKind::NAMED_TYPE => {
+            node
+        }
         _ => return None,
     };
     BodyCtxt::new(data.text).lower_type(type_node)
 }
 
-fn resolve(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Res> {
-    let data = db.file_data(file);
+fn resolve(db: &dyn DefDatabase, position: Position) -> Option<Res> {
+    let data = db.file_data(position.file);
     let root = data.tree.root_node();
-    let node = root.named_node_at(at)?;
+    let node = root.named_node_at(position.point)?;
     if node.kind() != NodeKind::NAME {
         return None;
     }
@@ -129,15 +133,15 @@ fn resolve(db: &dyn DefDatabase, file: FileId, at: Point) -> Option<Res> {
         | NodeKind::INPUT_OBJECT_TYPE_DEFINITION
         | NodeKind::INTERFACE_TYPE_DEFINITION => {
             let idx = db
-                .items(file)
+                .items(position.file)
                 .items
                 .iter()
                 .find_map(|(idx, item)| (item.range == parent.range()).then(|| idx))
                 .expect("item not found");
-            Some(Res::Item(ItemRes { file, idx }))
+            Some(Res::Item(ItemRes { file: position.file, idx }))
         }
         // TODO
-        _ => return None,
+        _ => None,
     }
 }
 

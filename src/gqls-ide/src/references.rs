@@ -1,13 +1,12 @@
 use gqls_db::DefDatabase;
 use gqls_ir::Res;
-use tree_sitter::Point;
-use vfs::FileId;
+use gqls_syntax::Position;
 
 use crate::{Location, Snapshot};
 
 impl Snapshot {
-    pub fn find_references(&self, file: FileId, at: Point) -> Vec<Location> {
-        let res = match self.resolve_item_name_at(file, at)[..] {
+    pub fn find_references(&self, position: Position) -> Vec<Location> {
+        let res = match self.resolve_item_name_at(position)[..] {
             [] => return vec![],
             [res, ..] => res,
         };

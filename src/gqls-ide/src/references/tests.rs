@@ -13,9 +13,9 @@ fn test(fixture: Fixture) {
         .map(|(file, range)| Location::new(file, range.into()))
         .collect::<HashSet<Location>>();
 
-    for (reference_file, at) in fixture.all_points() {
+    for reference_position in fixture.all_points() {
         let snapshot = ide.snapshot();
-        let references = snapshot.find_references(reference_file, at);
+        let references = snapshot.find_references(reference_position);
         let actual = references.into_iter().collect::<HashSet<Location>>();
 
         assert_eq!(expected, actual);
