@@ -111,7 +111,7 @@ impl ResponseExt for Response {
     fn json<T: DeserializeOwned>(self) -> Result<T> {
         match self.into_parts().1 {
             Ok(res) => Ok(serde_json::from_value(res)?),
-            Err(err) => return Err(err.into()),
+            Err(err) => Err(err.into()),
         }
     }
 }

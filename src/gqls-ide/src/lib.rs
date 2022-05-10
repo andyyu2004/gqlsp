@@ -119,7 +119,7 @@ impl Ide {
         }
 
         changeset.changes.iter().for_each(|change| {
-            self.apply(&change);
+            self.apply(change);
         });
 
         let files_changed =

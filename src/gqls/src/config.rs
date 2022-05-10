@@ -67,7 +67,7 @@ where
     let strings = OneOrMany::<String>::deserialize(deserializer)?;
     match strings.as_ref().map(|s| s.trim_start_matches("./")) {
         OneOrMany::One(glob) =>
-            Glob::new(&glob).map_err(serde::de::Error::custom).map(OneOrMany::One),
+            Glob::new(glob).map_err(serde::de::Error::custom).map(OneOrMany::One),
         OneOrMany::Many(globs) => globs
             .iter()
             .map(AsRef::as_ref)
@@ -101,7 +101,7 @@ impl<'a, T> OneOrManyRef<'a, T> {
     pub fn map<U>(self, mut f: impl FnMut(&'a T) -> U) -> OneOrMany<U> {
         match self {
             Self::One(x) => OneOrMany::One(f(x)),
-            Self::Many(xs) => OneOrMany::Many(xs.into_iter().map(f).collect()),
+            Self::Many(xs) => OneOrMany::Many(xs.iter().map(f).collect()),
         }
     }
 }

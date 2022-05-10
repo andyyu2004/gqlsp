@@ -130,7 +130,7 @@ impl<'s> CompletionCtxt<'s> {
             }
         }
 
-        return Context::Document;
+        Context::Document
     }
 
     fn new(snapshot: &'s Snapshot, position: Position) -> Self {

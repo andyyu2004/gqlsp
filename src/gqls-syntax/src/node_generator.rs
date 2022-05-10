@@ -9,7 +9,7 @@ fn generate_node_kinds() -> std::io::Result<()> {
         .join("../../tree-sitter-graphql/src/parser.c");
     let source = std::fs::read_to_string(path)?;
     let mut lines = source.lines();
-    while let Some(line) = lines.next() {
+    for line in lines.by_ref() {
         if line.contains("ts_symbol_names[]") {
             break;
         }
@@ -23,13 +23,13 @@ fn generate_node_kinds() -> std::io::Result<()> {
     writeln!(f, "pub enum NodeKind {{}}\n")?;
     writeln!(f, "impl NodeKind {{")?;
 
-    while let Some(line) = lines.next() {
+    for line in lines {
         if line.contains("};") {
             break;
         }
         let line = line.trim();
         if line.starts_with("[sym") {
-            let (name, _) = line.split_once("]").unwrap();
+            let (name, _) = line.split_once(']').unwrap();
             let name = name.trim_start_matches("[sym_");
             let upper = name.to_uppercase();
             writeln!(f, "    pub const {upper}: &'static str = \"{name}\";")?;

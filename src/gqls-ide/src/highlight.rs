@@ -176,7 +176,7 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                 _ => continue,
             };
 
-            let range = Range::from(node.range());
+            let range = node.range();
             if range.is_empty() {
                 continue;
             }

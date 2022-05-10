@@ -16,7 +16,7 @@ where
     type Converted = Vec<T::Converted>;
 
     fn convert(&self) -> Self::Converted {
-        self.into_iter().map(|x| x.convert()).collect()
+        self.iter().map(|x| x.convert()).collect()
     }
 }
 
