@@ -1,3 +1,4 @@
+use std::mem::discriminant;
 use std::sync::Arc;
 use std::vec;
 
@@ -165,7 +166,11 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
     let res_item = db.item(res);
     let name = res_item.name;
     for (&file, items) in db.project_items(res.file).iter() {
-        for (idx, _) in items.items.iter() {
+        for (idx, item) in items.items.iter() {
+            if item.name == name && discriminant(&item.kind) == discriminant(&res_item.kind) {
+                references.push((file, item.name.range));
+            }
+
             let body = db.item_body(ItemRes { file, idx });
 
             if let Some(ItemBody::UnionTypeDefinition(union)) = body.as_deref() {

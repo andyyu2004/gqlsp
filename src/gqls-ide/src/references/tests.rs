@@ -4,6 +4,7 @@ use gqls_fixture::{fixture, Fixture};
 
 use crate::{Ide, Location};
 
+#[track_caller]
 fn test(fixture: Fixture) {
     let mut ide = Ide::default();
     ide.setup_fixture(&fixture);
@@ -26,6 +27,7 @@ fn test(fixture: Fixture) {
 fn test_find_references_to_object_like_type() {
     let foo = r#"
         extend type Foo {
+                   #...
                    #^^^
             bar: Bar
         }
@@ -71,8 +73,8 @@ fn test_find_references_to_object_like_type() {
 fn test_find_references_when_cursor_on_reference() {
     let fixture = fixture! {
         "foo" => "
-            # TODO the definition site be included in references probably
             scalar Scalar
+                  #......
 
             type Foo {
                 s: [Scalar!]!
@@ -89,6 +91,7 @@ fn test_find_references_to_enum() {
     let fixture = fixture! {
         "foo" => "
             enum Enum {
+                #....
                 #^^^^
                 FOO
                 BAR
@@ -108,6 +111,7 @@ fn test_find_references_to_scalar() {
     let fixture = fixture! {
         "foo" => "
             scalar Scalar
+                  #......
                   #^^^^^^
 
             type Foo {
@@ -124,6 +128,7 @@ fn test_find_references_to_type_within_union() {
     let fixture = fixture! {
         "foo" => "
             scalar S
+                  #.
                   #^
             scalar T
 
@@ -137,6 +142,7 @@ fn test_find_references_to_type_within_union() {
     let fixture = fixture! {
         "foo" => "
             type Foo {
+                #...
                 #^^^
                 t: T
             }
@@ -155,6 +161,7 @@ fn test_find_directive_references() {
     let fixture = fixture! {
         "foo" => r#"
             directive @qux on FIELD_DEFINITION
+                      #...
                       #^^^
                 | OBJECT
                 | SCALAR
