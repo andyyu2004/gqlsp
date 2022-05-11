@@ -2,8 +2,6 @@ use gqls_db::DefDatabase;
 use gqls_ir::{FieldRes, ItemRes, ItemResolutions};
 use gqls_syntax::{Position, RangeExt};
 
-
-
 use crate::Snapshot;
 
 // TODO resolve logic should be moved to the ir layer

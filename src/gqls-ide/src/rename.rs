@@ -1,23 +1,33 @@
 use std::error::Error;
 use std::fmt::{self, Display};
 
+use gqls_db::DefDatabase;
 use gqls_syntax::Position;
 
-use crate::{FilePatches, Snapshot};
+use crate::{FilePatches, Patch, Range, Snapshot};
 
 impl Snapshot {
     // TODO can return a range indicating the rename scope (default behaviour works well enough for now)
-    pub fn prepare_rename(&self, position: Position) -> Result<(), RenameError> {
-        let res = self.resolve_item_name_at(position);
-        if res.is_empty() {
+    pub fn prepare_rename(&self, position: Position) -> Result<Range, RenameError> {
+        if self.resolve_item_name_at(position).is_empty() {
             Err("no references found at position".to_owned())?;
         }
-        Ok(())
+        let name = self.name_at(position).expect("there were references here so it must be a name");
+        Ok(name.range.into())
     }
 
-    pub fn rename(&self, position: Position) -> Result<Vec<FilePatches>, RenameError> {
+    pub fn rename(&self, position: Position, to: &str) -> Result<Vec<FilePatches>, RenameError> {
         self.prepare_rename(position)?;
-        Ok(vec![])
+        let patches = self
+            .find_references(position)
+            .into_iter()
+            .map(|location| FilePatches {
+                file: location.file,
+                patches: vec![Patch { range: location.range, with: to.to_owned() }],
+            })
+            .collect::<Vec<_>>();
+        assert!(!patches.is_empty());
+        Ok(patches)
     }
 }
 

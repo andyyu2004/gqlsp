@@ -306,7 +306,7 @@ impl LanguageServer for Gqls {
         params: TextDocumentPositionParams,
     ) -> jsonrpc::Result<Option<PrepareRenameResponse>> {
         self.with_ide(|ide| match ide.snapshot().prepare_rename(params.convert()?) {
-            Ok(_) => Ok(Some(PrepareRenameResponse::DefaultBehavior { default_behavior: true })),
+            Ok(range) => Ok(Some(PrepareRenameResponse::Range(range.convert()))),
             Err(_) => Ok(None),
         })
     }
@@ -315,7 +315,7 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position;
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            match snapshot.rename(position.convert()?) {
+            match snapshot.rename(position.convert()?, &params.new_name) {
                 Ok(edits) => Ok(Some(WorkspaceEdit {
                     document_changes: Some(DocumentChanges::Edits(edits.convert())),
                     ..Default::default()
