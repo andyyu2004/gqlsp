@@ -15,7 +15,7 @@ fn test(fixture: Fixture) {
         .map(|(file, range)| Location::new(file, range.into()))
         .collect::<HashSet<_>>();
 
-    for position in fixture.all_points() {
+    for position in fixture.all_positions() {
         let locations = snapshot.goto_definition(position).into_iter().collect::<HashSet<_>>();
         assert_eq!(expected_locations, locations);
     }

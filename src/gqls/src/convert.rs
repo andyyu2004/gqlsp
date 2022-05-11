@@ -4,6 +4,42 @@ use tower_lsp::jsonrpc;
 use crate::lsp::VfsExt;
 use crate::tokens;
 
+pub trait UrlExt {
+    fn to_path(&self) -> jsonrpc::Result<PathBuf>;
+}
+
+impl UrlExt for lsp_types::Url {
+    fn to_path(&self) -> jsonrpc::Result<PathBuf> {
+        if self.scheme() != "file" {
+            return Err(jsonrpc::Error::invalid_params(
+                "Only file URIs are supported for workspace folders: `{uri}`",
+            ));
+        }
+        self.to_file_path()
+            .map_err(|()| jsonrpc::Error::invalid_params(format!("Invalid file path: `{self}`")))
+    }
+}
+
+pub trait PathExt {
+    fn to_url(&self) -> lsp_types::Url;
+}
+
+impl PathExt for Path {
+    fn to_url(&self) -> lsp_types::Url {
+        lsp_types::Url::from_file_path(self).unwrap()
+    }
+}
+
+pub(crate) fn locations_to_goto_definition_response(
+    locations: &[gqls_ide::Location],
+) -> Option<lsp_types::GotoDefinitionResponse> {
+    match locations {
+        [] => None,
+        [location] => Some(lsp_types::GotoDefinitionResponse::Scalar(location.convert())),
+        locations => Some(lsp_types::GotoDefinitionResponse::Array(locations.convert())),
+    }
+}
+
 // Conversions to and from lsp types
 pub trait Convert {
     type Converted;
@@ -222,38 +258,15 @@ impl Convert for gqls_ide::SemanticTokenKind {
     }
 }
 
-pub trait UrlExt {
-    fn to_path(&self) -> jsonrpc::Result<PathBuf>;
-}
+impl Convert for gqls_ide::RenameError {
+    type Converted = jsonrpc::Error;
 
-impl UrlExt for lsp_types::Url {
-    fn to_path(&self) -> jsonrpc::Result<PathBuf> {
-        if self.scheme() != "file" {
-            return Err(jsonrpc::Error::invalid_params(
-                "Only file URIs are supported for workspace folders: `{uri}`",
-            ));
+    fn convert(&self) -> Self::Converted {
+        jsonrpc::Error {
+            // FIXME change to `RequestFailed` when available: https://github.com/microsoft/language-server-protocol/issues/1341
+            code: jsonrpc::ErrorCode::InvalidParams,
+            message: self.to_string(),
+            data: None,
         }
-        self.to_file_path()
-            .map_err(|()| jsonrpc::Error::invalid_params(format!("Invalid file path: `{self}`")))
-    }
-}
-
-pub trait PathExt {
-    fn to_url(&self) -> lsp_types::Url;
-}
-
-impl PathExt for Path {
-    fn to_url(&self) -> lsp_types::Url {
-        lsp_types::Url::from_file_path(self).unwrap()
-    }
-}
-
-pub(crate) fn locations_to_goto_definition_response(
-    locations: &[gqls_ide::Location],
-) -> Option<lsp_types::GotoDefinitionResponse> {
-    match locations {
-        [] => None,
-        [location] => Some(lsp_types::GotoDefinitionResponse::Scalar(location.convert())),
-        locations => Some(lsp_types::GotoDefinitionResponse::Array(locations.convert())),
     }
 }

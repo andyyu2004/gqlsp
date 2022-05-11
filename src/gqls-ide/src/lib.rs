@@ -15,6 +15,7 @@ mod typedef;
 pub use self::completions::{CompletionItem, CompletionItemKind};
 pub use self::edit::{Change, ChangeKind, Changeset, FilePatches, Patch, Point, Range};
 pub use self::highlight::{SemanticToken, SemanticTokenKind};
+pub use self::rename::RenameError;
 pub use self::symbols::{DocumentSymbol, SymbolKind, SymbolTree, WorkspaceSymbol};
 pub use gqls_syntax::{Position, RangeExt};
 use parking_lot::RwLock;

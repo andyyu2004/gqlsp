@@ -27,7 +27,7 @@ impl Fixture {
         Self { files }
     }
 
-    pub fn all_points(&self) -> impl Iterator<Item = Position> + '_ {
+    pub fn all_positions(&self) -> impl Iterator<Item = Position> + '_ {
         self.files
             .iter()
             .flat_map(|(&path, file)| std::iter::repeat(path).zip(file.points.iter().copied()))

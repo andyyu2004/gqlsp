@@ -6,7 +6,7 @@ use crate::Ide;
 fn test(fixture: &Fixture, expect: Expect) {
     let mut ide = Ide::default();
     ide.setup_fixture_allow_errors(fixture);
-    for position in fixture.all_points() {
+    for position in fixture.all_positions() {
         let completions = ide.snapshot().completions(position);
         expect.assert_debug_eq(&completions);
     }

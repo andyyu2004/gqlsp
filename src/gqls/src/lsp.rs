@@ -303,13 +303,11 @@ impl LanguageServer for Gqls {
 
     async fn prepare_rename(
         &self,
-        _params: TextDocumentPositionParams,
+        params: TextDocumentPositionParams,
     ) -> jsonrpc::Result<Option<PrepareRenameResponse>> {
-        self.with_ide(|_ide| {
-            // let snapshot = ide.snapshot();
-            // let path = ide.path(uri)?;
-            // snapshot.prepare_rename(params.convert());
-            todo!()
+        self.with_ide(|ide| match ide.snapshot().prepare_rename(params.convert()?) {
+            Ok(_) => Ok(Some(PrepareRenameResponse::DefaultBehavior { default_behavior: true })),
+            Err(_) => Ok(None),
         })
     }
 
@@ -317,18 +315,12 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position;
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            let _uri = &position.text_document.uri;
             match snapshot.rename(position.convert()?) {
                 Ok(edits) => Ok(Some(WorkspaceEdit {
                     document_changes: Some(DocumentChanges::Edits(edits.convert())),
                     ..Default::default()
                 })),
-                Err(err) => Err(jsonrpc::Error {
-                    // FIXME change to `RequestFailed` when available: https://github.com/microsoft/language-server-protocol/issues/1341
-                    code: jsonrpc::ErrorCode::InvalidParams,
-                    message: err.to_string(),
-                    data: None,
-                }),
+                Err(err) => Err(err.convert()),
             }
         })
     }
