@@ -3,7 +3,9 @@ use crate::convert::{self, PathExt};
 use crate::{tokens, Convert, UrlExt};
 use anyhow::Result;
 use core::panic::{AssertUnwindSafe, UnwindSafe};
-use gqls_ide::{Change, ChangeKind, Changeset, ChangesetSummary, FileId, Ide, Patch, Vfs};
+use gqls_ide::{
+    Change, ChangeKind, Changeset, ChangesetSummary, FileId, Ide, Patch, Vfs, VfsProxy,
+};
 use lsp_types::notification::PublishDiagnostics;
 use lsp_types::*;
 use once_cell::sync::OnceCell;
@@ -90,6 +92,13 @@ pub trait VfsExt {
 }
 
 impl VfsExt for Vfs {
+    fn path(&self, url: &Url) -> jsonrpc::Result<FileId> {
+        self.get(url.to_path()?)
+            .ok_or_else(|| jsonrpc::Error::invalid_params(format!("unknown file: `{url}`")))
+    }
+}
+
+impl VfsExt for VfsProxy {
     fn path(&self, url: &Url) -> jsonrpc::Result<FileId> {
         self.get(url.to_path()?)
             .ok_or_else(|| jsonrpc::Error::invalid_params(format!("unknown file: `{url}`")))
@@ -227,7 +236,7 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position;
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            let completions = snapshot.completions(position.convert());
+            let completions = snapshot.completions(position.convert()?);
             Ok(Some(CompletionResponse::Array(completions.convert())))
         })
     }
@@ -239,7 +248,7 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position_params;
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            let locations = snapshot.goto_definition(position.convert());
+            let locations = snapshot.goto_definition(position.convert()?);
             Ok(convert::locations_to_goto_definition_response(&locations))
         })
     }
@@ -251,7 +260,7 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position_params;
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            let locations = snapshot.goto_type_definition(position.convert());
+            let locations = snapshot.goto_type_definition(position.convert()?);
             Ok(convert::locations_to_goto_definition_response(&locations))
         })
     }
@@ -263,7 +272,7 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position_params;
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            let locations = snapshot.goto_implementation(position.convert());
+            let locations = snapshot.goto_implementation(position.convert()?);
             Ok(convert::locations_to_goto_definition_response(&locations))
         })
     }
@@ -272,7 +281,7 @@ impl LanguageServer for Gqls {
         let position = params.text_document_position;
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
-            let locations = snapshot.find_references(position.convert());
+            let locations = snapshot.find_references(position.convert()?);
             match &locations[..] {
                 [] => Ok(None),
                 locations => Ok(Some(locations.convert())),
@@ -309,7 +318,7 @@ impl LanguageServer for Gqls {
         self.with_ide(|ide| {
             let snapshot = ide.snapshot();
             let _uri = &position.text_document.uri;
-            match snapshot.rename(position.convert()) {
+            match snapshot.rename(position.convert()?) {
                 Ok(edits) => Ok(Some(WorkspaceEdit {
                     document_changes: Some(DocumentChanges::Edits(edits.convert())),
                     ..Default::default()

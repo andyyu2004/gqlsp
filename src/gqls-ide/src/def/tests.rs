@@ -58,7 +58,7 @@ type Qux {
 #[test]
 fn test_goto_definition() {
     let mut ide = Ide::default();
-    let foo = ide.vfs.intern("foo.graphql");
+    let foo = ide.vfs().intern("foo.graphql");
     let summary = setup!(ide: {
                foo: r#"
 type Foo {

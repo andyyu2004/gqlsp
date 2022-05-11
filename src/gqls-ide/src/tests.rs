@@ -73,7 +73,7 @@ impl Ide {
 #[test]
 fn test_ide() {
     let mut ide = Ide::default();
-    let foo = ide.vfs.intern("foo.graphql");
+    let foo = ide.vfs().intern("foo.graphql");
     let summary = apply_changeset!(ide: foo => "scalar Foo");
     assert_eq!(summary, hashmap! { foo => ChangeSummary::default() });
     assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Foo");
@@ -90,7 +90,7 @@ fn test_ide() {
 #[test]
 fn test_ide_syntax_diagnostics() {
     let mut ide = Ide::default();
-    let foo = ide.vfs.intern("foo.graphql");
+    let foo = ide.vfs().intern("foo.graphql");
     let summary = apply_changeset!(ide: foo => "bad");
     assert_eq!(
         summary[foo].diagnostics,

@@ -17,12 +17,13 @@ pub use self::edit::{Change, ChangeKind, Changeset, FilePatches, Patch, Point, R
 pub use self::highlight::{SemanticToken, SemanticTokenKind};
 pub use self::symbols::{DocumentSymbol, SymbolKind, SymbolTree, WorkspaceSymbol};
 pub use gqls_syntax::{Position, RangeExt};
+use parking_lot::RwLock;
 pub use tree_sitter;
 pub use vfs::{FileId, Vfs};
 
 use std::collections::{HashMap, HashSet};
 use std::ops::Deref;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use gqls_db::{Database, FileData, GqlsDatabase, ParallelDatabase, Project, SourceDatabase};
@@ -32,10 +33,12 @@ use ropey::Rope;
 use std::fmt::{self, Debug, Display};
 use tree_sitter::{Query, QueryCursor, TextProvider};
 
+// bit of a hack, there is probably a nicer way (we need access to the interner for `path` related conversion)
+pub static VFS: Lazy<RwLock<Vfs>> = Lazy::new(Default::default);
+
 #[derive(Default)]
 pub struct Ide {
     db: GqlsDatabase,
-    vfs: Vfs,
     file_ropes: HashMap<FileId, Rope>,
 }
 
@@ -93,6 +96,19 @@ impl Snapshot {
     }
 }
 
+// Wrapper that hides the static variable
+pub struct VfsProxy;
+
+impl VfsProxy {
+    pub fn intern(&self, path: impl AsRef<Path>) -> FileId {
+        VFS.write().intern(path)
+    }
+
+    pub fn get(&self, path: impl AsRef<Path>) -> Option<FileId> {
+        VFS.read().get(path)
+    }
+}
+
 impl Ide {
     pub fn snapshot(&self) -> Snapshot {
         self.db.unwind_if_cancelled();
@@ -100,15 +116,15 @@ impl Ide {
     }
 
     pub fn intern_path(&mut self, path: PathBuf) -> FileId {
-        self.vfs.intern(path)
+        self.vfs().intern(path)
     }
 
     pub fn intern_project(&self, project: String) -> Project {
         self.db.intern_project(project)
     }
 
-    pub fn vfs(&self) -> &Vfs {
-        &self.vfs
+    pub fn vfs(&self) -> VfsProxy {
+        VfsProxy
     }
 
     #[must_use]

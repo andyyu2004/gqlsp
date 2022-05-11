@@ -322,6 +322,7 @@ dependencies = [
  "gqls-syntax",
  "maplit",
  "once_cell",
+ "parking_lot 0.12.0",
  "ropey",
  "tracing",
  "tree-sitter",

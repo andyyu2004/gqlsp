@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 use tower_lsp::jsonrpc;
 
+use crate::lsp::VfsExt;
 use crate::tokens;
 
 // Conversions to and from lsp types
@@ -53,14 +54,13 @@ impl Convert for lsp_types::Range {
 }
 
 impl Convert for lsp_types::TextDocumentPositionParams {
-    type Converted = gqls_ide::Position;
+    type Converted = Result<gqls_ide::Position, jsonrpc::Error>;
 
     fn convert(&self) -> Self::Converted {
-        todo!();
-        // gqls_ide::Position {
-        //     file: self.text_document.uri.to_path().unwrap(),
-        //     point: self.position.convert(),
-        // }
+        Ok(gqls_ide::Position {
+            file: gqls_ide::VFS.read().path(&self.text_document.uri)?,
+            point: self.position.convert(),
+        })
     }
 }
 

@@ -54,12 +54,6 @@ pub struct Item {
     pub kind: ItemKind,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Position {
-    pub file: FileId,
-    pub point: Point,
-}
-
 impl Debug for Item {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Item")
