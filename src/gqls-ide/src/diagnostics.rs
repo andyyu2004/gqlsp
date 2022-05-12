@@ -41,16 +41,35 @@ impl Display for DiagnosticKind {
 
 impl Snapshot {
     pub fn diagnostics(&self, file: FileId) -> Diagnostics {
-        let mut diags = HashSet::new();
-        self.syntax_diagnostics(&mut diags, file);
-        diags
+        DiagnosticsCtxt::new(self, file).diagnostics()
+    }
+}
+
+struct DiagnosticsCtxt<'a> {
+    snapshot: &'a Snapshot,
+    file: FileId,
+    diagnostics: HashSet<Diagnostic>,
+}
+
+impl<'a> DiagnosticsCtxt<'a> {
+    fn new(snapshot: &'a Snapshot, file: FileId) -> Self {
+        Self { snapshot, file, diagnostics: Default::default() }
     }
 
-    fn syntax_diagnostics(&self, acc: &mut Diagnostics, file: FileId) {
+    fn diagnostics(mut self) -> HashSet<Diagnostic> {
+        self.syntax();
+        self.unresolved_references();
+        self.diagnostics
+    }
+
+    fn unresolved_references(&mut self) {
+    }
+
+    fn syntax(&mut self) {
         // can't query for missing nodes atm, so just traversing the entire tree to find any missing nodes
         static QUERY: Lazy<Query> = Lazy::new(|| query("(ERROR) @error"));
         let mut cursor = QueryCursor::new();
-        let data = self.file_data(file);
+        let data = self.snapshot.file_data(self.file);
         let tree = data.tree;
         cursor.set_match_limit(30);
         let diags = cursor
@@ -59,6 +78,6 @@ impl Snapshot {
             .map(|capture| capture.node)
             .chain(gqls_syntax::traverse_preorder(&tree).filter(|node| node.is_missing()))
             .map(|node| Diagnostic::syntax(node.range().into()));
-        acc.extend(diags);
+        self.diagnostics.extend(diags);
     }
 }
