@@ -2,7 +2,7 @@ use expect_test::expect;
 use gqls_fixture::Fixture;
 use maplit::{hashmap, hashset};
 
-use crate::{range, ChangeSummary, Changeset, ChangesetSummary, Diagnostic, Ide};
+use crate::{diagnostic, range, ChangeSummary, Changeset, ChangesetSummary, Ide};
 
 macro_rules! idx {
     ($idx:expr) => {
@@ -107,7 +107,7 @@ fn test_ide_syntax_diagnostics() {
     assert_eq!(
         summary[foo].diagnostics,
         hashset! {
-            Diagnostic::syntax(range!(0:0..0:3))
+            diagnostic!(E0001 @ range!(0:0..0:3))
         }
     );
 }

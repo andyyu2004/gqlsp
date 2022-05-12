@@ -8,11 +8,11 @@ use crate::{Ide, Location};
 fn test(fixture: Fixture) {
     let ide = Ide::from_fixture(&fixture);
     let expected = fixture
-        .all_ranges()
+        .ranges()
         .map(|(file, range)| Location::new(file, range.into()))
         .collect::<HashSet<Location>>();
 
-    for reference_position in fixture.all_positions() {
+    for reference_position in fixture.positions() {
         let snapshot = ide.snapshot();
         let references = snapshot.find_references(reference_position);
         let actual = references.into_iter().collect::<HashSet<Location>>();

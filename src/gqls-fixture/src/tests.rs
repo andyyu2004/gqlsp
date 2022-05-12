@@ -11,6 +11,7 @@ fn test(
     let actual = FixtureFile::parse(fixture);
     assert_eq!(actual.points, points);
     assert_eq!(actual.ranges, ranges);
+    assert_eq!(actual.annotations, annotations);
     assert_eq!(actual.text, fixture.replace('$', " "));
 }
 

@@ -3,7 +3,6 @@ members = [
     "src/gqls",
     "src/gqls-base-db",
     "src/gqls-db",
-    "src/gqls-diagnostics",
     "src/gqls-ide",
     "src/gqls-ir",
     "src/gqls-fixture",

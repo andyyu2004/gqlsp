@@ -23,7 +23,7 @@ fn test_resolve_item_at() {
     let ide = Ide::from_fixture(&fixture);
     let snapshot = ide.snapshot();
 
-    for position in fixture.all_positions() {
+    for position in fixture.positions() {
         let item = snapshot.resolve_item_at(position).unwrap();
         assert_eq!(item, ItemRes { file: position.file, idx: idx!(1) });
     }

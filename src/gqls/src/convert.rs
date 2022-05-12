@@ -74,7 +74,7 @@ impl Convert for gqls_ide::Diagnostic {
     fn convert(&self) -> Self::Converted {
         lsp_types::Diagnostic {
             range: self.range.convert(),
-            message: self.kind.to_string(),
+            message: self.message.clone(),
             source: Some("gqls".to_owned()),
             ..Default::default()
         }

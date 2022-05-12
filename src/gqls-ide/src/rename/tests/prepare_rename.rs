@@ -4,7 +4,7 @@ use crate::Ide;
 
 fn test(fixture: &Fixture, allow: bool) {
     let ide = Ide::from_fixture(&fixture);
-    for position in fixture.all_positions() {
+    for position in fixture.positions() {
         let result = ide.snapshot().prepare_rename(position);
         assert_eq!(result.is_ok(), allow);
     }

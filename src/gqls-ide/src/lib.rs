@@ -14,7 +14,7 @@ mod symbols;
 mod typedef;
 
 pub use self::completions::{CompletionItem, CompletionItemKind};
-pub use self::diagnostics::{Diagnostic, DiagnosticKind};
+pub use self::diagnostics::Diagnostic;
 pub use self::edit::{Change, ChangeKind, Changeset, FilePatches, Patch, Point, Range};
 pub use self::highlight::{SemanticToken, SemanticTokenKind};
 pub use self::rename::RenameError;

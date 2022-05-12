@@ -6,7 +6,7 @@ use crate::Ide;
 
 fn test(fixture: &Fixture, to: &str) {
     let ide = Ide::from_fixture(&fixture);
-    let mut positions = fixture.all_positions();
+    let mut positions = fixture.positions();
 
     let position = positions.next().expect("fixture must have at least one position");
     assert!(positions.next().is_none());

@@ -1,43 +1,12 @@
-use std::collections::HashSet;
-use std::fmt::{self, Display};
-
 use gqls_db::SourceDatabase;
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
+use std::collections::HashSet;
+use std::fmt::{self, Display};
+use std::str::FromStr;
 use vfs::FileId;
 
 use crate::{Range, Snapshot};
-
-pub type Diagnostics = HashSet<Diagnostic>;
-
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
-pub struct Diagnostic {
-    pub range: Range,
-    pub kind: DiagnosticKind,
-}
-
-impl Diagnostic {
-    pub fn new(range: Range, kind: DiagnosticKind) -> Self {
-        Self { range, kind }
-    }
-
-    pub fn syntax(range: Range) -> Self {
-        Self::new(range, DiagnosticKind::Syntax)
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
-pub enum DiagnosticKind {
-    Syntax,
-}
-
-impl Display for DiagnosticKind {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Syntax => write!(f, "Syntax Error"),
-        }
-    }
-}
 
 impl Snapshot {
     pub fn diagnostics(&self, file: FileId) -> Diagnostics {
@@ -49,6 +18,24 @@ struct DiagnosticsCtxt<'a> {
     snapshot: &'a Snapshot,
     file: FileId,
     diagnostics: HashSet<Diagnostic>,
+}
+
+#[macro_export]
+macro_rules! error_msg {
+    (E0001) => {
+        "Syntax Error"
+    };
+    ($ident:ident) => {
+        compile_error!("unknown error code")
+    };
+}
+
+#[macro_export]
+macro_rules! diagnostic {
+    ($code:ident @ $range:expr $(, $($arg:tt)* )? ) => {{
+        let message = format!($crate::error_msg!($code) $( , $($arg)* )? );
+        $crate::Diagnostic::new($range.into(), stringify!($code).parse().unwrap(), message)
+    }};
 }
 
 impl<'a> DiagnosticsCtxt<'a> {
@@ -77,8 +64,41 @@ impl<'a> DiagnosticsCtxt<'a> {
             .flat_map(|(captures, _)| captures.captures)
             .map(|capture| capture.node)
             .chain(gqls_syntax::traverse_preorder(&tree).filter(|node| node.is_missing()))
-            .map(|node| Diagnostic::syntax(node.range().into()));
+            .map(|node| diagnostic!(E0001 @ node.range()));
         self.diagnostics.extend(diags);
+    }
+}
+
+pub type Diagnostics = HashSet<Diagnostic>;
+
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+pub struct Diagnostic {
+    pub range: Range,
+    pub code: ErrorCode,
+    pub message: String,
+}
+
+impl Diagnostic {
+    pub fn new(range: Range, code: ErrorCode, message: String) -> Self {
+        Self { range, code, message }
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct ErrorCode(u16);
+
+impl Display for ErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:04}", self.0)
+    }
+}
+
+impl FromStr for ErrorCode {
+    type Err = std::convert::Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        assert!(s.starts_with("E"));
+        Ok(Self(u16::from_str_radix(&s[1..], 10).expect("failed to parse error code")))
     }
 }
 

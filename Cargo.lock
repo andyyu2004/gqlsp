@@ -303,10 +303,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gqls-diagnostics"
-version = "0.1.0"
-
-[[package]]
 name = "gqls-fixture"
 version = "0.1.0"
 dependencies = [

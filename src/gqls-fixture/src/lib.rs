@@ -1,3 +1,5 @@
+#![deny(rust_2018_idioms)]
+
 pub use maplit::hashmap;
 
 use std::collections::{HashMap, HashSet};
@@ -27,14 +29,20 @@ impl Fixture {
         Self { files }
     }
 
-    pub fn all_positions(&self) -> impl Iterator<Item = Position> + '_ {
+    pub fn positions(&self) -> impl Iterator<Item = Position> + '_ {
         self.files
             .iter()
             .flat_map(|(&path, file)| std::iter::repeat(path).zip(file.points.iter().copied()))
             .map(|(file, point)| Position { file, point })
     }
 
-    pub fn all_ranges(&self) -> impl Iterator<Item = (FileId, std::ops::Range<Point>)> + '_ {
+    pub fn annotations(
+        &self,
+    ) -> impl Iterator<Item = (FileId, std::slice::Iter<'_, Annotation>)> + '_ {
+        self.files.iter().map(|(&path, file)| (path, file.annotations.iter()))
+    }
+
+    pub fn ranges(&self) -> impl Iterator<Item = (FileId, std::ops::Range<Point>)> + '_ {
         self.files
             .iter()
             .flat_map(|(&path, file)| std::iter::repeat(path).zip(file.ranges.iter().cloned()))

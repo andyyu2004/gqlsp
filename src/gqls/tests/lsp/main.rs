@@ -2,7 +2,6 @@ use anyhow::Result;
 use expect_test::expect;
 use futures::StreamExt;
 use gqls::{Convert, Gqls};
-use gqls_ide::DiagnosticKind;
 use lsp_types::notification::Notification as _;
 use lsp_types::request::Request as _;
 use lsp_types::*;
@@ -195,7 +194,7 @@ async fn test_lsp_diagnostics() -> Result<()> {
             json!({
                 "uri": uri,
                 "diagnostics": [
-                    gqls_ide::Diagnostic { range: gqls_ide::range!(0:0..0:7), kind: DiagnosticKind::Syntax }.convert()
+                    gqls_ide::diagnostic!(E0001 @ gqls_ide::range!(0:0..0:7) ).convert(),
                 ]
             })
         )
