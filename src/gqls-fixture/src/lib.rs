@@ -53,11 +53,19 @@ impl Fixture {
 /// A fixture file supports three forms of annotations:
 /// - points (`^`) (if ^ points to a range, then it is shifted a further one up)
 /// - inline ranges (`...`)
+///   - if an inline range is immediately followed a by a single quote `'`, then it is treated as an annotation up to the closing quote
 /// - delimited ranges `(delimited above by `{` and below by `}` )`
 ///   This ranges from the start of the following line of `{` to the end of the the preceding line of `}`
 pub struct FixtureFile {
     pub points: Vec<Point>,
     pub ranges: Vec<std::ops::Range<Point>>,
+    pub text: String,
+    pub annotations: Vec<Annotation>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Annotation {
+    pub range: std::ops::Range<Point>,
     pub text: String,
 }
 
@@ -65,7 +73,9 @@ impl FixtureFile {
     pub fn parse(fixture: &str) -> Self {
         let mut points = vec![];
         let mut ranges = vec![];
+        let mut annotations = vec![];
         let mut stack = vec![];
+
         for (row, (line, prev_line)) in
             fixture.lines().zip(std::iter::once("").chain(fixture.lines())).enumerate()
         {
@@ -95,7 +105,15 @@ impl FixtureFile {
                         range_start = Some(Point { row: row - 1, column });
                     }
                 } else if let Some(start) = range_start.take() {
-                    ranges.push(start..Point { row: row - 1, column })
+                    let range = start..Point { row: row - 1, column };
+                    if char == '\'' {
+                        let (text, _) = line[column..]
+                            .split_once('\'')
+                            .expect("missing closing quote delimiter for annotation");
+                        annotations.push(Annotation { range, text: text.to_owned() });
+                    } else {
+                        ranges.push(range)
+                    }
                 }
 
                 if char == '^' {
@@ -115,7 +133,7 @@ impl FixtureFile {
             }
         }
 
-        Self { points, ranges, text: fixture.replace('$', " ") }
+        Self { points, ranges, annotations, text: fixture.replace('$', " ") }
     }
 }
 
