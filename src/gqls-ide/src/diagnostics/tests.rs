@@ -1,28 +1,40 @@
 use std::collections::HashSet;
+use std::fmt::Debug;
+use std::hash::Hash;
 use std::str::FromStr;
 
-use gqls_fixture::Fixture;
+use gqls_fixture::{Annotation, Fixture};
 
 use crate::diagnostics::ErrorCode;
-use crate::{Ide, Range};
+use crate::{Diagnostic, Ide, Range};
 
-fn test(fixture: &Fixture) {
+fn test_common<R>(fixture: &Fixture, f: impl Fn(&Diagnostic) -> R, g: impl Fn(&Annotation) -> R)
+where
+    R: Hash + Eq + Debug,
+{
     let ide = Ide::from_fixture_allow_errors(fixture);
     let snapshot = ide.snapshot();
     for (file, annotations) in fixture.annotations() {
         let diagnostics = snapshot.diagnostics(file);
         let expected =
-            diagnostics.iter().map(|diag| (diag.range, diag.code)).collect::<HashSet<_>>();
+            diagnostics.iter().map(|diag| (diag.range, f(&diag))).collect::<HashSet<_>>();
         let actual = annotations
-            .map(|annotation| {
-                (
-                    Range::from(annotation.range.clone()),
-                    annotation.text.parse::<ErrorCode>().unwrap(),
-                )
-            })
+            .map(|annotation| (Range::from(annotation.range.clone()), g(&annotation)))
             .collect::<HashSet<_>>();
         assert_eq!(expected, actual);
     }
+}
+
+fn test_error_message(fixture: &Fixture) {
+    test_common(fixture, |diag| diag.message.clone(), |annotation| annotation.text.clone());
+}
+
+fn test_error_code(fixture: &Fixture) {
+    test_common(
+        fixture,
+        |diag| diag.code,
+        |annotation| annotation.text.parse::<ErrorCode>().unwrap(),
+    );
 }
 
 #[test]

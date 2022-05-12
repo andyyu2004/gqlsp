@@ -1,14 +1,25 @@
 use gqls_fixture::fixture;
 
-use super::test;
+use super::{test_error_code, test_error_message};
 
 #[test]
-fn test_syntax_diagnostics() {
+fn test_syntax_diagnostics_by_code() {
     let fixture = fixture! {
         "foo" => "
             type
            #....'E0001'
         "
     };
-    test(&fixture);
+    test_error_code(&fixture);
+}
+
+#[test]
+fn test_syntax_diagnostics_by_message() {
+    let fixture = fixture! {
+        "foo" => "
+            type
+           #....'Syntax Error'
+        "
+    };
+    test_error_message(&fixture);
 }
