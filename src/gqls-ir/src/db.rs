@@ -42,7 +42,7 @@ fn project_items(db: &dyn DefDatabase, file: FileId) -> Arc<ProjectItems> {
 fn implementations(db: &dyn DefDatabase, file: FileId, interface: Name) -> Vec<ItemRes> {
     let mut implementations = vec![];
     for (&file, items) in db.project_items(file).iter() {
-        for (idx, _) in items.items.iter() {
+        for (idx, _) in items.iter() {
             if items.implements(idx, &interface) {
                 implementations.push(ItemRes { file, idx });
             }
@@ -73,8 +73,8 @@ fn field(db: &dyn DefDatabase, res: FieldRes) -> Field {
 
 fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
     let items = db.items(file);
-    let mut map = ItemMap::with_capacity(items.items.len());
-    for (idx, item) in items.items.iter() {
+    let mut map = ItemMap::with_capacity(items.len());
+    for (idx, item) in items.iter() {
         map.entry(item.name.clone()).or_default().push(idx);
     }
     Arc::new(map)
@@ -83,7 +83,7 @@ fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
 fn item_body(db: &dyn DefDatabase, res: ItemRes) -> Option<Arc<ItemBody>> {
     let items = db.items(res.file);
     let tree = db.file_tree(res.file);
-    let item = &items.items[res.idx];
+    let item = &items[res.idx];
     let item_node = tree.root_node().named_descendant_for_range(item.range).unwrap();
     let bcx = BodyCtxt::new(db.file_text(res.file));
     let body = match item.kind {
@@ -165,7 +165,7 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
     let res_item = db.item(res);
     let name = res_item.name;
     for (&file, items) in db.project_items(res.file).iter() {
-        for (idx, item) in items.items.iter() {
+        for (idx, item) in items.iter() {
             if item.name == name && discriminant(&item.kind) == discriminant(&res_item.kind) {
                 references.push((file, item.name.range));
             }

@@ -24,9 +24,25 @@ use vfs::FileId;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Items {
     pub items: Arena<Item>,
-    pub typedefs: Arena<TypeDefinition>,
-    pub directives: Arena<DirectiveDefinition>,
+    typedefs: Arena<TypeDefinition>,
+    directives: Arena<DirectiveDefinition>,
 }
+
+macro_rules! impl_index {
+    (Idx<$ty:ty> for $self:ty: $field:ident) => {
+        impl<'ir> std::ops::Index<Idx<$ty>> for $self {
+            type Output = $ty;
+
+            fn index(&self, index: la_arena::Idx<$ty>) -> &Self::Output {
+                &self.$field[index]
+            }
+        }
+    };
+}
+
+impl_index!(Idx<TypeDefinition> for Items: typedefs);
+impl_index!(Idx<DirectiveDefinition> for Items: directives);
+impl_index!(Idx<Item> for Items: items);
 
 impl Items {
     pub fn directives(&self, idx: Idx<Item>) -> Option<&Directives> {
@@ -44,6 +60,14 @@ impl Items {
         .as_ref()
         .map(|implements| implements.contains(interface))
         .unwrap_or_default()
+    }
+}
+
+impl Deref for Items {
+    type Target = Arena<Item>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.items
     }
 }
 

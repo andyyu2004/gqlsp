@@ -154,9 +154,9 @@ impl<'s> CompletionCtxt<'s> {
         let project_items = self.snapshot.project_items(self.file);
         let mut completions = HashSet::new();
         for items in project_items.values() {
-            for (_, item) in items.items.iter() {
+            for (_, item) in items.iter() {
                 let kind = match item.kind {
-                    ItemKind::TypeDefinition(idx) => match items.typedefs[idx].kind {
+                    ItemKind::TypeDefinition(idx) => match items[idx].kind {
                         TypeDefinitionKind::Object => CompletionItemKind::Object,
                         TypeDefinitionKind::Input => CompletionItemKind::InputObject,
                         TypeDefinitionKind::Interface => CompletionItemKind::Interface,
@@ -165,7 +165,7 @@ impl<'s> CompletionCtxt<'s> {
                         TypeDefinitionKind::Union => CompletionItemKind::Union,
                     },
                     ItemKind::DirectiveDefinition(idx) =>
-                        CompletionItemKind::Directive(items.directives[idx].locations),
+                        CompletionItemKind::Directive(items[idx].locations),
                 };
 
                 let label = match item.kind {

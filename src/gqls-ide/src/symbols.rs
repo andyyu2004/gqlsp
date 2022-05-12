@@ -119,7 +119,7 @@ impl Snapshot {
     pub fn document_symbols(&self, file: FileId) -> SymbolTree {
         let mut tree = SymbolTree::default();
         let items = self.items(file);
-        for (idx, item) in items.items.iter() {
+        for (idx, item) in items.iter() {
             let children = self
                 .item_body(ItemRes { file, idx })
                 .as_ref()
