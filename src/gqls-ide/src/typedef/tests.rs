@@ -46,3 +46,20 @@ extend type Bar {
     );
     test(fixture);
 }
+
+#[test]
+fn test_goto_type_definition_fallback() {
+    let fixture = fixture! {
+        "foo" => "
+            type Foo {
+                #...
+                bar: Int
+            }
+
+            union U = Foo
+                     #^^^
+        "
+    };
+
+    test(fixture);
+}

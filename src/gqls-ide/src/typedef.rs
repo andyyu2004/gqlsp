@@ -5,12 +5,16 @@ use crate::{Location, Snapshot};
 
 impl Snapshot {
     pub fn goto_type_definition(&self, position: Position) -> Vec<Location> {
-        self.resolve_field_at(position)
-            .into_iter()
-            .map(|res| (res.item.file, self.field(res)))
-            .flat_map(|(file, field)| self.resolve_item(file, field.ty.name()))
-            .map(|res| Location::new(res.file, self.item(res).name.range.into()))
-            .collect()
+        match self.resolve_field_at(position) {
+            Some(res) => {
+                let field = self.field(res);
+                self.resolve_item(position.file, field.ty.name())
+                    .into_iter()
+                    .map(|res| Location::new(res.file, self.item(res).name.range.into()))
+                    .collect()
+            }
+            None => self.goto_definition(position),
+        }
     }
 }
 
