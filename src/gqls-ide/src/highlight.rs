@@ -201,9 +201,7 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                         TypeDefinitionKind::Union => SemanticTokenKind::Union,
                     }
                 }
-                ItemKind::DirectiveDefinition(_) => {
-                    unreachable!("a type can't refer to a directive")
-                }
+                ItemKind::DirectiveDefinition(_) => SemanticTokenKind::Directive,
             },
         }
     }

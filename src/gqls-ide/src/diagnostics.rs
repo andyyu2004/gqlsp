@@ -1,4 +1,5 @@
-use gqls_db::SourceDatabase;
+use gqls_db::{DefDatabase, SourceDatabase};
+use gqls_ir::ItemKind;
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
 use std::collections::HashSet;
@@ -25,6 +26,9 @@ macro_rules! error_msg {
     (E0001) => {
         "Syntax Error"
     };
+    (E0002) => {
+        "Unresolved directive `{}`"
+    };
     ($ident:ident) => {
         compile_error!("unknown error code")
     };
@@ -50,6 +54,28 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 
     fn unresolved_references(&mut self) {
+        let items = self.snapshot.items(self.file);
+        for (_, item) in items.iter() {
+            let typedef = match item.kind {
+                ItemKind::TypeDefinition(idx) => &items[idx],
+                ItemKind::DirectiveDefinition(_) => continue,
+            };
+            for directive in typedef.directives.iter() {
+                let mut resolved = false;
+                for res in self.snapshot.resolve_item(self.file, directive.name.clone()) {
+                    match self.snapshot.item(res).kind {
+                        ItemKind::TypeDefinition(_) => {
+                            // TODO error: directive resolves to a type
+                        }
+                        ItemKind::DirectiveDefinition(_) => resolved = true,
+                    }
+                }
+                if !resolved {
+                    self.diagnostics
+                        .insert(diagnostic!(E0002 @ directive.name.range, directive.name));
+                }
+            }
+        }
     }
 
     fn syntax(&mut self) {

@@ -49,5 +49,5 @@ fn test_parse_error_code() {
     assert_eq!(ErrorCode::from_str("E42"), Ok(ErrorCode(42)));
 }
 
-#[cfg(test)]
 mod syntax;
+mod unresolved;
