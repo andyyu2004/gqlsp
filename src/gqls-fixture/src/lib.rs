@@ -115,9 +115,10 @@ impl FixtureFile {
                 } else if let Some(start) = range_start.take() {
                     let range = start..Point { row: row - 1, column };
                     if char == '\'' {
-                        let (text, _) = line[column..]
+                        let (text, _) = line[column + 1..]
                             .split_once('\'')
                             .expect("missing closing quote delimiter for annotation");
+                        assert!(!text.is_empty());
                         annotations.push(Annotation { range, text: text.to_owned() });
                     } else {
                         ranges.push(range)

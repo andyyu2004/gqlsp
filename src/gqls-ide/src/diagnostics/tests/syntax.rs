@@ -7,7 +7,7 @@ fn test_syntax_diagnostics() {
     let fixture = fixture! {
         "foo" => "
             type
-               # .'E0001'
+           #....'E0001'
         "
     };
     test(&fixture);
