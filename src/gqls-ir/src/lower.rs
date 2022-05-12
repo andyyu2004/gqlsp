@@ -147,8 +147,9 @@ impl ItemCtxt {
                     NodeKind::ENUM_TYPE_DEFINITION => TypeDefinitionKind::Enum,
                     NodeKind::UNION_TYPE_DEFINITION => TypeDefinitionKind::Union,
                     NodeKind::INPUT_OBJECT_TYPE_DEFINITION => TypeDefinitionKind::Input,
-                    _ =>
-                        unreachable!("invalid node kind for type definition: {:?}", typedef.kind()),
+                    _ => {
+                        unreachable!("invalid node kind for type definition: {:?}", typedef.kind())
+                    }
                 };
                 let name_node = typedef.name_node()?;
                 let name = Name::new(self, name_node);
@@ -203,8 +204,9 @@ impl ItemCtxt {
                             "SCALAR" => DirectiveLocations::SCALAR,
                             "SCHEMA" => DirectiveLocations::SCHEMA,
                             "UNION" => DirectiveLocations::UNION,
-                            location =>
-                                unreachable!("found invalid directive location: `{location}`",),
+                            location => {
+                                unreachable!("found invalid directive location: `{location}`",)
+                            }
                         })
                     })
                     .fold(DirectiveLocations::default(), |acc, location| acc | location);

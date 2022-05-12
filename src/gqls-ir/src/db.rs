@@ -108,9 +108,8 @@ fn type_at(db: &dyn DefDatabase, position: Position) -> Option<Ty> {
     let root = data.tree.root_node();
     let node = root.named_node_at(position.point)?;
     let type_node = match node.kind() {
-        NodeKind::TYPE | NodeKind::NON_NULL_TYPE | NodeKind::LIST_TYPE | NodeKind::NAMED_TYPE => {
-            node
-        }
+        NodeKind::TYPE | NodeKind::NON_NULL_TYPE | NodeKind::LIST_TYPE | NodeKind::NAMED_TYPE =>
+            node,
         _ => return None,
     };
     BodyCtxt::new(data.text).lower_type(type_node)

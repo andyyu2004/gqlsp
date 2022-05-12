@@ -72,19 +72,15 @@ impl Scope {
         match kind {
             NodeKind::DIRECTIVE_DEFINITION => Some(Scope::Directive),
             NodeKind::FIELD_DEFINITION | NodeKind::INPUT_VALUE_DEFINITION => Some(Scope::Field),
-            NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION => {
-                Some(Scope::Object)
-            }
-            NodeKind::INTERFACE_TYPE_DEFINITION | NodeKind::INTERFACE_TYPE_EXTENSION => {
-                Some(Scope::Interface)
-            }
+            NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
+                Some(Scope::Object),
+            NodeKind::INTERFACE_TYPE_DEFINITION | NodeKind::INTERFACE_TYPE_EXTENSION =>
+                Some(Scope::Interface),
             NodeKind::ENUM_TYPE_DEFINITION | NodeKind::ENUM_TYPE_EXTENSION => Some(Scope::Enum),
-            NodeKind::INPUT_OBJECT_TYPE_DEFINITION | NodeKind::INPUT_OBJECT_TYPE_EXTENSION => {
-                Some(Scope::InputObject)
-            }
-            NodeKind::SCALAR_TYPE_DEFINITION | NodeKind::SCALAR_TYPE_EXTENSION => {
-                Some(Scope::Scalar)
-            }
+            NodeKind::INPUT_OBJECT_TYPE_DEFINITION | NodeKind::INPUT_OBJECT_TYPE_EXTENSION =>
+                Some(Scope::InputObject),
+            NodeKind::SCALAR_TYPE_DEFINITION | NodeKind::SCALAR_TYPE_EXTENSION =>
+                Some(Scope::Scalar),
             NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_TYPE_EXTENSION => Some(Scope::Union),
             NodeKind::UNION_MEMBER_TYPES => Some(Scope::UnionMember),
             NodeKind::TYPE => Some(Scope::Type),
@@ -151,14 +147,11 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                 //TODO missing anonymous symbols
                 "type" | "scalar" | "interface" | "union" | "directive" | "on"
                     if !node.is_named() =>
-                {
-                    SemanticTokenKind::Keyword
-                }
+                    SemanticTokenKind::Keyword,
                 // TODO builtin types (ID, String, Int should be defaultLibrary types)
                 NodeKind::TYPE if matches!(self.scope(), Scope::Type) => self.highlight_type(at),
-                NodeKind::NAMED_TYPE if matches!(self.scope(), Scope::UnionMember) => {
-                    self.highlight_type(at)
-                }
+                NodeKind::NAMED_TYPE if matches!(self.scope(), Scope::UnionMember) =>
+                    self.highlight_type(at),
                 NodeKind::DIRECTIVE => SemanticTokenKind::Directive,
                 NodeKind::ENUM_VALUE => SemanticTokenKind::EnumValue,
                 NodeKind::NAME => match self.scope() {

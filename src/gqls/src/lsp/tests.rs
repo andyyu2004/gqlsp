@@ -15,9 +15,7 @@ macro_rules! fixture_path {
 }
 
 macro_rules! fixtures {
-    ($name:literal) => {{
-        lsp_types::Url::from_file_path(fixture_path!($name)).unwrap()
-    }};
+    ($name:literal) => {{ lsp_types::Url::from_file_path(fixture_path!($name)).unwrap() }};
 }
 
 #[test]

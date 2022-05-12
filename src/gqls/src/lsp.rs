@@ -4,7 +4,7 @@ use crate::{tokens, Convert, UrlExt};
 use anyhow::Result;
 use core::panic::{AssertUnwindSafe, UnwindSafe};
 use gqls_ide::{
-    Change, ChangeKind, Changeset, ChangesetSummary, FileId, Ide, Patch, Vfs, VfsProxy,
+    Change, ChangeKind, Changeset, ChangesetSummary, FileId, Ide, Patch, Vfs, VfsProxy
 };
 use lsp_types::notification::PublishDiagnostics;
 use lsp_types::*;

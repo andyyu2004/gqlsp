@@ -78,39 +78,31 @@ impl<'s> CompletionCtxt<'s> {
             };
             match node.kind() {
                 NodeKind::IMPLEMENTS_INTERFACES => return Context::Interface,
-                NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION => {
-                    return Context::Directive(DirectiveLocations::OBJECT)
-                }
-                NodeKind::ENUM_TYPE_DEFINITION | NodeKind::ENUM_TYPE_EXTENSION => {
-                    return Context::Directive(DirectiveLocations::ENUM)
-                }
-                NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_TYPE_EXTENSION => {
-                    return Context::Directive(DirectiveLocations::UNION)
-                }
-                NodeKind::INTERFACE_TYPE_DEFINITION | NodeKind::INTERFACE_TYPE_EXTENSION => {
-                    return Context::Directive(DirectiveLocations::INTERFACE)
-                }
-                NodeKind::SCALAR_TYPE_DEFINITION | NodeKind::SCALAR_TYPE_EXTENSION => {
-                    return Context::Directive(DirectiveLocations::SCALAR)
-                }
-                NodeKind::INPUT_OBJECT_TYPE_DEFINITION | NodeKind::INPUT_OBJECT_TYPE_EXTENSION => {
-                    return Context::Directive(DirectiveLocations::INPUT_OBJECT)
-                }
-                NodeKind::DIRECTIVE_LOCATIONS | NodeKind::DIRECTIVE_LOCATION => {
-                    return Context::DirectiveLocations
-                }
+                NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
+                    return Context::Directive(DirectiveLocations::OBJECT),
+                NodeKind::ENUM_TYPE_DEFINITION | NodeKind::ENUM_TYPE_EXTENSION =>
+                    return Context::Directive(DirectiveLocations::ENUM),
+                NodeKind::UNION_TYPE_DEFINITION | NodeKind::UNION_TYPE_EXTENSION =>
+                    return Context::Directive(DirectiveLocations::UNION),
+                NodeKind::INTERFACE_TYPE_DEFINITION | NodeKind::INTERFACE_TYPE_EXTENSION =>
+                    return Context::Directive(DirectiveLocations::INTERFACE),
+                NodeKind::SCALAR_TYPE_DEFINITION | NodeKind::SCALAR_TYPE_EXTENSION =>
+                    return Context::Directive(DirectiveLocations::SCALAR),
+                NodeKind::INPUT_OBJECT_TYPE_DEFINITION | NodeKind::INPUT_OBJECT_TYPE_EXTENSION =>
+                    return Context::Directive(DirectiveLocations::INPUT_OBJECT),
+                NodeKind::DIRECTIVE_LOCATIONS | NodeKind::DIRECTIVE_LOCATION =>
+                    return Context::DirectiveLocations,
                 NodeKind::ENUM_VALUES_DEFINITION
                 | NodeKind::ENUM_VALUE_DEFINITION
-                | NodeKind::ENUM_VALUE => {
-                    return Context::Directive(DirectiveLocations::ENUM_VALUE)
-                }
+                | NodeKind::ENUM_VALUE =>
+                    return Context::Directive(DirectiveLocations::ENUM_VALUE),
                 NodeKind::INPUT_VALUE_DEFINITION => return Context::InputField,
                 NodeKind::FIELD_DEFINITION => return Context::Field,
                 NodeKind::UNION_MEMBER_TYPES => return Context::UnionMembers,
                 NodeKind::NON_NULL_TYPE
                 | NodeKind::LIST_TYPE
                 | NodeKind::NAMED_TYPE
-                | NodeKind::TYPE => {
+                | NodeKind::TYPE =>
                     if node.has_parent_of_kind(NodeKind::FIELD_DEFINITION) {
                         return Context::Field;
                     } else if node.has_parent_of_kind(NodeKind::INPUT_VALUE_DEFINITION) {
@@ -119,8 +111,7 @@ impl<'s> CompletionCtxt<'s> {
                         return Context::UnionMembers;
                     } else if node.has_parent_of_kind(NodeKind::IMPLEMENTS_INTERFACES) {
                         return Context::Interface;
-                    }
-                }
+                    },
                 _ => {
                     if point.column == 0 {
                         break;
@@ -173,9 +164,8 @@ impl<'s> CompletionCtxt<'s> {
                         TypeDefinitionKind::Enum => CompletionItemKind::Enum,
                         TypeDefinitionKind::Union => CompletionItemKind::Union,
                     },
-                    ItemKind::DirectiveDefinition(idx) => {
-                        CompletionItemKind::Directive(items.directives[idx].locations)
-                    }
+                    ItemKind::DirectiveDefinition(idx) =>
+                        CompletionItemKind::Directive(items.directives[idx].locations),
                 };
 
                 let label = match item.kind {
@@ -192,9 +182,8 @@ impl<'s> CompletionCtxt<'s> {
 
     fn complete_input_fields(&mut self) {
         self.completions.extend(self.items().filter(|item| match item.kind {
-            CompletionItemKind::Directive(loc) => {
-                loc.contains(DirectiveLocations::INPUT_FIELD_DEFINITION)
-            }
+            CompletionItemKind::Directive(loc) =>
+                loc.contains(DirectiveLocations::INPUT_FIELD_DEFINITION),
             CompletionItemKind::InputObject
             | CompletionItemKind::Enum
             | CompletionItemKind::Scalar => true,
@@ -208,9 +197,8 @@ impl<'s> CompletionCtxt<'s> {
 
     fn complete_fields(&mut self) {
         self.completions.extend(self.items().filter(|item| match item.kind {
-            CompletionItemKind::Directive(loc) => {
-                loc.contains(DirectiveLocations::FIELD_DEFINITION)
-            }
+            CompletionItemKind::Directive(loc) =>
+                loc.contains(DirectiveLocations::FIELD_DEFINITION),
             CompletionItemKind::Object
             | CompletionItemKind::Interface
             | CompletionItemKind::Enum

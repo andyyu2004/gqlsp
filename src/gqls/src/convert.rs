@@ -222,14 +222,12 @@ impl Convert for gqls_ide::CompletionItemKind {
             gqls_ide::CompletionItemKind::Enum => lsp_types::CompletionItemKind::ENUM,
             gqls_ide::CompletionItemKind::Interface => lsp_types::CompletionItemKind::INTERFACE,
             gqls_ide::CompletionItemKind::Keyword => lsp_types::CompletionItemKind::KEYWORD,
-            gqls_ide::CompletionItemKind::InputObject | gqls_ide::CompletionItemKind::Object => {
-                lsp_types::CompletionItemKind::STRUCT
-            }
+            gqls_ide::CompletionItemKind::InputObject | gqls_ide::CompletionItemKind::Object =>
+                lsp_types::CompletionItemKind::STRUCT,
             gqls_ide::CompletionItemKind::Scalar => lsp_types::CompletionItemKind::CONSTANT,
             gqls_ide::CompletionItemKind::Union => lsp_types::CompletionItemKind::CLASS,
-            gqls_ide::CompletionItemKind::DirectiveLocation => {
-                lsp_types::CompletionItemKind::MODULE
-            }
+            gqls_ide::CompletionItemKind::DirectiveLocation =>
+                lsp_types::CompletionItemKind::MODULE,
         }
     }
 }
@@ -247,9 +245,8 @@ impl Convert for gqls_ide::SemanticTokenKind {
             gqls_ide::SemanticTokenKind::Interface => lsp_types::SemanticTokenType::INTERFACE,
             gqls_ide::SemanticTokenKind::Keyword => lsp_types::SemanticTokenType::KEYWORD,
             gqls_ide::SemanticTokenKind::Number => lsp_types::SemanticTokenType::NUMBER,
-            gqls_ide::SemanticTokenKind::InputObject | gqls_ide::SemanticTokenKind::Object => {
-                lsp_types::SemanticTokenType::STRUCT
-            }
+            gqls_ide::SemanticTokenKind::InputObject | gqls_ide::SemanticTokenKind::Object =>
+                lsp_types::SemanticTokenType::STRUCT,
             gqls_ide::SemanticTokenKind::String => lsp_types::SemanticTokenType::STRING,
             gqls_ide::SemanticTokenKind::Type => lsp_types::SemanticTokenType::TYPE,
             gqls_ide::SemanticTokenKind::Scalar => tokens::TOKEN_TYPE_SCALAR,

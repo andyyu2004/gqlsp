@@ -48,7 +48,8 @@ impl Display for RenameError {
     }
 }
 
-impl Error for RenameError {}
+impl Error for RenameError {
+}
 
 #[cfg(test)]
 mod tests;
