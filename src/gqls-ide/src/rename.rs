@@ -1,8 +1,10 @@
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{self, Display};
 
 use gqls_db::DefDatabase;
 use gqls_syntax::Position;
+use vfs::FileId;
 
 use crate::{FilePatches, Patch, Range, Snapshot};
 
@@ -18,16 +20,16 @@ impl Snapshot {
 
     pub fn rename(&self, position: Position, to: &str) -> Result<Vec<FilePatches>, RenameError> {
         self.prepare_rename(position)?;
-        let patches = self
-            .find_references(position)
-            .into_iter()
-            .map(|location| FilePatches {
-                file: location.file,
-                patches: vec![Patch { range: location.range, with: to.to_owned() }],
-            })
-            .collect::<Vec<_>>();
+        let mut patches = HashMap::<FileId, FilePatches>::new();
+        self.find_references(position).into_iter().for_each(|location| {
+            patches
+                .entry(location.file)
+                .or_insert_with(|| FilePatches::empty(location.file))
+                .patches
+                .push(Patch::new(location.range, to.to_owned()));
+        });
         assert!(!patches.is_empty());
-        Ok(patches)
+        Ok(patches.into_values().collect())
     }
 }
 

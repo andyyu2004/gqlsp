@@ -53,6 +53,16 @@ pub struct FilePatches {
     pub patches: Vec<Patch>,
 }
 
+impl FilePatches {
+    pub fn new(file: FileId, patches: Vec<Patch>) -> Self {
+        Self { file, patches }
+    }
+
+    pub fn empty(file: FileId) -> Self {
+        Self::new(file, vec![])
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Clone, PartialOrd, Ord, Default)]
 pub struct Patch {
     pub range: Range,
@@ -60,6 +70,10 @@ pub struct Patch {
 }
 
 impl Patch {
+    pub fn new(range: Range, with: String) -> Self {
+        Self { range, with }
+    }
+
     #[must_use]
     pub fn apply(&self, rope: &mut Rope) -> tree_sitter::InputEdit {
         let Patch { range, with } = self;

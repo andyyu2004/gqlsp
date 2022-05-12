@@ -27,8 +27,8 @@ fn test(fixture: &Fixture, to: &str) {
         // The expected result is just calculated by doing a textual find and replace for the given name
         // This is probably good enough for graphql
         assert_eq!(
+            fixture.files()[file_patch.file].text.replace(name.as_str(), to),
             rope.to_string(),
-            fixture.files()[file_patch.file].text.replace(name.as_str(), to)
         );
     }
 }
@@ -45,13 +45,19 @@ fn test_rename_simple() {
 }
 
 #[test]
-fn test_rename() {
+fn test_rename_field_references() {
     let before = fixture! {
         "foo" => "
             scalar Bar
-                   #^
+                  # ^
 
-            type Foo {}
+            type Foo implements I {
+                bar: Bar
+            }
+
+            interface I {
+                bar: Bar
+            }
         "
     };
     test(&before, "Foobar");
