@@ -8,6 +8,8 @@ use vfs::FileId;
 
 use crate::{Range, Snapshot};
 
+pub type Diagnostics = HashSet<Diagnostic>;
+
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Diagnostic {
     pub range: Range,
@@ -38,23 +40,25 @@ impl Display for DiagnosticKind {
 }
 
 impl Snapshot {
-    pub fn diagnostics(&self, file: FileId) -> HashSet<Diagnostic> {
-        self.syntax_diagnostics(file)
+    pub fn diagnostics(&self, file: FileId) -> Diagnostics {
+        let mut diags = HashSet::new();
+        self.syntax_diagnostics(&mut diags, file);
+        diags
     }
 
-    fn syntax_diagnostics(&self, file: FileId) -> HashSet<Diagnostic> {
+    fn syntax_diagnostics(&self, acc: &mut Diagnostics, file: FileId) {
         // can't query for missing nodes atm, so just traversing the entire tree to find any missing nodes
         static QUERY: Lazy<Query> = Lazy::new(|| query("(ERROR) @error"));
         let mut cursor = QueryCursor::new();
         let data = self.file_data(file);
         let tree = data.tree;
         cursor.set_match_limit(30);
-        cursor
+        let diags = cursor
             .captures(&QUERY, tree.root_node(), data.text.as_bytes())
             .flat_map(|(captures, _)| captures.captures)
             .map(|capture| capture.node)
             .chain(gqls_syntax::traverse_preorder(&tree).filter(|node| node.is_missing()))
-            .map(|node| Diagnostic::syntax(node.range().into()))
-            .collect()
+            .map(|node| Diagnostic::syntax(node.range().into()));
+        acc.extend(diags);
     }
 }

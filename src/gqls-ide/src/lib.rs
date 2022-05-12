@@ -33,7 +33,6 @@ use gqls_db::{Database, FileData, GqlsDatabase, ParallelDatabase, Project, Sourc
 use once_cell::sync::Lazy;
 use ropey::Rope;
 use std::fmt::{self, Debug};
-use tree_sitter::TextProvider;
 
 // bit of a hack, there is probably a nicer way (we need access to the interner for `path` related conversion)
 pub static VFS: Lazy<RwLock<Vfs>> = Lazy::new(Default::default);
