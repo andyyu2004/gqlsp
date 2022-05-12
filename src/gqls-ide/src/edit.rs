@@ -53,7 +53,7 @@ pub struct FilePatches {
     pub patches: Vec<Patch>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Default)]
+#[derive(Debug, Eq, PartialEq, Clone, PartialOrd, Ord, Default)]
 pub struct Patch {
     pub range: Range,
     pub with: String,
