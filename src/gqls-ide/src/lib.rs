@@ -2,6 +2,7 @@
 
 mod completions;
 mod def;
+mod diagnostics;
 mod edit;
 mod highlight;
 mod implementation;
@@ -13,6 +14,7 @@ mod symbols;
 mod typedef;
 
 pub use self::completions::{CompletionItem, CompletionItemKind};
+pub use self::diagnostics::{Diagnostic, DiagnosticKind};
 pub use self::edit::{Change, ChangeKind, Changeset, FilePatches, Patch, Point, Range};
 pub use self::highlight::{SemanticToken, SemanticTokenKind};
 pub use self::rename::RenameError;
@@ -28,11 +30,10 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use gqls_db::{Database, FileData, GqlsDatabase, ParallelDatabase, Project, SourceDatabase};
-use gqls_syntax::query;
 use once_cell::sync::Lazy;
 use ropey::Rope;
-use std::fmt::{self, Debug, Display};
-use tree_sitter::{Query, QueryCursor, TextProvider};
+use std::fmt::{self, Debug};
+use tree_sitter::TextProvider;
 
 // bit of a hack, there is probably a nicer way (we need access to the interner for `path` related conversion)
 pub static VFS: Lazy<RwLock<Vfs>> = Lazy::new(Default::default);
@@ -48,35 +49,6 @@ pub type ChangesetSummary = HashMap<FileId, ChangeSummary>;
 #[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub struct ChangeSummary {
     pub diagnostics: HashSet<Diagnostic>,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
-pub struct Diagnostic {
-    pub range: Range,
-    pub kind: DiagnosticKind,
-}
-
-impl Diagnostic {
-    pub fn new(range: Range, kind: DiagnosticKind) -> Self {
-        Self { range, kind }
-    }
-
-    pub fn syntax(range: Range) -> Self {
-        Self::new(range, DiagnosticKind::Syntax)
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
-pub enum DiagnosticKind {
-    Syntax,
-}
-
-impl Display for DiagnosticKind {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Syntax => write!(f, "Syntax Error"),
-        }
-    }
 }
 
 pub struct Snapshot {
@@ -143,28 +115,12 @@ impl Ide {
             changeset.changes.iter().map(|change| change.file).collect::<HashSet<_>>();
         files_changed
             .into_iter()
-            .map(|path| (path, ChangeSummary { diagnostics: self.diagnostics(path) }))
+            .map(|path| (path, ChangeSummary { diagnostics: self.snapshot().diagnostics(path) }))
             .collect()
     }
 
     fn apply(&mut self, change: &Change) {
         self.patch_tree(change);
-    }
-
-    fn diagnostics(&self, file: FileId) -> HashSet<Diagnostic> {
-        // can't query for missing nodes atm, so just traversing the entire tree to find any missing nodes
-        static QUERY: Lazy<Query> = Lazy::new(|| query("(ERROR) @error"));
-        let text = RopeText::new(&self.file_ropes[&file]);
-        let mut cursor = QueryCursor::new();
-        let tree = self.db.file_tree(file);
-        cursor.set_match_limit(30);
-        cursor
-            .captures(&QUERY, tree.root_node(), text)
-            .flat_map(|(captures, _)| captures.captures)
-            .map(|capture| capture.node)
-            .chain(gqls_syntax::traverse_preorder(&tree).filter(|node| node.is_missing()))
-            .map(|node| Diagnostic::syntax(node.range().into()))
-            .collect()
     }
 
     fn patch_tree(&mut self, change: &Change) {
@@ -187,22 +143,6 @@ impl Ide {
             }
         };
         self.db.set_file_data(file, data);
-    }
-}
-
-struct RopeText<'a>(&'a Rope);
-
-impl<'a> RopeText<'a> {
-    pub fn new(rope: &'a Rope) -> Self {
-        RopeText(rope)
-    }
-}
-
-impl<'a> TextProvider<'a> for RopeText<'a> {
-    type I = std::iter::Map<ropey::iter::Chunks<'a>, fn(&str) -> &[u8]>;
-
-    fn text(&mut self, node: tree_sitter::Node<'_>) -> Self::I {
-        self.0.byte_slice(node.byte_range()).chunks().map(str::as_bytes)
     }
 }
 
