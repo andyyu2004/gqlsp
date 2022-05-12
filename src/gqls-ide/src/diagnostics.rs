@@ -81,3 +81,6 @@ impl<'a> DiagnosticsCtxt<'a> {
         self.diagnostics.extend(diags);
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -6,9 +6,7 @@ use crate::{Ide, Location};
 
 #[track_caller]
 fn test(fixture: Fixture) {
-    let mut ide = Ide::default();
-    ide.setup_fixture(&fixture);
-
+    let ide = Ide::from_fixture(&fixture);
     let expected = fixture
         .all_ranges()
         .map(|(file, range)| Location::new(file, range.into()))

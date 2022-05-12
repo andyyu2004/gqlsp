@@ -4,8 +4,7 @@ use gqls_fixture::{fixture, Fixture};
 use crate::Ide;
 
 fn test(fixture: Fixture, file: &'static str, expect: Expect) {
-    let mut ide = Ide::default();
-    ide.setup_fixture(&fixture);
+    let ide = Ide::from_fixture(&fixture);
     let snapshot = ide.snapshot();
     let symbols = snapshot.document_symbols(file.as_ref());
     expect.assert_debug_eq(&symbols);

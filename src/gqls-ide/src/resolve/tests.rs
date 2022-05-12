@@ -6,7 +6,6 @@ use crate::Ide;
 
 #[test]
 fn test_resolve_item_at() {
-    let mut ide = Ide::default();
     let fixture = fixture! {
         "foo" => "
             type Bar {
@@ -21,7 +20,7 @@ fn test_resolve_item_at() {
 #^^^^^^^^^^^^
         "
     };
-    ide.setup_fixture(&fixture);
+    let ide = Ide::from_fixture(&fixture);
     let snapshot = ide.snapshot();
 
     for position in fixture.all_positions() {

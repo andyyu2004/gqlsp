@@ -7,8 +7,7 @@ use gqls_fixture::{fixture, Fixture};
 use gqls_ir::Name;
 
 fn test(fixture: Fixture) {
-    let mut ide = Ide::default();
-    ide.setup_fixture(&fixture);
+    let ide = Ide::from_fixture(&fixture);
     let snapshot = ide.snapshot();
     let expected_locations = fixture
         .all_ranges()

@@ -3,8 +3,7 @@ use gqls_fixture::{fixture, Fixture};
 use crate::Ide;
 
 fn test(fixture: &Fixture, allow: bool) {
-    let mut ide = Ide::default();
-    ide.setup_fixture(fixture);
+    let ide = Ide::from_fixture(&fixture);
     for position in fixture.all_positions() {
         let result = ide.snapshot().prepare_rename(position);
         assert_eq!(result.is_ok(), allow);

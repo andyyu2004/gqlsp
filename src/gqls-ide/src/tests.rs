@@ -47,6 +47,18 @@ macro_rules! setup {
 pub(crate) use setup;
 
 impl Ide {
+    pub fn from_fixture(fixture: &Fixture) -> Self {
+        let mut ide = Ide::default();
+        ide.setup_fixture(fixture);
+        ide
+    }
+
+    pub fn from_fixture_allow_errors(fixture: &Fixture) -> Self {
+        let mut ide = Ide::default();
+        ide.setup_fixture_allow_errors(fixture);
+        ide
+    }
+
     pub fn setup_fixture(&mut self, fixture: &Fixture) {
         let summary = self.setup_fixture_allow_errors(fixture);
         for file in fixture.fileset() {
