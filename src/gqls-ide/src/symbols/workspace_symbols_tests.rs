@@ -38,10 +38,10 @@ fn test_workspace_symbols() {
         "",
         expect![[r#"
             [
+                @qux :: Constant @ bar:1:12..1:55,
                 Bar :: Struct @ foo:5:12..9:13,
                 Foo :: Struct @ foo:1:12..3:13,
                 Foo :: Struct @ bar:3:12..5:13,
-                qux :: Constant @ bar:1:12..1:55,
             ]
         "#]],
     );

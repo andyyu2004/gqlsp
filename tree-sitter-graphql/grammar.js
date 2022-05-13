@@ -274,13 +274,12 @@ module.exports = grammar({
     object_field: ($) => seq($.name, ":", $.value, optional($.comma)),
     type_condition: ($) => seq("on", $.named_type),
     directives: ($) => repeat1($.directive),
-    directive: ($) => seq("@", $.name, optional($.arguments)),
+    directive: ($) => seq($.directive_name, optional($.arguments)),
     directive_definition: ($) =>
       seq(
         optional($.description),
         "directive",
-        "@",
-        $.name,
+        $.directive_name,
         optional($.arguments_definition),
         optional("repeatable"),
         $.directive_locations
@@ -308,6 +307,7 @@ module.exports = grammar({
     named_type: ($) => $._name,
     list_type: ($) => seq("[", $.type, "]"),
     non_null_type: ($) => choice(seq($.named_type, "!"), seq($.list_type, "!")),
+    directive_name: ($) => seq("@", $._name),
     name: ($) => $._name,
     _name: ($) => /[_A-Za-z][_0-9A-Za-z]*/,
     comment: ($) => token(seq("#", /.*/)),

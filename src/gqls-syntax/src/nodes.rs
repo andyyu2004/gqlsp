@@ -57,6 +57,7 @@ impl NodeKind {
     pub const NAMED_TYPE: &'static str = "named_type";
     pub const LIST_TYPE: &'static str = "list_type";
     pub const NON_NULL_TYPE: &'static str = "non_null_type";
+    pub const DIRECTIVE_NAME: &'static str = "directive_name";
     pub const NAME: &'static str = "name";
     pub const DESCRIPTION: &'static str = "description";
 }

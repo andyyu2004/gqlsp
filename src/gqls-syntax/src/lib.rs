@@ -156,7 +156,7 @@ impl<'tree> NodeExt<'tree> for Node<'tree> {
     }
 
     fn name_node(self) -> Option<Self> {
-        self.child_of_kind(NodeKind::NAME)
+        self.child_of_kind(NodeKind::NAME).or_else(|| self.child_of_kind(NodeKind::DIRECTIVE_NAME))
     }
 
     fn child_of_kind(self, kind: &'static str) -> Option<Self> {

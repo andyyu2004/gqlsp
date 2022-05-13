@@ -101,7 +101,6 @@ impl Snapshot {
             self.projects().iter().flat_map(|(_, fs)| fs).map(|file| (file, self.items(file)))
         {
             let symbols = items
-                .items
                 .iter()
                 .map(|(_, item)| item)
                 .filter(|item| item.name.to_uppercase().contains(&query))

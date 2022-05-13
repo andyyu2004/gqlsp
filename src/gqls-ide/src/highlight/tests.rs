@@ -133,7 +133,7 @@ fn test_highlight_directive() {
             "foo" => expect![[r#"
                 [
                     1:8..1:17 :: Keyword,
-                    1:19..1:22 :: Directive,
+                    1:18..1:22 :: Directive,
                     1:23..1:25 :: Keyword,
                     2:8..2:14 :: Keyword,
                     2:15..2:21 :: Scalar,

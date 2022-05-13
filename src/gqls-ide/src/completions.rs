@@ -168,11 +168,7 @@ impl<'s> CompletionCtxt<'s> {
                         CompletionItemKind::Directive(items[idx].locations),
                 };
 
-                let label = match item.kind {
-                    ItemKind::TypeDefinition(_) => item.name.to_string(),
-                    ItemKind::DirectiveDefinition(_) => format!("@{}", item.name),
-                };
-                completions.insert(CompletionItem { label, kind });
+                completions.insert(CompletionItem { label: item.name.to_string(), kind });
             }
         }
         let mut v = completions.into_iter().collect::<Vec<_>>();

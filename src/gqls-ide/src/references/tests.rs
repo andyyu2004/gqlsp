@@ -159,8 +159,8 @@ fn test_find_directive_references() {
     let fixture = fixture! {
         "foo" => r#"
             directive @qux on FIELD_DEFINITION
-                      #...
-                      #^^^
+                     #....
+                     #^^^^
                 | OBJECT
                 | SCALAR
                 | UNION

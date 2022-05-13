@@ -1683,12 +1683,8 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "STRING",
-          "value": "@"
-        },
-        {
           "type": "SYMBOL",
-          "name": "name"
+          "name": "directive_name"
         },
         {
           "type": "CHOICE",
@@ -1724,12 +1720,8 @@
           "value": "directive"
         },
         {
-          "type": "STRING",
-          "value": "@"
-        },
-        {
           "type": "SYMBOL",
-          "name": "name"
+          "name": "directive_name"
         },
         {
           "type": "CHOICE",
@@ -1926,6 +1918,19 @@
               "value": "!"
             }
           ]
+        }
+      ]
+    },
+    "directive_name": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "@"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_name"
         }
       ]
     },

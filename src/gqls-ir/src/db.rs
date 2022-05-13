@@ -58,7 +58,6 @@ fn items(db: &dyn DefDatabase, file: FileId) -> Arc<Items> {
 
 fn item_at(db: &dyn DefDatabase, position: Position) -> Option<Idx<Item>> {
     db.items(position.file)
-        .items
         .iter()
         .find_map(|(idx, item)| item.range.contains(position.point).then(|| idx))
 }
@@ -98,7 +97,7 @@ fn name_at(db: &dyn DefDatabase, position: Position) -> Option<Name> {
     let root = data.tree.root_node();
     let node = root.named_node_at(position.point)?;
     match node.kind() {
-        NodeKind::NAME => Some(Name::new(&data.text, node)),
+        NodeKind::NAME | NodeKind::DIRECTIVE_NAME => Some(Name::new(&data.text, node)),
         _ => db.type_at(position).map(|ty| ty.name()),
     }
 }

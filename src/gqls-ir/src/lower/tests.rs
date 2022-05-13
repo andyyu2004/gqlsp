@@ -40,7 +40,7 @@ fn test_lower_item_body() {
                                     directives: [
                                         Directive {
                                             range: 3:21..3:25,
-                                            name: qux,
+                                            name: @qux,
                                         },
                                     ],
                                 },
@@ -57,7 +57,7 @@ fn test_lower_item_body() {
                                     directives: [
                                         Directive {
                                             range: 5:26..5:30,
-                                            name: qux,
+                                            name: @qux,
                                         },
                                     ],
                                 },
@@ -68,7 +68,7 @@ fn test_lower_item_body() {
                                     directives: [
                                         Directive {
                                             range: 6:33..6:37,
-                                            name: qux,
+                                            name: @qux,
                                         },
                                     ],
                                 },

@@ -41,7 +41,7 @@ fn test_parse_directive_definition() {
     test(
         "directive @qux on OBJECT | FIELD_DEFINITION",
         expect![[
-            r#"(document (item (directive_definition (name) (directive_locations (directive_location) (directive_location)))))"#
+            r#"(document (item (directive_definition (directive_name) (directive_locations (directive_location) (directive_location)))))"#
         ]],
     );
 }

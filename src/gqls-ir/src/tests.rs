@@ -103,7 +103,7 @@ fn test_definitions() {
         hashmap! {
             Name::unranged("Foo") => smallvec![idx!(0), idx!(1)],
             Name::unranged("Bar") => smallvec![idx!(2), idx!(3)],
-            Name::unranged("qux") => smallvec![idx!(4)],
+            Name::unranged("@qux") => smallvec![idx!(4)],
             Name::unranged("S") => smallvec![idx!(5)],
             Name::unranged("U") => smallvec![idx!(6)],
             Name::unranged("I") => smallvec![idx!(7)],
@@ -127,7 +127,7 @@ fn test_definitions() {
         }
     );
 
-    let resolutions = db.resolve_item(bar, Name::unranged("d"));
+    let resolutions = db.resolve_item(bar, Name::unranged("@d"));
     assert_eq!(resolutions.as_slice(), [ItemRes { file: Path::new("bar"), idx: idx!(2) },]);
 
     let items = db.items(foo);
@@ -165,7 +165,7 @@ fn test_definitions() {
                         ),
                     },
                     Item {
-                        name: qux,
+                        name: @qux,
                         range: 17:8..17:66,
                         kind: DirectiveDefinition(
                             Idx::<DirectiveDefinition>(0),
@@ -208,7 +208,7 @@ fn test_definitions() {
                         directives: [
                             Directive {
                                 range: 1:17..1:21,
-                                name: qux,
+                                name: @qux,
                             },
                         ],
                         implementations: None,
@@ -241,7 +241,7 @@ fn test_definitions() {
                         directives: [
                             Directive {
                                 range: 19:17..19:21,
-                                name: qux,
+                                name: @qux,
                             },
                         ],
                         implementations: None,
@@ -252,7 +252,7 @@ fn test_definitions() {
                         directives: [
                             Directive {
                                 range: 21:16..21:20,
-                                name: qux,
+                                name: @qux,
                             },
                         ],
                         implementations: None,
@@ -263,7 +263,7 @@ fn test_definitions() {
                         directives: [
                             Directive {
                                 range: 23:16..23:20,
-                                name: qux,
+                                name: @qux,
                             },
                         ],
                         implementations: None,
@@ -274,7 +274,7 @@ fn test_definitions() {
                         directives: [
                             Directive {
                                 range: 27:24..27:28,
-                                name: qux,
+                                name: @qux,
                             },
                         ],
                         implementations: None,
@@ -316,7 +316,7 @@ fn test_definitions() {
                         ),
                     },
                     Item {
-                        name: d,
+                        name: @d,
                         range: 9:8..9:40,
                         kind: DirectiveDefinition(
                             Idx::<DirectiveDefinition>(0),
@@ -337,7 +337,7 @@ fn test_definitions() {
                         directives: [
                             Directive {
                                 range: 5:17..5:21,
-                                name: foo,
+                                name: @foo,
                             },
                         ],
                         implementations: None,

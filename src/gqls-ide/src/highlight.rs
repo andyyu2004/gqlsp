@@ -154,7 +154,7 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                     self.highlight_type(at),
                 NodeKind::DIRECTIVE => SemanticTokenKind::Directive,
                 NodeKind::ENUM_VALUE => SemanticTokenKind::EnumValue,
-                NodeKind::NAME => match self.scope() {
+                NodeKind::NAME | NodeKind::DIRECTIVE_NAME => match self.scope() {
                     Scope::Directive => SemanticTokenKind::Directive,
                     Scope::Enum => SemanticTokenKind::Enum,
                     Scope::Field => SemanticTokenKind::Field,
