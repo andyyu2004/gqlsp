@@ -25,6 +25,7 @@ pub trait DefDatabase: SourceDatabase {
     fn references(&self, res: Res) -> References;
     fn resolve(&self, position: Position) -> Option<Res>;
     fn resolve_item(&self, file: FileId, name: Name) -> ItemResolutions;
+    fn resolve_type(&self, file: FileId, ty: Ty) -> ItemResolutions;
     fn type_at(&self, position: Position) -> Option<Ty>;
     fn typedef(&self, file: FileId, idx: Idx<TypeDefinition>) -> TypeDefinition;
 }
@@ -142,6 +143,10 @@ fn resolve(db: &dyn DefDatabase, position: Position) -> Option<Res> {
         // TODO
         _ => None,
     }
+}
+
+fn resolve_type(db: &dyn DefDatabase, file: FileId, ty: Ty) -> ItemResolutions {
+    db.resolve_item(file, ty.name())
 }
 
 fn resolve_item(db: &dyn DefDatabase, file: FileId, name: Name) -> ItemResolutions {

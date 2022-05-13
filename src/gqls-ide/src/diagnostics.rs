@@ -1,5 +1,5 @@
 use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::ItemKind;
+use gqls_ir::{ItemKind, ItemRes};
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
 use std::collections::HashSet;
@@ -24,10 +24,13 @@ struct DiagnosticsCtxt<'a> {
 #[macro_export]
 macro_rules! error_msg {
     (E0001) => {
-        "Syntax Error"
+        "syntax error"
     };
     (E0002) => {
-        "Unresolved directive `{}`"
+        "unresolved directive `{}`"
+    };
+    (E0003) => {
+        "unresolved type `{}`"
     };
     ($ident:ident) => {
         compile_error!("unknown error code")
@@ -55,15 +58,34 @@ impl<'a> DiagnosticsCtxt<'a> {
 
     fn unresolved_references(&mut self) {
         let items = self.snapshot.items(self.file);
-        for (_, item) in items.iter() {
+        for (idx, item) in items.iter() {
             let typedef = match item.kind {
                 ItemKind::TypeDefinition(idx) => &items[idx],
                 ItemKind::DirectiveDefinition(_) => continue,
             };
+
             for directive in typedef.directives.iter() {
                 if self.snapshot.resolve_item(self.file, directive.name.clone()).is_empty() {
                     self.diagnostics
                         .insert(diagnostic!(E0002 @ directive.name.range, directive.name));
+                }
+            }
+
+            if let Some(fields) = self
+                .snapshot
+                .item_body(ItemRes { file: self.file, idx })
+                .as_ref()
+                .and_then(|body| body.fields())
+            {
+                for (_, field) in fields.iter() {
+                    let ty = &field.ty;
+                    match ty.name().as_str() {
+                        "Int" | "Float" | "String" | "Boolean" | "ID" => continue,
+                        _ =>
+                            if self.snapshot.resolve_type(self.file, ty.clone()).is_empty() {
+                                self.diagnostics.insert(diagnostic!(E0003 @ ty.range, ty.name()));
+                            },
+                    };
                 }
             }
         }

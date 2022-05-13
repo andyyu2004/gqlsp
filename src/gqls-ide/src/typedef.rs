@@ -8,7 +8,7 @@ impl Snapshot {
         match self.resolve_field_at(position) {
             Some(res) => {
                 let field = self.field(res);
-                self.resolve_item(position.file, field.ty.name())
+                self.resolve_type(position.file, field.ty)
                     .into_iter()
                     .map(|res| Location::new(res.file, self.item(res).name.range.into()))
                     .collect()

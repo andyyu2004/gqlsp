@@ -13,9 +13,7 @@ impl Snapshot {
     }
 
     pub(crate) fn resolve_type_at(&self, position: Position) -> ItemResolutions {
-        self.type_at(position)
-            .map(|ty| self.resolve_item(position.file, ty.name()))
-            .unwrap_or_default()
+        self.type_at(position).map(|ty| self.resolve_type(position.file, ty)).unwrap_or_default()
     }
 
     pub(crate) fn resolve_item_at(&self, position: Position) -> Option<ItemRes> {

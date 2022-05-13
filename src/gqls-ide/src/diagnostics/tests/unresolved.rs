@@ -1,6 +1,6 @@
 use gqls_fixture::fixture;
 
-use super::test_error_code;
+use super::{test_error_code, test_error_message};
 
 #[test]
 fn test_unresolved_item_directive() {
@@ -23,4 +23,17 @@ fn test_unresolved_item_directive() {
         "
     };
     test_error_code(&fixture);
+}
+
+#[test]
+fn test_unresolved_type_in_field() {
+    let fixture = fixture! {
+        "foo" => "
+            type Foo {
+                bar: [Bar!]
+                    #......'unresolved type `Bar`'
+            }
+        "
+    };
+    test_error_message(&fixture);
 }

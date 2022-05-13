@@ -18,7 +18,7 @@ fn test_syntax_diagnostics_by_message() {
     let fixture = fixture! {
         "foo" => "
             type
-           #....'Syntax Error'
+           #....'syntax error'
         "
     };
     test_error_message(&fixture);

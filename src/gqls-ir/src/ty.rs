@@ -3,7 +3,7 @@ use std::fmt::{self, Debug};
 
 pub type Ty = Box<Type>;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Type {
     pub range: Range,
     pub kind: TyKind,
@@ -18,7 +18,7 @@ impl Type {
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum TyKind {
     Named(Name),
     NonNull(Ty),
