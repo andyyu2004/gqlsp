@@ -1,5 +1,5 @@
 use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::{Directive, ItemKind, ItemRes};
+use gqls_ir::{Directive, ItemKind, ItemRes, Ty};
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
 use std::collections::HashSet;
@@ -74,17 +74,20 @@ impl<'a> DiagnosticsCtxt<'a> {
             {
                 for (_, field) in fields.iter() {
                     self.check_directives(&field.directives);
-                    let ty = &field.ty;
-                    match ty.name().as_str() {
-                        "Int" | "Float" | "String" | "Boolean" | "ID" => continue,
-                        _ =>
-                            if self.snapshot.resolve_type(self.file, ty.clone()).is_empty() {
-                                self.diagnostics.insert(diagnostic!(E0003 @ ty.range, ty.name()));
-                            },
-                    };
+                    self.check_ty(field.ty.clone());
                 }
             }
         }
+    }
+
+    fn check_ty<'d>(&mut self, ty: Ty) {
+        match ty.name().as_str() {
+            "Int" | "Float" | "String" | "Boolean" | "ID" => return,
+            _ =>
+                if self.snapshot.resolve_type(self.file, ty.clone()).is_empty() {
+                    self.diagnostics.insert(diagnostic!(E0003 @ ty.range, ty.name()));
+                },
+        };
     }
 
     fn check_directives<'d>(&mut self, directives: impl IntoIterator<Item = &'d Directive>) {
