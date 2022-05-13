@@ -3,22 +3,26 @@ use gqls_fixture::fixture;
 use super::{test_error_code, test_error_message};
 
 #[test]
-fn test_unresolved_item_directive() {
+fn test_unresolved_directives() {
     let fixture = fixture! {
         "foo" => "
             type Foo @qux {
                     #....'E0002'
-                bar: Int
+                bar: Int @qux
+                        #....'E0002'
             }
 
             input FooInput @qux {
                           #....'E0002'
-                bar: Int
+                bar: Int @qux
+                        #....'E0002'
+                    #...[E0002]
             }
 
             interface Bar @qux {
                          #....'E0002'
-                bar: Int
+                bar: Int @qux
+                        #....'E0002'
             }
         "
     };

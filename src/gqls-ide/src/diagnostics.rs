@@ -1,5 +1,5 @@
 use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::{ItemKind, ItemRes};
+use gqls_ir::{Directive, ItemKind, ItemRes};
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
 use std::collections::HashSet;
@@ -64,12 +64,7 @@ impl<'a> DiagnosticsCtxt<'a> {
                 ItemKind::DirectiveDefinition(_) => continue,
             };
 
-            for directive in typedef.directives.iter() {
-                if self.snapshot.resolve_item(self.file, directive.name.clone()).is_empty() {
-                    self.diagnostics
-                        .insert(diagnostic!(E0002 @ directive.name.range, directive.name));
-                }
-            }
+            self.check_directives(&typedef.directives);
 
             if let Some(fields) = self
                 .snapshot
@@ -78,6 +73,7 @@ impl<'a> DiagnosticsCtxt<'a> {
                 .and_then(|body| body.fields())
             {
                 for (_, field) in fields.iter() {
+                    self.check_directives(&field.directives);
                     let ty = &field.ty;
                     match ty.name().as_str() {
                         "Int" | "Float" | "String" | "Boolean" | "ID" => continue,
@@ -87,6 +83,14 @@ impl<'a> DiagnosticsCtxt<'a> {
                             },
                     };
                 }
+            }
+        }
+    }
+
+    fn check_directives<'d>(&mut self, directives: impl IntoIterator<Item = &'d Directive>) {
+        for directive in directives {
+            if self.snapshot.resolve_item(self.file, directive.name.clone()).is_empty() {
+                self.diagnostics.insert(diagnostic!(E0002 @ directive.name.range, directive.name));
             }
         }
     }
