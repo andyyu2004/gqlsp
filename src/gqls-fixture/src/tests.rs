@@ -78,7 +78,7 @@ fn test_annotations() {
     test(
         r#"
 scalar E
-# ...'hello'
+# ...(hello)
    "#,
         vec![],
         vec![],

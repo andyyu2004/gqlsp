@@ -7,22 +7,22 @@ fn test_unresolved_directives() {
     let fixture = fixture! {
         "foo" => "
             type Foo @qux {
-                    #....'E0002'
+                    #....(E0002)
                 bar: Int @qux
-                        #....'E0002'
+                        #....(E0002)
             }
 
             input FooInput @qux {
-                          #....'E0002'
+                          #....(E0002)
                 bar: Int @qux
-                        #....'E0002'
+                        #....(E0002)
                     #...[E0002]
             }
 
             interface Bar @qux {
-                         #....'E0002'
+                         #....(E0002)
                 bar: Int @qux
-                        #....'E0002'
+                        #....(E0002)
             }
         "
     };
@@ -35,7 +35,7 @@ fn test_unresolved_type_in_field() {
         "foo" => "
             type Foo {
                 bar: [Bar!]
-                    #......'unresolved type `Bar`'
+                    #......(unresolved type `Bar`)
             }
         "
     };

@@ -7,7 +7,7 @@ fn test_syntax_diagnostics_by_code() {
     let fixture = fixture! {
         "foo" => "
             type
-           #....'E0001'
+           #....(E0001)
         "
     };
     test_error_code(&fixture);
@@ -18,7 +18,7 @@ fn test_syntax_diagnostics_by_message() {
     let fixture = fixture! {
         "foo" => "
             type
-           #....'syntax error'
+           #....(syntax error)
         "
     };
     test_error_message(&fixture);

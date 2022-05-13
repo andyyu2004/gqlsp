@@ -61,7 +61,7 @@ impl Fixture {
 /// A fixture file supports three forms of annotations:
 /// - points (`^`) (if ^ points to a range, then it is shifted a further one up)
 /// - inline ranges (`...`)
-///   - if an inline range is immediately followed a by a single quote `'`, then it is treated as an annotation up to the closing quote
+///   - if an inline range is immediately followed by a open paren  `(`, then it is treated as an annotation up to the closing paren
 /// - delimited ranges `(delimited above by `{` and below by `}` )`
 ///   This ranges from the start of the following line of `{` to the end of the the preceding line of `}`
 pub struct FixtureFile {
@@ -114,10 +114,10 @@ impl FixtureFile {
                     }
                 } else if let Some(start) = range_start.take() {
                     let range = start..Point { row: row - 1, column };
-                    if char == '\'' {
+                    if char == '(' {
                         let (text, _) = line[column + 1..]
-                            .split_once('\'')
-                            .expect("missing closing quote delimiter for annotation");
+                            .split_once(')')
+                            .expect("missing closing delimiter for annotation");
                         assert!(!text.is_empty());
                         annotations.push(Annotation { range, text: text.to_owned() });
                     } else {
