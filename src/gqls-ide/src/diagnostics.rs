@@ -1,5 +1,5 @@
 use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::{Directive, ItemKind, ItemRes, Ty};
+use gqls_ir::{Directive, ItemKind, ItemRes, Ty, TypeDefinitionKind};
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
 use std::collections::HashSet;
@@ -56,6 +56,10 @@ impl<'a> DiagnosticsCtxt<'a> {
         self.diagnostics
     }
 
+    fn diagnose(&mut self, diagnostic: Diagnostic) {
+        self.diagnostics.insert(diagnostic);
+    }
+
     fn unresolved_references(&mut self) {
         let items = self.snapshot.items(self.file);
         for (idx, item) in items.iter() {
@@ -74,18 +78,29 @@ impl<'a> DiagnosticsCtxt<'a> {
             {
                 for (_, field) in fields.iter() {
                     self.check_directives(&field.directives);
-                    self.check_ty(field.ty.clone());
+                    match typedef.kind {
+                        TypeDefinitionKind::Object
+                        | TypeDefinitionKind::Interface
+                        | TypeDefinitionKind::Union => self.check_output_ty(field.ty.clone()),
+                        TypeDefinitionKind::Input => self.check_input_ty(field.ty.clone()),
+                        TypeDefinitionKind::Scalar | TypeDefinitionKind::Enum =>
+                            unreachable!("don't have fields"),
+                    }
                 }
             }
         }
     }
 
-    fn check_ty<'d>(&mut self, ty: Ty) {
+    fn check_input_ty<'d>(&mut self, ty: Ty) {
+        // TODO
+    }
+
+    fn check_output_ty<'d>(&mut self, ty: Ty) {
         match ty.name().as_str() {
             "Int" | "Float" | "String" | "Boolean" | "ID" => return,
             _ =>
                 if self.snapshot.resolve_type(self.file, ty.clone()).is_empty() {
-                    self.diagnostics.insert(diagnostic!(E0003 @ ty.range, ty.name()));
+                    self.diagnose(diagnostic!(E0003 @ ty.range, ty.name()))
                 },
         };
     }
@@ -93,7 +108,7 @@ impl<'a> DiagnosticsCtxt<'a> {
     fn check_directives<'d>(&mut self, directives: impl IntoIterator<Item = &'d Directive>) {
         for directive in directives {
             if self.snapshot.resolve_item(self.file, directive.name.clone()).is_empty() {
-                self.diagnostics.insert(diagnostic!(E0002 @ directive.name.range, directive.name));
+                self.diagnose(diagnostic!(E0002 @ directive.name.range, directive.name))
             }
         }
     }
