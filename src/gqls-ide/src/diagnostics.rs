@@ -37,6 +37,14 @@ macro_rules! error_msg {
     };
 }
 
+impl ErrorCode {
+    pub fn severity(self) -> Severity {
+        match self.0 {
+            _ => Severity::Error,
+        }
+    }
+}
+
 #[macro_export]
 macro_rules! diagnostic {
     ($code:ident @ $range:expr $(, $($arg:tt)* )? ) => {{
@@ -137,7 +145,13 @@ pub struct Diagnostic {
     pub range: Range,
     pub code: ErrorCode,
     pub message: String,
+    pub severity: Severity,
     pub labels: Vec<DiagnosticLabel>,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+pub enum Severity {
+    Error,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
@@ -148,7 +162,7 @@ pub struct DiagnosticLabel {
 
 impl Diagnostic {
     pub fn new(range: Range, code: ErrorCode, message: String) -> Self {
-        Self { range, code, message, labels: Default::default() }
+        Self { range, code, message, severity: code.severity(), labels: Default::default() }
     }
 
     pub fn with_label(mut self, label: DiagnosticLabel) -> Self {

@@ -75,12 +75,22 @@ impl Convert for gqls_ide::Diagnostic {
     fn convert(&self) -> Self::Converted {
         lsp_types::Diagnostic {
             range: self.range.convert(),
-            severity: Some(lsp_types::DiagnosticSeverity::ERROR),
+            severity: Some(self.severity.convert()),
             message: self.message.clone(),
             code: Some(NumberOrString::Number(self.code.code() as i32)),
             source: Some("gqls".to_owned()),
             related_information: Some(self.labels.convert()),
             ..Default::default()
+        }
+    }
+}
+
+impl Convert for gqls_ide::Severity {
+    type Converted = lsp_types::DiagnosticSeverity;
+
+    fn convert(&self) -> Self::Converted {
+        match self {
+            gqls_ide::Severity::Error => lsp_types::DiagnosticSeverity::ERROR,
         }
     }
 }

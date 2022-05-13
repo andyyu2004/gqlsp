@@ -49,5 +49,7 @@ fn test_parse_error_code() {
     assert_eq!(ErrorCode::from_str("E42"), Ok(ErrorCode(42)));
 }
 
+mod duplicate;
+mod io;
 mod syntax;
 mod unresolved;
