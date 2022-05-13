@@ -1,7 +1,8 @@
+use lsp_types::NumberOrString;
 use std::path::{Path, PathBuf};
 use tower_lsp::jsonrpc;
 
-use crate::lsp::VfsExt;
+use crate::lsp::{self, VfsExt};
 use crate::tokens;
 
 pub trait UrlExt {
@@ -74,9 +75,23 @@ impl Convert for gqls_ide::Diagnostic {
     fn convert(&self) -> Self::Converted {
         lsp_types::Diagnostic {
             range: self.range.convert(),
+            severity: Some(lsp_types::DiagnosticSeverity::ERROR),
             message: self.message.clone(),
+            code: Some(NumberOrString::Number(self.code.code() as i32)),
             source: Some("gqls".to_owned()),
+            related_information: Some(self.labels.convert()),
             ..Default::default()
+        }
+    }
+}
+
+impl Convert for gqls_ide::DiagnosticLabel {
+    type Converted = lsp_types::DiagnosticRelatedInformation;
+
+    fn convert(&self) -> Self::Converted {
+        lsp_types::DiagnosticRelatedInformation {
+            location: self.location.convert(),
+            message: self.message.to_string(),
         }
     }
 }

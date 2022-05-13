@@ -7,7 +7,7 @@ use std::fmt::{self, Display};
 use std::str::FromStr;
 use vfs::FileId;
 
-use crate::{Range, Snapshot};
+use crate::{Location, Range, Snapshot};
 
 impl Snapshot {
     pub fn diagnostics(&self, file: FileId) -> Diagnostics {
@@ -137,16 +137,34 @@ pub struct Diagnostic {
     pub range: Range,
     pub code: ErrorCode,
     pub message: String,
+    pub labels: Vec<DiagnosticLabel>,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+pub struct DiagnosticLabel {
+    pub location: Location,
+    pub message: String,
 }
 
 impl Diagnostic {
     pub fn new(range: Range, code: ErrorCode, message: String) -> Self {
-        Self { range, code, message }
+        Self { range, code, message, labels: Default::default() }
+    }
+
+    pub fn with_label(mut self, label: DiagnosticLabel) -> Self {
+        self.labels.push(label);
+        self
     }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ErrorCode(u16);
+
+impl ErrorCode {
+    pub fn code(self) -> u16 {
+        self.0
+    }
+}
 
 impl Display for ErrorCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
