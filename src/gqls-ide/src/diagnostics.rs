@@ -61,16 +61,7 @@ impl<'a> DiagnosticsCtxt<'a> {
                 ItemKind::DirectiveDefinition(_) => continue,
             };
             for directive in typedef.directives.iter() {
-                let mut resolved = false;
-                for res in self.snapshot.resolve_item(self.file, directive.name.clone()) {
-                    match self.snapshot.item(res).kind {
-                        ItemKind::TypeDefinition(_) => {
-                            // TODO error: directive resolves to a type
-                        }
-                        ItemKind::DirectiveDefinition(_) => resolved = true,
-                    }
-                }
-                if !resolved {
+                if self.snapshot.resolve_item(self.file, directive.name.clone()).is_empty() {
                     self.diagnostics
                         .insert(diagnostic!(E0002 @ directive.name.range, directive.name));
                 }
