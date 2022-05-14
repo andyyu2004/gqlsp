@@ -14,11 +14,18 @@ macro_rules! fixture_file {
 
 #[macro_export]
 macro_rules! fixture {
-    ( $($file:literal => $text:expr)* ) => {{
+    ($($file:literal => $text:expr)*) => {{
         let mut vfs = vfs::Vfs::default();
         $crate::Fixture::new(
             $crate::hashmap! {
                 $(vfs.intern($file) => $crate::fixture_file!($text)),*
+            }
+        )
+    }};
+    ($($file:expr => $text:expr)*) => {{
+        $crate::Fixture::new(
+            $crate::hashmap! {
+                $($file => $crate::fixture_file!($text)),*
             }
         )
     }};

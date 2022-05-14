@@ -1,5 +1,6 @@
 use expect_test::expect;
-use testing::setup_db;
+use gqls_fixture::fixture;
+use testing::SourceDatabaseExt;
 use vfs::Vfs;
 
 use crate::tests::{idx, TestDB};
@@ -10,8 +11,8 @@ fn test_lower_item_body() {
     let mut db = TestDB::default();
     let mut vfs = Vfs::default();
     let foo = vfs.intern("foo");
-    setup_db!(db: {
-        foo: r#"
+    let fixture = fixture! {
+        foo => "
         directive @qux on FIELD_DEFINITION
         extend type Foo {
             foo: Int @qux
@@ -21,9 +22,9 @@ fn test_lower_item_body() {
             a: [Int!]
             b: [Int]!
         }
-        "#,
-
-    });
+        "
+    };
+    db.setup_fixture(&fixture);
 
     let body = db.item_body(ItemRes { file: foo, idx: idx!(1) });
     expect![[r#"

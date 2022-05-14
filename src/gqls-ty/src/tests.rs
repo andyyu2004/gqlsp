@@ -1,6 +1,5 @@
 use crate::TyDatabaseStorage;
 use gqls_ir::{DefDatabaseStorage, SourceDatabaseStorage};
-use testing::setup_db;
 
 #[salsa::database(SourceDatabaseStorage, DefDatabaseStorage, TyDatabaseStorage)]
 #[derive(Default)]

@@ -4,9 +4,10 @@ use std::path::Path;
 use crate::{DefDatabase, DefDatabaseStorage, ItemRes, Name};
 use expect_test::expect;
 use gqls_base_db::SourceDatabaseStorage;
+use gqls_fixture::fixture;
 use maplit::{hashmap, hashset};
 use smallvec::smallvec;
-use testing::setup_db;
+use testing::SourceDatabaseExt;
 use vfs::Vfs;
 
 #[salsa::database(SourceDatabaseStorage, DefDatabaseStorage)]
@@ -77,10 +78,12 @@ fn test_definitions() {
         directive @d on FIELD_DEFINITION
     "#;
 
-    setup_db!(db: {
-        foo: foogql,
-        bar: bargql,
-    });
+    let fixture = fixture! {
+        foo => foogql
+        bar => bargql
+    };
+
+    db.setup_fixture(&fixture);
 
     let item_map = db.item_map(foo);
     assert_eq!(

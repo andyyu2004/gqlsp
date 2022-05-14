@@ -25,6 +25,9 @@ path = "../vfs"
 expect-test = "1"
 maplit = "1"
 
+[dev-dependencies.gqls-fixture]
+path = "../gqls-fixture"
+
 [dev-dependencies.testing]
 path = "../testing"
 
