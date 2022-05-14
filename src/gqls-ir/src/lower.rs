@@ -280,19 +280,19 @@ pub(crate) trait LowerCtxt: HasText {
             }
             _ => unreachable!(),
         };
-        Some(Box::new(Type { range: ty.range(), kind }))
+        Some(Arc::new(Type { range: ty.range(), kind }))
     }
 
     fn lower_list_type(&mut self, node: Node<'_>) -> Option<Ty> {
         assert_eq!(node.kind(), NodeKind::LIST_TYPE);
         let kind = TyKind::List(self.lower_type(node.sole_named_child()?)?);
-        Some(Box::new(Type { range: node.range(), kind }))
+        Some(Arc::new(Type { range: node.range(), kind }))
     }
 
     fn lower_named_type(&mut self, node: Node<'_>) -> Ty {
         assert_eq!(node.kind(), NodeKind::NAMED_TYPE);
         let kind = TyKind::Named(Name::new(self, node));
-        Box::new(Type { range: node.range(), kind })
+        Arc::new(Type { range: node.range(), kind })
     }
 }
 

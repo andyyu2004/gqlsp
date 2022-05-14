@@ -7,7 +7,8 @@ mod ty;
 
 pub use self::body::*;
 pub use self::ty::*;
-pub use db::{DefDatabase, DefDatabaseStorage};
+pub use db::{DefDatabase, DefDatabaseStorage };
+pub use gqls_base_db::{SourceDatabase, SourceDatabaseStorage};
 pub use la_arena::{Arena, Idx, RawIdx};
 
 use gqls_syntax::{Node, NodeExt, Point, Range, RangeExt};
@@ -176,6 +177,12 @@ pub struct DirectiveDefinition {
 pub struct Name {
     name: SmolStr,
     pub range: Range,
+}
+
+impl Name {
+    pub fn name(&self) -> SmolStr {
+        self.name.clone()
+    }
 }
 
 impl Deref for Name {

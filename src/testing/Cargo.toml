@@ -1,0 +1,16 @@
+[package]
+name = "testing"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+maplit = "1"
+
+[dependencies.gqls-fixture]
+path = "../gqls-fixture"
+
+[dependencies.gqls-base-db]
+path = "../gqls-base-db"
+
+[dependencies.gqls-syntax]
+path = "../gqls-syntax"

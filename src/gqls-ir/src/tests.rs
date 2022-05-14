@@ -6,6 +6,7 @@ use expect_test::expect;
 use gqls_base_db::SourceDatabaseStorage;
 use maplit::{hashmap, hashset};
 use smallvec::smallvec;
+use testing::setup_db;
 use vfs::Vfs;
 
 #[salsa::database(SourceDatabaseStorage, DefDatabaseStorage)]
@@ -24,22 +25,6 @@ macro_rules! idx {
 }
 
 pub(crate) use idx;
-
-macro_rules! setup {
-    ($db:ident: {
-        $($file:ident: $text:expr,)*
-     }) => {
-        use gqls_base_db::{FileData, SourceDatabase};
-        $db.set_projects(std::sync::Arc::new(
-            maplit::hashmap! { "default" => maplit::hashset! { $($file),* } },
-        ));
-        $(
-            $db.set_file_data($file, FileData::new($text, gqls_syntax::parse_fresh($text)));
-        )*
-    };
-}
-
-pub(crate) use setup;
 
 #[test]
 fn test_definitions() {
@@ -92,7 +77,7 @@ fn test_definitions() {
         directive @d on FIELD_DEFINITION
     "#;
 
-    setup!(db: {
+    setup_db!(db: {
         foo: foogql,
         bar: bargql,
     });

@@ -1,7 +1,8 @@
 use expect_test::expect;
+use testing::setup_db;
 use vfs::Vfs;
 
-use crate::tests::{idx, setup, TestDB};
+use crate::tests::{idx, TestDB};
 use crate::{DefDatabase, ItemRes};
 
 #[test]
@@ -9,7 +10,7 @@ fn test_lower_item_body() {
     let mut db = TestDB::default();
     let mut vfs = Vfs::default();
     let foo = vfs.intern("foo");
-    setup!(db: {
+    setup_db!(db: {
         foo: r#"
         directive @qux on FIELD_DEFINITION
         extend type Foo {

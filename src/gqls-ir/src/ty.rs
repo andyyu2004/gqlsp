@@ -1,7 +1,8 @@
 use crate::{Name, Range};
 use std::fmt::{self, Debug};
+use std::sync::Arc;
 
-pub type Ty = Box<Type>;
+pub type Ty = Arc<Type>;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Type {
@@ -11,7 +12,7 @@ pub struct Type {
 
 impl Type {
     pub fn new_named(name: Name) -> Ty {
-        Box::new(Self { range: name.range, kind: TyKind::Named(name) })
+        Arc::new(Self { range: name.range, kind: TyKind::Named(name) })
     }
 
     pub fn name(&self) -> Name {
