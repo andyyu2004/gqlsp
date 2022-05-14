@@ -112,7 +112,7 @@ fn test_highlight_directive() {
             i: Scalar @qux
         }
 
-        interface Foo @qux {
+        interface Iface @qux {
             i: Scalar @qux
         }
 
@@ -145,8 +145,8 @@ fn test_highlight_directive() {
                     5:15..5:21 :: Scalar,
                     5:22..5:26 :: Directive,
                     8:8..8:17 :: Keyword,
-                    8:18..8:21 :: Interface,
-                    8:22..8:26 :: Directive,
+                    8:18..8:23 :: Interface,
+                    8:24..8:28 :: Directive,
                     9:12..9:13 :: Field,
                     9:15..9:21 :: Scalar,
                     9:22..9:26 :: Directive,

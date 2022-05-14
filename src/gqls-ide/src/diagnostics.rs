@@ -35,6 +35,9 @@ macro_rules! error_msg {
     (E0004) => {
         "duplicate directive definition `{}`"
     };
+    (E0005) => {
+        "duplicate type definition `{}`"
+    };
     ($ident:ident) => {
         compile_error!("unknown error code")
     };
@@ -90,7 +93,12 @@ impl<'a> DiagnosticsCtxt<'a> {
                             // type extensions are not duplicates
                             continue;
                         }
-                        typedefs.insert(&item.name, location);
+                        if let Some(existing) = typedefs.insert(&item.name, location) {
+                            let diagnostic = diagnostic!(E0005 @ item.range, item.name; [
+                                existing => format!("previous definition of type `{}` here", item.name)
+                            ]);
+                            self.diagnose(diagnostic);
+                        }
                     }
                     ItemKind::DirectiveDefinition(_) =>
                         if let Some(existing) = directives.insert(&item.name, location) {

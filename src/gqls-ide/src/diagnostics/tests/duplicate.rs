@@ -21,3 +21,24 @@ fn test_duplicate_directive_definition() {
         "#]],
     )
 }
+
+#[test]
+fn test_duplicate_type_definition() {
+    let gql = "
+        scalar Foo
+        enum Foo { A B }
+    ";
+    test_rendered(
+        gql,
+        expect![[r#"
+            error[0005]: duplicate type definition `Foo`
+              ┌─ test.graphql:3:9
+              │
+            2 │         scalar Foo
+              │                --- previous definition of type `Foo` here
+            3 │         enum Foo { A B }
+              │         ^^^^^^^^^^^^^^^^
+
+        "#]],
+    )
+}

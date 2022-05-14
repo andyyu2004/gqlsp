@@ -10,23 +10,6 @@ use gqls_syntax::Point;
 use crate::diagnostics::ErrorCode;
 use crate::{Diagnostic, Ide, Range};
 
-fn test_common<R>(fixture: &Fixture, f: impl Fn(&Diagnostic) -> R, g: impl Fn(&Annotation) -> R)
-where
-    R: Hash + Eq + Debug,
-{
-    let ide = Ide::from_fixture_allow_errors(fixture);
-    let snapshot = ide.snapshot();
-    for (file, annotations) in fixture.annotations() {
-        let diagnostics = snapshot.diagnostics(file);
-        let expected =
-            diagnostics.iter().map(|diag| (diag.range, f(&diag))).collect::<HashSet<_>>();
-        let actual = annotations
-            .map(|annotation| (Range::from(annotation.range.clone()), g(&annotation)))
-            .collect::<HashSet<_>>();
-        assert_eq!(expected, actual);
-    }
-}
-
 fn test_error_message(fixture: &Fixture) {
     test_common(fixture, |diag| diag.message.clone(), |annotation| annotation.text.clone());
 }
@@ -45,6 +28,23 @@ fn test_rendered(gql: &str, expect: Expect) {
     let diagnostics = snapshot.diagnostics(file);
     let rendered = render_diagnostics(gql, diagnostics);
     expect.assert_eq(&rendered);
+}
+
+fn test_common<R>(fixture: &Fixture, f: impl Fn(&Diagnostic) -> R, g: impl Fn(&Annotation) -> R)
+where
+    R: Hash + Eq + Debug,
+{
+    let ide = Ide::from_fixture_allow_errors(fixture);
+    let snapshot = ide.snapshot();
+    for (file, annotations) in fixture.annotations() {
+        let diagnostics = snapshot.diagnostics(file);
+        let expected =
+            diagnostics.iter().map(|diag| (diag.range, f(&diag))).collect::<HashSet<_>>();
+        let actual = annotations
+            .map(|annotation| (Range::from(annotation.range.clone()), g(&annotation)))
+            .collect::<HashSet<_>>();
+        assert_eq!(expected, actual);
+    }
 }
 
 // render diagnostics into a string using codespan
