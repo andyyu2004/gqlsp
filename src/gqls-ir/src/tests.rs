@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::path::Path;
 
 use crate::{DefDatabase, DefDatabaseStorage, ItemRes, Name};
 use expect_test::expect;
@@ -7,7 +6,7 @@ use gqls_base_db::SourceDatabaseStorage;
 use gqls_fixture::fixture;
 use maplit::{hashmap, hashset};
 use smallvec::smallvec;
-use testing::TestDatabaseExt;
+use testing::{file_id, TestDatabaseExt};
 use vfs::Vfs;
 
 #[salsa::database(SourceDatabaseStorage, DefDatabaseStorage)]
@@ -115,7 +114,7 @@ fn test_definitions() {
     );
 
     let resolutions = db.resolve_item(bar, Name::unranged("@d"));
-    assert_eq!(resolutions.as_slice(), [ItemRes { file: Path::new("bar"), idx: idx!(2) },]);
+    assert_eq!(resolutions.as_slice(), [ItemRes { file: file_id!("bar"), idx: idx!(2) },]);
 
     let items = db.items(foo);
     expect![[r#"

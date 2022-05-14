@@ -1,18 +1,20 @@
 pub use db::TyDatabaseStorage;
 
 mod db;
+mod fmt;
 
+use gqls_ir::FieldRes;
 use smol_str::SmolStr;
 use std::sync::Arc;
 
 pub type Ty = Arc<Type>;
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Clone, Hash)]
 pub struct Type {
     pub kind: TyKind,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Clone, Hash)]
 pub enum TyKind {
     Boolean,
     Float,
@@ -26,30 +28,33 @@ pub enum TyKind {
     List(Ty),
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
-pub struct Fields {
+#[derive(PartialEq, Eq, Clone, Hash)]
+pub struct FieldTypes {
     pub fields: Vec<FieldType>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Clone, Hash)]
 pub struct ObjectType {
-    fields: Fields,
+    name: SmolStr,
+    fields: FieldTypes,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Clone, Hash)]
 pub struct InputObjectType {
-    fields: Fields,
+    name: SmolStr,
+    fields: FieldTypes,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Clone, Hash)]
 pub struct InterfaceType {
-    fields: Fields,
+    name: SmolStr,
+    fields: FieldTypes,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct FieldType {
     name: SmolStr,
-    ty: Ty,
+    res: FieldRes,
 }
 
 impl TyKind {

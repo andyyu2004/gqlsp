@@ -1,20 +1,47 @@
 use gqls_ir::{self as ir, DefDatabase, ItemKind, ItemRes, TypeDefinitionKind};
+use ir::FieldRes;
 
-use crate::{FieldType, Fields, ObjectType, Ty, TyKind};
+use crate::{FieldType, FieldTypes, ObjectType, Ty, TyKind};
 
 #[salsa::query_group(TyDatabaseStorage)]
 pub trait TyDatabase: DefDatabase {
     fn type_of(&self, res: ItemRes) -> Ty;
+    fn field_types_of(&self, res: ItemRes) -> FieldTypes;
+    fn type_of_field(&self, res: FieldRes) -> Ty;
     fn lower_type(&self, ty: ir::Ty) -> Ty;
 }
 
 fn lower_type(db: &dyn TyDatabase, ty: ir::Ty) -> Ty {
     match &ty.kind {
-        ir::TyKind::Named(_) => todo!(),
+        ir::TyKind::Named(name) => match name.as_str() {
+            "ID" => TyKind::Id,
+            "Boolean" => TyKind::Boolean,
+            "Float" => TyKind::Float,
+            "Int" => TyKind::Int,
+            "String" => TyKind::String,
+            _ => todo!(),
+        },
         ir::TyKind::NonNull(inner) => TyKind::NonNull(db.lower_type(inner.clone())),
         ir::TyKind::List(inner) => TyKind::List(db.lower_type(inner.clone())),
     }
     .intern()
+}
+
+fn type_of_field(db: &dyn TyDatabase, res: FieldRes) -> Ty {
+    let field = db.field(res);
+    db.lower_type(field.ty)
+}
+
+fn field_types_of(db: &dyn TyDatabase, res: ItemRes) -> FieldTypes {
+    let body = db.item_body(res).expect("queried `field_types` on item with no fields");
+    FieldTypes {
+        fields: body
+            .fields()
+            .unwrap()
+            .iter()
+            .map(|(idx, field)| FieldType { name: field.name.name(), res: FieldRes::new(res, idx) })
+            .collect(),
+    }
 }
 
 fn type_of(db: &dyn TyDatabase, res: ItemRes) -> Ty {
@@ -25,17 +52,8 @@ fn type_of(db: &dyn TyDatabase, res: ItemRes) -> Ty {
             let body = db.item_body(res).expect("typedef should have a body");
             let kind = match typedef.kind {
                 TypeDefinitionKind::Object => TyKind::Object(ObjectType {
-                    fields: Fields {
-                        fields: body
-                            .fields_slice()
-                            .unwrap()
-                            .iter()
-                            .map(|field| FieldType {
-                                name: field.name.name(),
-                                ty: db.lower_type(field.ty.clone()),
-                            })
-                            .collect(),
-                    },
+                    name: item.name.name(),
+                    fields: db.field_types_of(res),
                 }),
                 TypeDefinitionKind::Interface => todo!(),
                 TypeDefinitionKind::Input => todo!(),

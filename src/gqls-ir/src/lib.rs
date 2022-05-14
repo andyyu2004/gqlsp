@@ -7,7 +7,7 @@ mod ty;
 
 pub use self::body::*;
 pub use self::ty::*;
-pub use db::{DefDatabase, DefDatabaseStorage };
+pub use db::{DefDatabase, DefDatabaseStorage};
 pub use gqls_base_db::{SourceDatabase, SourceDatabaseStorage};
 pub use la_arena::{Arena, Idx, RawIdx};
 
@@ -280,6 +280,12 @@ impl ItemRes {
 pub struct FieldRes {
     pub item: ItemRes,
     pub idx: Idx<Field>,
+}
+
+impl FieldRes {
+    pub fn new(item: ItemRes, idx: Idx<Field>) -> Self {
+        Self { item, idx }
+    }
 }
 
 trait ArenaExt {

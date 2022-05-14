@@ -373,6 +373,7 @@ dependencies = [
 name = "gqls-ty"
 version = "0.1.0"
 dependencies = [
+ "expect-test",
  "gqls-fixture",
  "gqls-ir",
  "salsa",
