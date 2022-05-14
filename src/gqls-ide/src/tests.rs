@@ -1,8 +1,8 @@
 use expect_test::expect;
-use gqls_fixture::Fixture;
-use maplit::{hashmap, hashset};
+use gqls_fixture::{fixture, Fixture};
+use maplit::hashmap;
 
-use crate::{diagnostic, range, ChangeSummary, Changeset, ChangesetSummary, Ide};
+use crate::{ChangeSummary, Changeset, ChangesetSummary, Ide};
 
 macro_rules! idx {
     ($idx:expr) => {
@@ -85,9 +85,10 @@ impl Ide {
 #[test]
 fn test_ide() {
     let mut ide = Ide::default();
+    ide.setup_fixture(&fixture! {
+        "foo.graphql" => "scalar Foo"
+    });
     let foo = ide.vfs().intern("foo.graphql");
-    let summary = apply_changeset!(ide: foo => "scalar Foo");
-    assert_eq!(summary, hashmap! { foo => ChangeSummary::default() });
     assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Foo");
     expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]]
         .assert_eq(&ide.snapshot().syntax_tree(foo));
@@ -97,17 +98,4 @@ fn test_ide() {
     assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Baz");
     expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]]
         .assert_eq(&ide.snapshot().syntax_tree(foo));
-}
-
-#[test]
-fn test_ide_syntax_diagnostics() {
-    let mut ide = Ide::default();
-    let foo = ide.vfs().intern("foo.graphql");
-    let summary = apply_changeset!(ide: foo => "bad");
-    assert_eq!(
-        summary[foo].diagnostics,
-        hashset! {
-            diagnostic!(E0001 @ range!(0:0..0:3))
-        }
-    );
 }

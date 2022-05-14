@@ -1,16 +1,14 @@
 use gqls_fixture::fixture;
 
+use super::test_error_code;
+
 #[test]
-fn test_duplicate_definition() {
+fn test_duplicate_directive_definition() {
     let fixture = fixture! {
         "foo" => "
-            type Foo {
-                id: ID!
-            }
-
-            type Foo {
-                id: ID!
-            }
+            directive @qux on FIELD_DEFINITION
+            directive @qux on INTERFACE
         "
     };
+    test_error_code(&fixture);
 }

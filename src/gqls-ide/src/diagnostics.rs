@@ -2,7 +2,7 @@ use gqls_db::{DefDatabase, SourceDatabase};
 use gqls_ir::{Directive, ItemKind, ItemRes, Ty, TypeDefinitionKind};
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Display};
 use std::str::FromStr;
 use vfs::FileId;
@@ -32,6 +32,9 @@ macro_rules! error_msg {
     (E0003) => {
         "unresolved type `{}`"
     };
+    (E0004) => {
+        "duplicate directive definition `{}`"
+    };
     ($ident:ident) => {
         compile_error!("unknown error code")
     };
@@ -47,9 +50,13 @@ impl ErrorCode {
 
 #[macro_export]
 macro_rules! diagnostic {
-    ($code:ident @ $range:expr $(, $($arg:tt)* )? ) => {{
-        let message = format!($crate::error_msg!($code) $( , $($arg)* )? );
-        $crate::Diagnostic::new($range.into(), stringify!($code).parse().unwrap(), message)
+    ($code:ident @ $range:expr $(, $arg:expr)* $( ; [ $( $location:expr => $msg:expr ),+ ] )? ) => {{
+        let message = format!($crate::error_msg!($code),  $($arg),*  );
+        let labels = vec![ $( $( $crate::DiagnosticLabel {
+            location: $location,
+            message: $msg.to_string(),
+        }, )+ )? ];
+        $crate::Diagnostic::new_with_labels($range.into(), stringify!($code).parse().unwrap(), message, labels)
     }};
 }
 
@@ -60,12 +67,41 @@ impl<'a> DiagnosticsCtxt<'a> {
 
     fn diagnostics(mut self) -> HashSet<Diagnostic> {
         self.syntax();
+        self.duplicate_definitions();
         self.unresolved_references();
         self.diagnostics
     }
 
     fn diagnose(&mut self, diagnostic: Diagnostic) {
         self.diagnostics.insert(diagnostic);
+    }
+
+    fn duplicate_definitions(&mut self) {
+        let project_items = self.snapshot.project_items(self.file);
+        let mut directives = HashMap::new();
+        let mut typedefs = HashMap::new();
+
+        for (file, items) in project_items.iter() {
+            for (_, item) in items.iter() {
+                let location = Location::new(file, item.name.range.into());
+                match item.kind {
+                    ItemKind::TypeDefinition(typedef) => {
+                        if items[typedef].is_ext {
+                            // type extensions are not duplicates
+                            continue;
+                        }
+                        typedefs.insert(&item.name, location);
+                    }
+                    ItemKind::DirectiveDefinition(_) =>
+                        if let Some(existing) = directives.insert(&item.name, location) {
+                            let diagnostic = diagnostic!(E0004 @ item.range, item.name; [
+                                existing => format!("previous definition of directive `{}` here", item.name)
+                            ]);
+                            self.diagnose(diagnostic);
+                        },
+                };
+            }
+        }
     }
 
     fn unresolved_references(&mut self) {
@@ -108,7 +144,7 @@ impl<'a> DiagnosticsCtxt<'a> {
             "Int" | "Float" | "String" | "Boolean" | "ID" => return,
             _ =>
                 if self.snapshot.resolve_type(self.file, ty.clone()).is_empty() {
-                    self.diagnose(diagnostic!(E0003 @ ty.range, ty.name()))
+                    self.diagnose(diagnostic!(E0003 @ ty.range, ty.name() ))
                 },
         };
     }
@@ -162,12 +198,16 @@ pub struct DiagnosticLabel {
 
 impl Diagnostic {
     pub fn new(range: Range, code: ErrorCode, message: String) -> Self {
-        Self { range, code, message, severity: code.severity(), labels: Default::default() }
+        Self::new_with_labels(range, code, message, vec![])
     }
 
-    pub fn with_label(mut self, label: DiagnosticLabel) -> Self {
-        self.labels.push(label);
-        self
+    pub fn new_with_labels(
+        range: Range,
+        code: ErrorCode,
+        message: String,
+        labels: Vec<DiagnosticLabel>,
+    ) -> Self {
+        Self { range, code, message, severity: code.severity(), labels }
     }
 }
 
