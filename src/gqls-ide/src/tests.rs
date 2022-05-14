@@ -1,8 +1,9 @@
 use expect_test::expect;
-use gqls_fixture::{fixture, Fixture};
+use gqls_fixture::{fixture, fixture_file, Fixture, FixtureFile};
 use maplit::hashmap;
+use vfs::FileId;
 
-use crate::{ChangeSummary, Changeset, ChangesetSummary, Ide};
+use crate::{ChangeSummary, Changeset, ChangesetSummary, Ide, VFS};
 
 macro_rules! idx {
     ($idx:expr) => {
@@ -47,6 +48,13 @@ macro_rules! setup {
 pub(crate) use setup;
 
 impl Ide {
+    pub fn from_file(gql: &str) -> (Self, FileId) {
+        let file = VFS.write().intern("test");
+        let fixture = Fixture::new(hashmap! { file => fixture_file!(gql) });
+        let ide = Self::from_fixture_allow_errors(&fixture);
+        (ide, file)
+    }
+
     pub fn from_fixture(fixture: &Fixture) -> Self {
         let mut ide = Ide::default();
         ide.setup_fixture(fixture);

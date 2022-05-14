@@ -8,12 +8,17 @@ use gqls_syntax::{Point, Position};
 use vfs::FileId;
 
 #[macro_export]
+macro_rules! fixture_file {
+    ( $text:expr ) => {{ $crate::FixtureFile::parse(&$text) }};
+}
+
+#[macro_export]
 macro_rules! fixture {
     ( $($file:literal => $text:expr)* ) => {{
         let mut vfs = vfs::Vfs::default();
         $crate::Fixture::new(
             $crate::hashmap! {
-                $(vfs.intern($file) => $crate::FixtureFile::parse(&$text)),*
+                $(vfs.intern($file) => $crate::fixture_file!($text)),*
             }
         )
     }};
