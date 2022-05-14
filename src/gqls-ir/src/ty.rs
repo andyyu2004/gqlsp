@@ -10,11 +10,19 @@ pub struct Type {
 }
 
 impl Type {
+    pub fn new_named(name: Name) -> Ty {
+        Box::new(Self { range: name.range, kind: TyKind::Named(name) })
+    }
+
     pub fn name(&self) -> Name {
         match &self.kind {
             TyKind::Named(name) => name.clone(),
             TyKind::NonNull(ty) | TyKind::List(ty) => ty.name(),
         }
+    }
+
+    pub fn is_builtin(&self) -> bool {
+        matches!(self.name().as_str(), "Int" | "Float" | "String" | "Boolean" | "ID")
     }
 }
 

@@ -107,7 +107,7 @@ impl Snapshot {
                 .map(|item| WorkspaceSymbol {
                     name: item.name.clone(),
                     kind: item.kind.into(),
-                    location: Location::new(file, item.range.into()),
+                    location: Location::new(file, item.range),
                 });
             workspace_symbols.extend(symbols);
         }

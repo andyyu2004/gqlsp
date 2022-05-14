@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use std::hash::Hash;
 use std::str::FromStr;
 
-use expect_test::Expect;
+use expect_test::{expect, Expect};
 use gqls_fixture::{Annotation, Fixture};
 use gqls_syntax::Point;
 
@@ -138,6 +138,7 @@ fn test_parse_error_code() {
 
 mod duplicate;
 mod empty_fields;
+mod impl_non_interface;
 mod io;
 mod syntax;
 mod unresolved;

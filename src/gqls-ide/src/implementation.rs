@@ -12,7 +12,7 @@ impl Snapshot {
         self.implementations(position.file, name)
             .into_iter()
             .map(|res| self.item(res))
-            .map(|item| Location::new(position.file, item.name.range.into()))
+            .map(|item| Location::new(position.file, item.name.range))
             .collect()
     }
 }

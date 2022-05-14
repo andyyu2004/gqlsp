@@ -10,7 +10,7 @@ impl Snapshot {
                 let field = self.field(res);
                 self.resolve_type(position.file, field.ty)
                     .into_iter()
-                    .map(|res| Location::new(res.file, self.item(res).name.range.into()))
+                    .map(|res| Location::new(res.file, self.item(res).name.range))
                     .collect()
             }
             None => self.goto_definition(position),

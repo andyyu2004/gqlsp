@@ -155,7 +155,7 @@ pub enum TypeDefinitionKind {
 }
 
 impl TypeDefinitionKind {
-    pub fn description(&self) -> &'static str {
+    pub fn desc(&self) -> &'static str {
         match self {
             Self::Object => "object",
             Self::Interface => "interface",

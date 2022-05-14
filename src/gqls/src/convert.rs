@@ -2,7 +2,7 @@ use lsp_types::NumberOrString;
 use std::path::{Path, PathBuf};
 use tower_lsp::jsonrpc;
 
-use crate::lsp::{self, VfsExt};
+use crate::lsp::VfsExt;
 use crate::tokens;
 
 pub trait UrlExt {

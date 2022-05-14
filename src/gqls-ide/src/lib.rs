@@ -152,8 +152,8 @@ pub struct Location {
 }
 
 impl Location {
-    pub fn new(file: FileId, range: Range) -> Self {
-        Self { file, range }
+    pub fn new(file: FileId, range: impl Into<Range>) -> Self {
+        Self { file, range: range.into() }
     }
 }
 

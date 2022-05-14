@@ -1,5 +1,5 @@
 use expect_test::expect;
-use gqls_fixture::{fixture, fixture_file, Fixture, FixtureFile};
+use gqls_fixture::{fixture, fixture_file, Fixture};
 use maplit::hashmap;
 use vfs::FileId;
 

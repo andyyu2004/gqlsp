@@ -9,7 +9,7 @@ fn test(fixture: Fixture) {
     let ide = Ide::from_fixture(&fixture);
     let expected = fixture
         .ranges()
-        .map(|(file, range)| Location::new(file, range.into()))
+        .map(|(file, range)| Location::new(file, range))
         .collect::<HashSet<Location>>();
 
     for reference_position in fixture.positions() {

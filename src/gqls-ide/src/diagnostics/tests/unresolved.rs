@@ -45,12 +45,15 @@ fn test_unresolved_type_in_field() {
 
 #[test]
 fn test_unresolved_interface_in_implements_clause() {
-    test_rendered("type Foo implements Bar { id: ID! }", expect![[r#"
+    test_rendered(
+        "type Foo implements Bar { id: ID! }",
+        expect![[r#"
         error[0003]: unresolved type `Bar`
           ┌─ test.graphql:1:21
           │
         1 │ type Foo implements Bar { id: ID! }
           │                     ^^^
 
-    "#]]);
+    "#]],
+    );
 }

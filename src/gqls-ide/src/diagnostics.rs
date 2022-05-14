@@ -1,5 +1,5 @@
 use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::{Directive, Implementations, ItemKind, ItemRes, Ty, TypeDefinitionKind};
+use gqls_ir::{Directive, Implementations, ItemKind, ItemRes, Ty, Type, TypeDefinitionKind};
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
@@ -39,7 +39,10 @@ macro_rules! error_msg {
         "duplicate type definition `{name}`"
     };
     (E0006) => {
-        "{item_kind} `{name}` must define at least one field"
+        "{typedef_kind} `{name}` must define at least one field"
+    };
+    (E0007) => {
+        "expected an interface, found {typedef_kind} `{name}`"
     };
     ($ident:ident) => {
         compile_error!("unknown error code")
@@ -93,9 +96,9 @@ impl<'a> DiagnosticsCtxt<'a> {
                     .and_then(|body| body.fields())
                 {
                     if fields.is_empty() {
-                        let item_kind = items[item.kind.into_type_definition()].kind.description();
+                        let kind = items[item.kind.into_type_definition()].kind.desc();
                         self.diagnose(
-                            diagnostic!(E0006 @ item.range, item_kind = item_kind, name = item.name),
+                            diagnostic!(E0006 @ item.range, typedef_kind = kind, name = item.name),
                         );
                     }
                 }
@@ -110,7 +113,7 @@ impl<'a> DiagnosticsCtxt<'a> {
 
         for (file, items) in project_items.iter() {
             for (_, item) in items.iter() {
-                let location = Location::new(file, item.name.range.into());
+                let location = Location::new(file, item.name.range);
                 match item.kind {
                     ItemKind::TypeDefinition(typedef) => {
                         if items[typedef].is_ext {
@@ -170,31 +173,35 @@ impl<'a> DiagnosticsCtxt<'a> {
         }
     }
 
-    fn check_input_ty<'d>(&mut self, ty: Ty) {
+    fn check_input_ty<'d>(&mut self, _ty: Ty) {
         // TODO
     }
 
     fn check_output_ty<'d>(&mut self, ty: Ty) {
-        match ty.name().as_str() {
-            "Int" | "Float" | "String" | "Boolean" | "ID" => return,
-            _ =>
-                if self.snapshot.resolve_type(self.file, ty.clone()).is_empty() {
-                    self.diagnose(diagnostic!(E0003 @ ty.range, typename = ty.name()))
-                },
-        };
+        // FIXME avoid all these haphazard builtin checks
+        if !ty.is_builtin() && self.snapshot.resolve_type(self.file, ty.clone()).is_empty() {
+            self.diagnose(diagnostic!(E0003 @ ty.range, typename = ty.name()))
+        }
     }
 
     fn check_implementations<'d>(&mut self, impls: &Implementations) {
         for name in impls {
-            let resolutions = self.snapshot.resolve_item(self.file, name.clone());
-            if resolutions.is_empty() {
+            let ty = Type::new_named(name.clone());
+            let resolutions = self.snapshot.resolve_type(self.file, ty.clone());
+            if !ty.is_builtin() && resolutions.is_empty() {
                 self.diagnose(diagnostic!(E0003 @ name.range, typename = name))
             }
 
             for res in resolutions {
                 let item = self.snapshot.item(res);
-                let typedef = self.snapshot.typedef(self.file, item.kind.into_type_definition());
-                // match typedef.kind {}
+                let typedef = self.snapshot.typedef(res.file, item.kind.into_type_definition());
+                if !matches!(typedef.kind, TypeDefinitionKind::Interface) {
+                    self.diagnose(
+                        diagnostic!(E0007 @ name.range, typedef_kind = typedef.kind.desc(), name = item.name; [
+                            Location::new(res.file, item.name.range)  => "not an interface"
+                        ]),
+                    )
+                }
             }
         }
     }

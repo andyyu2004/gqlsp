@@ -12,7 +12,7 @@ impl Snapshot {
         };
         self.references(Res::Item(res))
             .into_iter()
-            .map(|(file, range)| Location::new(file, range.into()))
+            .map(|(file, range)| Location::new(file, range))
             .collect()
     }
 }
