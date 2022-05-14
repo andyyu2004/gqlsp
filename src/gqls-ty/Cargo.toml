@@ -10,5 +10,8 @@ smol_str = "0.1"
 [dependencies.gqls-ir]
 path = "../gqls-ir"
 
+[dev-dependencies.gqls-fixture]
+path = "../gqls-fixture"
+
 [dev-dependencies.testing]
 path = "../testing"

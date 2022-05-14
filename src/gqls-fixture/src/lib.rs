@@ -1,6 +1,7 @@
 #![deny(rust_2018_idioms)]
 
 pub use maplit::hashmap;
+pub use vfs;
 
 use std::collections::{HashMap, HashSet};
 
@@ -15,7 +16,7 @@ macro_rules! fixture_file {
 #[macro_export]
 macro_rules! fixture {
     ($($file:literal => $text:expr)*) => {{
-        let mut vfs = vfs::Vfs::default();
+        let mut vfs = $crate::vfs::Vfs::default();
         $crate::Fixture::new(
             $crate::hashmap! {
                 $(vfs.intern($file) => $crate::fixture_file!($text)),*

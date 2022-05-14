@@ -7,7 +7,7 @@ use gqls_base_db::SourceDatabaseStorage;
 use gqls_fixture::fixture;
 use maplit::{hashmap, hashset};
 use smallvec::smallvec;
-use testing::SourceDatabaseExt;
+use testing::TestDatabaseExt;
 use vfs::Vfs;
 
 #[salsa::database(SourceDatabaseStorage, DefDatabaseStorage)]
@@ -29,7 +29,6 @@ pub(crate) use idx;
 
 #[test]
 fn test_definitions() {
-    let mut db = TestDB::default();
     let mut vfs = Vfs::default();
 
     let foo = vfs.intern("foo");
@@ -83,7 +82,7 @@ fn test_definitions() {
         bar => bargql
     };
 
-    db.setup_fixture(&fixture);
+    let db = TestDB::from_fixture(&fixture);
 
     let item_map = db.item_map(foo);
     assert_eq!(

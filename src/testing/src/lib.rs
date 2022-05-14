@@ -5,11 +5,21 @@ use gqls_fixture::{hashmap, Fixture};
 
 pub use {gqls_base_db, gqls_syntax, maplit};
 
-pub trait SourceDatabaseExt {
+pub trait TestDatabaseExt: Default + SourceDatabase {
     fn setup_fixture(&mut self, fixture: &Fixture);
+    fn from_fixture(fixture: &Fixture) -> Self;
 }
 
-impl<DB: SourceDatabase> SourceDatabaseExt for DB {
+impl<DB> TestDatabaseExt for DB
+where
+    DB: SourceDatabase + Default,
+{
+    fn from_fixture(fixture: &Fixture) -> Self {
+        let mut db = Self::default();
+        db.setup_fixture(fixture);
+        db
+    }
+
     fn setup_fixture(&mut self, fixture: &Fixture) {
         self.set_projects(Arc::new(
             hashmap! { "default" => fixture.files().keys().cloned().collect() },
