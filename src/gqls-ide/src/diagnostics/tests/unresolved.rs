@@ -1,6 +1,7 @@
+use expect_test::expect;
 use gqls_fixture::fixture;
 
-use super::{test_error_code, test_error_message};
+use super::{test_error_code, test_error_message, test_rendered};
 
 #[test]
 fn test_unresolved_directives() {
@@ -40,4 +41,16 @@ fn test_unresolved_type_in_field() {
         "
     };
     test_error_message(&fixture);
+}
+
+#[test]
+fn test_unresolved_interface_in_implements_clause() {
+    test_rendered("type Foo implements Bar { id: ID! }", expect![[r#"
+        error[0003]: unresolved type `Bar`
+          ┌─ test.graphql:1:21
+          │
+        1 │ type Foo implements Bar { id: ID! }
+          │                     ^^^
+
+    "#]]);
 }

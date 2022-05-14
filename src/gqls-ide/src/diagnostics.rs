@@ -1,5 +1,5 @@
 use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::{Directive, ItemKind, ItemRes, Ty, TypeDefinitionKind};
+use gqls_ir::{Directive, Implementations, ItemKind, ItemRes, Ty, TypeDefinitionKind};
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
@@ -145,6 +145,9 @@ impl<'a> DiagnosticsCtxt<'a> {
             };
 
             self.check_directives(&typedef.directives);
+            if let Some(impls) = &typedef.implementations {
+                self.check_implementations(impls);
+            };
 
             if let Some(fields) = self
                 .snapshot
@@ -176,9 +179,24 @@ impl<'a> DiagnosticsCtxt<'a> {
             "Int" | "Float" | "String" | "Boolean" | "ID" => return,
             _ =>
                 if self.snapshot.resolve_type(self.file, ty.clone()).is_empty() {
-                    self.diagnose(diagnostic!(E0003 @ ty.range, typename = ty.name() ))
+                    self.diagnose(diagnostic!(E0003 @ ty.range, typename = ty.name()))
                 },
         };
+    }
+
+    fn check_implementations<'d>(&mut self, impls: &Implementations) {
+        for name in impls {
+            let resolutions = self.snapshot.resolve_item(self.file, name.clone());
+            if resolutions.is_empty() {
+                self.diagnose(diagnostic!(E0003 @ name.range, typename = name))
+            }
+
+            for res in resolutions {
+                let item = self.snapshot.item(res);
+                let typedef = self.snapshot.typedef(self.file, item.kind.into_type_definition());
+                // match typedef.kind {}
+            }
+        }
     }
 
     fn check_directives<'d>(&mut self, directives: impl IntoIterator<Item = &'d Directive>) {
