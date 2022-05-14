@@ -42,3 +42,12 @@ fn test_duplicate_type_definition() {
         "#]],
     )
 }
+
+#[test]
+fn test_type_extension_no_duplicate_diagnostic() {
+    let gql = "
+        type Foo { id: ID! }
+        extend type Foo { foo: Foo! }
+    ";
+    test_rendered(gql, expect![[]])
+}

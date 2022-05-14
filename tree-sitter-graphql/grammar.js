@@ -123,7 +123,7 @@ module.exports = grammar({
         )
       ),
     input_fields_definition: ($) =>
-      seq("{", repeat1($.input_value_definition), "}"),
+      seq("{", repeat($.input_value_definition), "}"),
     enum_values_definition: ($) =>
       seq("{", repeat1($.enum_value_definition), "}"),
     enum_value_definition: ($) =>

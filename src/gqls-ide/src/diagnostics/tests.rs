@@ -108,6 +108,8 @@ fn render_diagnostics(gql: &str, diagnostics: impl IntoIterator<Item = Diagnosti
 
     let mut writer = StringWriter::default();
 
+    let mut diagnostics = diagnostics.into_iter().collect::<Vec<_>>();
+    diagnostics.sort_by_key(|diag| diag.range.start);
     for diagnostic in diagnostics {
         let diag = convert_diagnostic(&diagnostic);
         codespan_reporting::term::emit(
@@ -135,6 +137,7 @@ fn test_parse_error_code() {
 }
 
 mod duplicate;
+mod empty_fields;
 mod io;
 mod syntax;
 mod unresolved;

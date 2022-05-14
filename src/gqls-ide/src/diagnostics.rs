@@ -27,16 +27,19 @@ macro_rules! error_msg {
         "syntax error"
     };
     (E0002) => {
-        "unresolved directive `{}`"
+        "unresolved directive `{name}`"
     };
     (E0003) => {
-        "unresolved type `{}`"
+        "unresolved type `{typename}`"
     };
     (E0004) => {
-        "duplicate directive definition `{}`"
+        "duplicate directive definition `{name}`"
     };
     (E0005) => {
-        "duplicate type definition `{}`"
+        "duplicate type definition `{name}`"
+    };
+    (E0006) => {
+        "{item_kind} `{name}` must define at least one field"
     };
     ($ident:ident) => {
         compile_error!("unknown error code")
@@ -53,8 +56,8 @@ impl ErrorCode {
 
 #[macro_export]
 macro_rules! diagnostic {
-    ($code:ident @ $range:expr $(, $arg:expr)* $( ; [ $( $location:expr => $msg:expr ),+ ] )? ) => {{
-        let message = format!($crate::error_msg!($code),  $($arg),*  );
+    ($code:ident @ $range:expr $(, $name:ident = $arg:expr)* $( ; [ $( $location:expr => $msg:expr ),+ ] )? ) => {{
+        let message = format!($crate::error_msg!($code),  $($name = $arg),*  );
         let labels = vec![ $( $( $crate::DiagnosticLabel {
             location: $location,
             message: $msg.to_string(),
@@ -70,6 +73,7 @@ impl<'a> DiagnosticsCtxt<'a> {
 
     fn diagnostics(mut self) -> HashSet<Diagnostic> {
         self.syntax();
+        self.empty_fields();
         self.duplicate_definitions();
         self.unresolved_references();
         self.diagnostics
@@ -77,6 +81,26 @@ impl<'a> DiagnosticsCtxt<'a> {
 
     fn diagnose(&mut self, diagnostic: Diagnostic) {
         self.diagnostics.insert(diagnostic);
+    }
+
+    fn empty_fields(&mut self) {
+        for (file, items) in self.snapshot.project_items(self.file).iter() {
+            for (idx, item) in items.iter() {
+                if let Some(fields) = self
+                    .snapshot
+                    .item_body(ItemRes::new(file, idx))
+                    .as_ref()
+                    .and_then(|body| body.fields())
+                {
+                    if fields.is_empty() {
+                        let item_kind = items[item.kind.into_type_definition()].kind.description();
+                        self.diagnose(
+                            diagnostic!(E0006 @ item.range, item_kind = item_kind, name = item.name),
+                        );
+                    }
+                }
+            }
+        }
     }
 
     fn duplicate_definitions(&mut self) {
@@ -94,7 +118,7 @@ impl<'a> DiagnosticsCtxt<'a> {
                             continue;
                         }
                         if let Some(existing) = typedefs.insert(&item.name, location) {
-                            let diagnostic = diagnostic!(E0005 @ item.range, item.name; [
+                            let diagnostic = diagnostic!(E0005 @ item.range, name = item.name; [
                                 existing => format!("previous definition of type `{}` here", item.name)
                             ]);
                             self.diagnose(diagnostic);
@@ -102,7 +126,7 @@ impl<'a> DiagnosticsCtxt<'a> {
                     }
                     ItemKind::DirectiveDefinition(_) =>
                         if let Some(existing) = directives.insert(&item.name, location) {
-                            let diagnostic = diagnostic!(E0004 @ item.range, item.name; [
+                            let diagnostic = diagnostic!(E0004 @ item.range, name = item.name; [
                                 existing => format!("previous definition of directive `{}` here", item.name)
                             ]);
                             self.diagnose(diagnostic);
@@ -152,7 +176,7 @@ impl<'a> DiagnosticsCtxt<'a> {
             "Int" | "Float" | "String" | "Boolean" | "ID" => return,
             _ =>
                 if self.snapshot.resolve_type(self.file, ty.clone()).is_empty() {
-                    self.diagnose(diagnostic!(E0003 @ ty.range, ty.name() ))
+                    self.diagnose(diagnostic!(E0003 @ ty.range, typename = ty.name() ))
                 },
         };
     }
@@ -160,7 +184,7 @@ impl<'a> DiagnosticsCtxt<'a> {
     fn check_directives<'d>(&mut self, directives: impl IntoIterator<Item = &'d Directive>) {
         for directive in directives {
             if self.snapshot.resolve_item(self.file, directive.name.clone()).is_empty() {
-                self.diagnose(diagnostic!(E0002 @ directive.name.range, directive.name))
+                self.diagnose(diagnostic!(E0002 @ directive.name.range, name = directive.name))
             }
         }
     }

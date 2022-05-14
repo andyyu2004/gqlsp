@@ -128,6 +128,12 @@ pub enum ItemKind {
     DirectiveDefinition(Idx<DirectiveDefinition>),
 }
 
+impl ItemKind {
+    pub fn into_type_definition(self) -> Idx<TypeDefinition> {
+        if let Self::TypeDefinition(v) = self { v } else { panic!() }
+    }
+}
+
 pub type Implementations = HashSet<Name>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -146,6 +152,19 @@ pub enum TypeDefinitionKind {
     Scalar,
     Enum,
     Union,
+}
+
+impl TypeDefinitionKind {
+    pub fn description(&self) -> &'static str {
+        match self {
+            Self::Object => "object",
+            Self::Interface => "interface",
+            Self::Input => "input",
+            Self::Scalar => "scalar",
+            Self::Enum => "enum",
+            Self::Union => "union",
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -242,6 +261,12 @@ pub enum Res {
 pub struct ItemRes {
     pub file: FileId,
     pub idx: Idx<Item>,
+}
+
+impl ItemRes {
+    pub fn new(file: FileId, idx: Idx<Item>) -> Self {
+        Self { file, idx }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
