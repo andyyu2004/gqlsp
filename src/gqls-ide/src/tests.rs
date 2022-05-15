@@ -17,9 +17,6 @@ macro_rules! apply_changeset {
     ($ide:ident: $file:ident:$a:literal:$b:literal..$x:literal:$y:literal => $text:expr) => {
         $ide.apply_changeset($crate::Changeset::single($crate::change!($file:$a:$b..$x:$y => $text)))
     };
-    ($ide:ident: $file:ident => $text:expr) => {
-        $ide.apply_changeset($crate::Changeset::single($crate::change!($file => $text)))
-    };
 }
 
 pub(crate) use apply_changeset;

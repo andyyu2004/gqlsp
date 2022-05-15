@@ -5,7 +5,6 @@ use gqls_db::{DefDatabase, SourceDatabase};
 use gqls_ir::{DirectiveLocations, InProject, ItemKind, TypeDefinitionKind};
 use gqls_syntax::{NodeExt, NodeKind, Position};
 
-
 use crate::Snapshot;
 
 #[derive(PartialEq, Eq, Hash, PartialOrd, Ord)]
