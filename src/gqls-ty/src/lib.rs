@@ -5,9 +5,27 @@ mod fmt;
 
 use gqls_ir::FieldRes;
 use smol_str::SmolStr;
+use std::ops::Deref;
 use std::sync::Arc;
 
-pub type Ty = Arc<Type>;
+pub type Ty = Interned<Type>;
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub struct Interned<T>(Arc<T>);
+
+impl<T> Deref for Interned<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> Interned<T> {
+    pub fn new(value: T) -> Self {
+        Interned(Arc::new(value))
+    }
+}
 
 #[derive(PartialEq, Eq, Clone, Hash)]
 pub struct Type {
@@ -18,9 +36,10 @@ pub struct Type {
 pub enum TyKind {
     Boolean,
     Float,
-    Id,
+    ID,
     Int,
     String,
+    Err,
     Object(ObjectType),
     Input(InputObjectType),
     Interface(InterfaceType),
@@ -51,7 +70,7 @@ pub struct InterfaceType {
     fields: FieldTypes,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(PartialEq, Eq, Clone, Hash)]
 pub struct FieldType {
     name: SmolStr,
     res: FieldRes,
@@ -62,6 +81,9 @@ impl TyKind {
         Ty::new(Type { kind: self })
     }
 }
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct ImplError;
 
 #[cfg(test)]
 mod tests;

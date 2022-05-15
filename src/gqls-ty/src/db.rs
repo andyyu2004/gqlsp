@@ -1,20 +1,30 @@
 use gqls_ir::{self as ir, DefDatabase, ItemKind, ItemRes, TypeDefinitionKind};
-use ir::FieldRes;
+use ir::{FieldRes, Res};
 
-use crate::{FieldType, FieldTypes, ObjectType, Ty, TyKind};
+use crate::{FieldType, FieldTypes, ImplError, InterfaceType, ObjectType, Ty, TyKind};
 
 #[salsa::query_group(TyDatabaseStorage)]
 pub trait TyDatabase: DefDatabase {
-    fn type_of(&self, res: ItemRes) -> Ty;
+    fn type_of(&self, res: Res) -> Ty;
+    fn type_of_item(&self, res: ItemRes) -> Ty;
     fn field_types_of(&self, res: ItemRes) -> FieldTypes;
     fn type_of_field(&self, res: FieldRes) -> Ty;
     fn lower_type(&self, ty: ir::Ty) -> Ty;
+    fn implements_interface(&self, obj: ObjectType, interface: InterfaceType) -> Option<ImplError>;
+}
+
+fn implements_interface(
+    db: &dyn TyDatabase,
+    obj: ObjectType,
+    interface: InterfaceType,
+) -> Option<ImplError> {
+    todo!()
 }
 
 fn lower_type(db: &dyn TyDatabase, ty: ir::Ty) -> Ty {
     match &ty.kind {
         ir::TyKind::Named(name) => match name.as_str() {
-            "ID" => TyKind::Id,
+            "ID" => TyKind::ID,
             "Boolean" => TyKind::Boolean,
             "Float" => TyKind::Float,
             "Int" => TyKind::Int,
@@ -25,6 +35,13 @@ fn lower_type(db: &dyn TyDatabase, ty: ir::Ty) -> Ty {
         ir::TyKind::List(inner) => TyKind::List(db.lower_type(inner.clone())),
     }
     .intern()
+}
+
+fn type_of(db: &dyn TyDatabase, res: Res) -> Ty {
+    match res {
+        Res::Item(res) => db.type_of_item(res),
+        Res::Field(res) => db.type_of_field(res),
+    }
 }
 
 fn type_of_field(db: &dyn TyDatabase, res: FieldRes) -> Ty {
@@ -44,7 +61,9 @@ fn field_types_of(db: &dyn TyDatabase, res: ItemRes) -> FieldTypes {
     }
 }
 
-fn type_of(db: &dyn TyDatabase, res: ItemRes) -> Ty {
+fn type_of_item(db: &dyn TyDatabase, res: ItemRes) -> Ty {
+    // FIXME aggregate over all the extensions
+    // if there's any ambiguities/duplicates/whatever just return TyKind::Err
     let item = db.item(res);
     match item.kind {
         ItemKind::TypeDefinition(idx) => {

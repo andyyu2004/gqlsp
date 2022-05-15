@@ -42,6 +42,10 @@ impl Fixture {
         Self { files }
     }
 
+    pub fn single(file: FixtureFile) -> Self {
+        Self { files: hashmap! { std::path::Path::new("") => file } }
+    }
+
     pub fn positions(&self) -> impl Iterator<Item = Position> + '_ {
         self.files
             .iter()
