@@ -41,7 +41,7 @@ pub trait SourceDatabase {
 
     fn file_to_projects(&self) -> Arc<HashMap<FileId, SmallVec<[Project; 1]>>>;
 
-    fn projects_of(&self, file: FileId) -> SmallVec<[Project; 1]>;
+    fn projects_of(&self, file: InProject<()>) -> SmallVec<[Project; 1]>;
 
     fn project_files(&self, project: Project) -> HashSet<FileId>;
 }
@@ -72,6 +72,49 @@ fn file_to_projects(db: &dyn SourceDatabase) -> Arc<HashMap<FileId, SmallVec<[Pr
     Arc::new(result)
 }
 
-fn projects_of(db: &dyn SourceDatabase, file: FileId) -> SmallVec<[Project; 1]> {
-    db.file_to_projects()[&file].clone()
+fn projects_of(db: &dyn SourceDatabase, project: InProject<()>) -> SmallVec<[Project; 1]> {
+    db.file_to_projects()[&project.file].clone()
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct InFile<T> {
+    pub file: FileId,
+    pub value: T,
+}
+
+impl<T> InFile<T> {
+    pub fn new(file: FileId, value: T) -> Self {
+        Self { file, value }
+    }
+
+    pub fn project(self) -> InProject<()> {
+        InProject::new(self.file, ())
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct InProject<T> {
+    /// any file in the project
+    pub file: FileId,
+    pub value: T,
+}
+
+impl InProject<()> {
+    pub fn unit(file: FileId) -> Self {
+        Self::new(file, ())
+    }
+}
+
+impl<T> InProject<T> {
+    pub fn new(file: FileId, value: T) -> Self {
+        Self { file, value }
+    }
+
+    pub fn project(&self) -> InProject<()> {
+        InProject::new(self.file, ())
+    }
+
+    pub fn map<U>(self, f: impl FnOnce(T) -> U) -> InProject<U> {
+        InProject::new(self.file, f(self.value))
+    }
 }

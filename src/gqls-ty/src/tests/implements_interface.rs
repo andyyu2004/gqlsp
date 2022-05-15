@@ -1,12 +1,12 @@
 use gqls_fixture::{fixture_file, FixtureFile};
 use testing::TestDatabaseExt;
 
-use crate::db::TyDatabase;
+
 
 use super::TestDB;
 
-fn test(fixture_file: &FixtureFile, obj: &str, interface: &str) {
-    let db = TestDB::from_fixture_file(fixture_file);
+fn test(fixture_file: &FixtureFile, _obj: &str, _interface: &str) {
+    let _db = TestDB::from_fixture_file(fixture_file);
     // db.type_of_item();
     // db.implements_interface();
 }

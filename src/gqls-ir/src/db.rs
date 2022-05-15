@@ -2,7 +2,7 @@ use std::mem::discriminant;
 use std::sync::Arc;
 use std::vec;
 
-use gqls_base_db::SourceDatabase;
+use gqls_base_db::{InProject, SourceDatabase};
 use gqls_syntax::{NodeExt, NodeKind, Position, RangeExt};
 use smallvec::smallvec;
 use vfs::FileId;
@@ -13,26 +13,26 @@ use crate::*;
 #[salsa::query_group(DefDatabaseStorage)]
 pub trait DefDatabase: SourceDatabase {
     fn field(&self, res: FieldRes) -> Field;
-    fn implementations(&self, file: FileId, name: Name) -> Vec<ItemRes>;
+    fn implementations(&self, interface: InProject<Name>) -> Vec<ItemRes>;
     fn item(&self, res: ItemRes) -> Item;
     fn item_at(&self, position: Position) -> Option<Idx<Item>>;
     fn item_body(&self, res: ItemRes) -> Option<Arc<ItemBody>>;
     fn item_map(&self, file: FileId) -> Arc<ItemMap>;
     fn item_references(&self, res: ItemRes) -> References;
     fn items(&self, file: FileId) -> Arc<Items>;
-    fn project_items(&self, file: FileId) -> Arc<ProjectItems>;
+    fn project_items(&self, project: InProject<()>) -> Arc<ProjectItems>;
     fn name_at(&self, position: Position) -> Option<Name>;
     fn references(&self, res: Res) -> References;
     fn resolve(&self, position: Position) -> Option<Res>;
-    fn resolve_item(&self, file: FileId, name: Name) -> ItemResolutions;
-    fn resolve_type(&self, file: FileId, ty: Ty) -> ItemResolutions;
+    fn resolve_item(&self, name: InProject<Name>) -> ItemResolutions;
+    fn resolve_type(&self, ty: InProject<Ty>) -> ItemResolutions;
     fn type_at(&self, position: Position) -> Option<Ty>;
     fn typedef(&self, file: FileId, idx: Idx<TypeDefinition>) -> TypeDefinition;
 }
 
-fn project_items(db: &dyn DefDatabase, file: FileId) -> Arc<ProjectItems> {
+fn project_items(db: &dyn DefDatabase, project: InProject<()>) -> Arc<ProjectItems> {
     let data = db
-        .projects_of(file)
+        .projects_of(project)
         .iter()
         .flat_map(|project| db.project_files(project))
         .map(|file| (file, db.items(file)))
@@ -40,12 +40,12 @@ fn project_items(db: &dyn DefDatabase, file: FileId) -> Arc<ProjectItems> {
     Arc::new(data)
 }
 
-fn implementations(db: &dyn DefDatabase, file: FileId, interface: Name) -> Vec<ItemRes> {
+fn implementations(db: &dyn DefDatabase, interface: InProject<Name>) -> Vec<ItemRes> {
     let mut implementations = vec![];
-    for (&file, items) in db.project_items(file).iter() {
+    for (&file, items) in db.project_items(interface.project()).iter() {
         for (idx, _) in items.iter() {
-            if items.implements(idx, &interface) {
-                implementations.push(ItemRes { file, idx });
+            if items.implements(idx, &interface.value) {
+                implementations.push(ItemRes::new(file, idx));
             }
         }
     }
@@ -64,7 +64,7 @@ fn item_at(db: &dyn DefDatabase, position: Position) -> Option<Idx<Item>> {
 }
 
 fn item(db: &dyn DefDatabase, res: ItemRes) -> Item {
-    db.items(res.file).items[res.idx].clone()
+    db.items(res.file).items[res.value].clone()
 }
 
 fn field(db: &dyn DefDatabase, res: FieldRes) -> Field {
@@ -83,7 +83,7 @@ fn item_map(db: &dyn DefDatabase, file: FileId) -> Arc<ItemMap> {
 fn item_body(db: &dyn DefDatabase, res: ItemRes) -> Option<Arc<ItemBody>> {
     let items = db.items(res.file);
     let tree = db.file_tree(res.file);
-    let item = &items[res.idx];
+    let item = &items[res.value];
     let item_node = tree.root_node().named_descendant_for_range(item.range).unwrap();
     let bcx = BodyCtxt::new(db.file_text(res.file));
     let body = match item.kind {
@@ -138,25 +138,25 @@ fn resolve(db: &dyn DefDatabase, position: Position) -> Option<Res> {
                 .iter()
                 .find_map(|(idx, item)| (item.range == parent.range()).then(|| idx))
                 .expect("item not found");
-            Some(Res::Item(ItemRes { file: position.file, idx }))
+            Some(Res::Item(ItemRes::new(position.file, idx)))
         }
         // TODO
         _ => None,
     }
 }
 
-fn resolve_type(db: &dyn DefDatabase, file: FileId, ty: Ty) -> ItemResolutions {
-    db.resolve_item(file, ty.name())
+fn resolve_type(db: &dyn DefDatabase, ty: InProject<Ty>) -> ItemResolutions {
+    db.resolve_item(ty.map(|ty| ty.name()))
 }
 
-fn resolve_item(db: &dyn DefDatabase, file: FileId, name: Name) -> ItemResolutions {
+fn resolve_item(db: &dyn DefDatabase, name: InProject<Name>) -> ItemResolutions {
     let mut resolutions = smallvec![];
-    for project in db.projects_of(file) {
+    for project in db.projects_of(name.project()) {
         for file in db.project_files(project).iter() {
             let map = db.item_map(file);
-            if let Some(items) = map.get(&name) {
+            if let Some(items) = map.get(&name.value) {
                 for &idx in items {
-                    resolutions.push(ItemRes { file, idx });
+                    resolutions.push(ItemRes::new(file, idx));
                 }
             }
         }
@@ -168,13 +168,13 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
     let mut references = vec![];
     let res_item = db.item(res);
     let name = res_item.name;
-    for (&file, items) in db.project_items(res.file).iter() {
+    for (&file, items) in db.project_items(res.project()).iter() {
         for (idx, item) in items.iter() {
             if item.name == name && discriminant(&item.kind) == discriminant(&res_item.kind) {
                 references.push((file, item.name.range));
             }
 
-            let body = db.item_body(ItemRes { file, idx });
+            let body = db.item_body(ItemRes::new(file, idx));
 
             if let Some(ItemBody::UnionTypeDefinition(union)) = body.as_deref() {
                 references.extend(

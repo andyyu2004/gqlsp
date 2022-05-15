@@ -1,5 +1,5 @@
 use gqls_db::DefDatabase;
-use gqls_ir::{FieldRes, ItemRes, ItemResolutions};
+use gqls_ir::{FieldRes, InProject, ItemRes, ItemResolutions};
 use gqls_syntax::{Position, RangeExt};
 
 use crate::Snapshot;
@@ -8,16 +8,18 @@ use crate::Snapshot;
 impl Snapshot {
     pub(crate) fn resolve_item_name_at(&self, position: Position) -> ItemResolutions {
         self.name_at(position)
-            .map(|name| self.resolve_item(position.file, name))
+            .map(|name| self.resolve_item(InProject::new(position.file, name)))
             .unwrap_or_default()
     }
 
     pub(crate) fn resolve_type_at(&self, position: Position) -> ItemResolutions {
-        self.type_at(position).map(|ty| self.resolve_type(position.file, ty)).unwrap_or_default()
+        self.type_at(position)
+            .map(|ty| self.resolve_type(InProject::new(position.file, ty)))
+            .unwrap_or_default()
     }
 
     pub(crate) fn resolve_item_at(&self, position: Position) -> Option<ItemRes> {
-        self.item_at(position).map(|idx| ItemRes { file: position.file, idx })
+        self.item_at(position).map(|idx| ItemRes::new(position.file, idx))
     }
 
     pub(crate) fn resolve_field_at(&self, position: Position) -> Option<FieldRes> {

@@ -379,6 +379,7 @@ dependencies = [
  "salsa",
  "smol_str",
  "testing",
+ "vfs",
 ]
 
 [[package]]

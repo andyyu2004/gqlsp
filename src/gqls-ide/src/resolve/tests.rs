@@ -25,6 +25,6 @@ fn test_resolve_item_at() {
 
     for position in fixture.positions() {
         let item = snapshot.resolve_item_at(position).unwrap();
-        assert_eq!(item, ItemRes { file: position.file, idx: idx!(1) });
+        assert_eq!(item, ItemRes::new(position.file, idx!(1)));
     }
 }

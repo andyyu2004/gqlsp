@@ -25,7 +25,7 @@ fn test_lower_item_body() {
     };
     let db = TestDB::from_fixture(&fixture);
 
-    let body = db.item_body(ItemRes { file: foo, idx: idx!(1) });
+    let body = db.item_body(ItemRes::new(foo, idx!(1)));
     expect![[r#"
         Some(
             ObjectTypeDefinition(

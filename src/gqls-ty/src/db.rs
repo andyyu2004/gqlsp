@@ -1,5 +1,6 @@
 use gqls_ir::{self as ir, DefDatabase, ItemKind, ItemRes, TypeDefinitionKind};
 use ir::{FieldRes, Res};
+use vfs::FileId;
 
 use crate::{FieldType, FieldTypes, ImplError, InterfaceType, ObjectType, Ty, TyKind};
 
@@ -9,19 +10,19 @@ pub trait TyDatabase: DefDatabase {
     fn type_of_item(&self, res: ItemRes) -> Ty;
     fn field_types_of(&self, res: ItemRes) -> FieldTypes;
     fn type_of_field(&self, res: FieldRes) -> Ty;
-    fn lower_type(&self, ty: ir::Ty) -> Ty;
+    fn lower_type(&self, file: FileId, ty: ir::Ty) -> Ty;
     fn implements_interface(&self, obj: ObjectType, interface: InterfaceType) -> Option<ImplError>;
 }
 
 fn implements_interface(
-    db: &dyn TyDatabase,
-    obj: ObjectType,
-    interface: InterfaceType,
+    _db: &dyn TyDatabase,
+    _obj: ObjectType,
+    _interface: InterfaceType,
 ) -> Option<ImplError> {
     todo!()
 }
 
-fn lower_type(db: &dyn TyDatabase, ty: ir::Ty) -> Ty {
+fn lower_type(db: &dyn TyDatabase, file: FileId, ty: ir::Ty) -> Ty {
     match &ty.kind {
         ir::TyKind::Named(name) => match name.as_str() {
             "ID" => TyKind::ID,
@@ -31,8 +32,8 @@ fn lower_type(db: &dyn TyDatabase, ty: ir::Ty) -> Ty {
             "String" => TyKind::String,
             _ => todo!(),
         },
-        ir::TyKind::NonNull(inner) => TyKind::NonNull(db.lower_type(inner.clone())),
-        ir::TyKind::List(inner) => TyKind::List(db.lower_type(inner.clone())),
+        ir::TyKind::NonNull(inner) => TyKind::NonNull(db.lower_type(file, inner.clone())),
+        ir::TyKind::List(inner) => TyKind::List(db.lower_type(file, inner.clone())),
     }
     .intern()
 }
@@ -46,7 +47,7 @@ fn type_of(db: &dyn TyDatabase, res: Res) -> Ty {
 
 fn type_of_field(db: &dyn TyDatabase, res: FieldRes) -> Ty {
     let field = db.field(res);
-    db.lower_type(field.ty)
+    db.lower_type(res.item.file, field.ty)
 }
 
 fn field_types_of(db: &dyn TyDatabase, res: ItemRes) -> FieldTypes {
@@ -68,7 +69,7 @@ fn type_of_item(db: &dyn TyDatabase, res: ItemRes) -> Ty {
     match item.kind {
         ItemKind::TypeDefinition(idx) => {
             let typedef = &db.items(res.file)[idx];
-            let body = db.item_body(res).expect("typedef should have a body");
+            let _body = db.item_body(res).expect("typedef should have a body");
             let kind = match typedef.kind {
                 TypeDefinitionKind::Object => TyKind::Object(ObjectType {
                     name: item.name.name(),

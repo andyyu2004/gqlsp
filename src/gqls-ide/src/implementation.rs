@@ -1,4 +1,5 @@
 use gqls_db::DefDatabase;
+use gqls_ir::InProject;
 use gqls_syntax::Position;
 
 use crate::{Location, Snapshot};
@@ -9,7 +10,7 @@ impl Snapshot {
             Some(name) => name,
             None => return vec![],
         };
-        self.implementations(position.file, name)
+        self.implementations(InProject::new(position.file, name))
             .into_iter()
             .map(|res| self.item(res))
             .map(|item| Location::new(position.file, item.name.range))

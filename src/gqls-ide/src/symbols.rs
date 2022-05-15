@@ -120,7 +120,7 @@ impl Snapshot {
         let items = self.items(file);
         for (idx, item) in items.iter() {
             let children = self
-                .item_body(ItemRes { file, idx })
+                .item_body(ItemRes::new(file, idx))
                 .as_ref()
                 .and_then(|b| b.fields())
                 .map(|fields| {

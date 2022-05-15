@@ -1,5 +1,7 @@
 use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::{Directive, Implementations, ItemKind, ItemRes, Ty, Type, TypeDefinitionKind};
+use gqls_ir::{
+    Directive, Implementations, InProject, ItemKind, ItemRes, Ty, Type, TypeDefinitionKind
+};
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
@@ -87,7 +89,7 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 
     fn empty_fields(&mut self) {
-        for (file, items) in self.snapshot.project_items(self.file).iter() {
+        for (file, items) in self.snapshot.project_items(InProject::unit(self.file)).iter() {
             for (idx, item) in items.iter() {
                 if let Some(fields) = self
                     .snapshot
@@ -107,7 +109,7 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 
     fn duplicate_definitions(&mut self) {
-        let project_items = self.snapshot.project_items(self.file);
+        let project_items = self.snapshot.project_items(InProject::unit(self.file));
         let mut directives = HashMap::new();
         let mut typedefs = HashMap::new();
 
@@ -154,7 +156,7 @@ impl<'a> DiagnosticsCtxt<'a> {
 
             if let Some(fields) = self
                 .snapshot
-                .item_body(ItemRes { file: self.file, idx })
+                .item_body(ItemRes::new(self.file, idx))
                 .as_ref()
                 .and_then(|body| body.fields())
             {
@@ -179,7 +181,9 @@ impl<'a> DiagnosticsCtxt<'a> {
 
     fn check_output_ty<'d>(&mut self, ty: Ty) {
         // FIXME avoid all these haphazard builtin checks
-        if !ty.is_builtin() && self.snapshot.resolve_type(self.file, ty.clone()).is_empty() {
+        if !ty.is_builtin()
+            && self.snapshot.resolve_type(InProject::new(self.file, ty.clone())).is_empty()
+        {
             self.diagnose(diagnostic!(E0003 @ ty.range, typename = ty.name()))
         }
     }
@@ -187,7 +191,7 @@ impl<'a> DiagnosticsCtxt<'a> {
     fn check_implementations<'d>(&mut self, impls: &Implementations) {
         for name in impls {
             let ty = Type::new_named(name.clone());
-            let resolutions = self.snapshot.resolve_type(self.file, ty.clone());
+            let resolutions = self.snapshot.resolve_type(InProject::new(self.file, ty.clone()));
             if !ty.is_builtin() && resolutions.is_empty() {
                 self.diagnose(diagnostic!(E0003 @ name.range, typename = name))
             }
@@ -208,7 +212,11 @@ impl<'a> DiagnosticsCtxt<'a> {
 
     fn check_directives<'d>(&mut self, directives: impl IntoIterator<Item = &'d Directive>) {
         for directive in directives {
-            if self.snapshot.resolve_item(self.file, directive.name.clone()).is_empty() {
+            if self
+                .snapshot
+                .resolve_item(InProject::new(self.file, directive.name.clone()))
+                .is_empty()
+            {
                 self.diagnose(diagnostic!(E0002 @ directive.name.range, name = directive.name))
             }
         }

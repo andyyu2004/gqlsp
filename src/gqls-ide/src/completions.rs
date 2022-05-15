@@ -2,9 +2,9 @@ use std::collections::HashSet;
 use std::fmt::{self, Debug};
 
 use gqls_db::{DefDatabase, SourceDatabase};
-use gqls_ir::{DirectiveLocations, ItemKind, TypeDefinitionKind};
+use gqls_ir::{DirectiveLocations, InProject, ItemKind, TypeDefinitionKind};
 use gqls_syntax::{NodeExt, NodeKind, Position};
-use vfs::FileId;
+
 
 use crate::Snapshot;
 
@@ -41,7 +41,7 @@ impl Snapshot {
 
 struct CompletionCtxt<'s> {
     snapshot: &'s Snapshot,
-    file: FileId,
+    project: InProject<()>,
     context: Context,
     completions: Vec<CompletionItem>,
 }
@@ -127,7 +127,12 @@ impl<'s> CompletionCtxt<'s> {
     fn new(snapshot: &'s Snapshot, position: Position) -> Self {
         let context = Self::infer_context(snapshot, position);
         tracing::info!("inferred completion context: {:?}", context);
-        Self { snapshot, file: position.file, context, completions: Default::default() }
+        Self {
+            snapshot,
+            project: InProject::new(position.file, ()),
+            context,
+            completions: Default::default(),
+        }
     }
 
     pub fn completions(mut self) -> Vec<CompletionItem> {
@@ -151,7 +156,7 @@ impl<'s> CompletionCtxt<'s> {
     }
 
     fn items(&self) -> impl Iterator<Item = CompletionItem> {
-        let project_items = self.snapshot.project_items(self.file);
+        let project_items = self.snapshot.project_items(self.project);
         let mut completions = HashSet::new();
         for items in project_items.values() {
             for (_, item) in items.iter() {

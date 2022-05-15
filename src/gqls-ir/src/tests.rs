@@ -2,11 +2,11 @@ use std::collections::HashSet;
 
 use crate::{DefDatabase, DefDatabaseStorage, ItemRes, Name};
 use expect_test::expect;
-use gqls_base_db::SourceDatabaseStorage;
+use gqls_base_db::{InProject, SourceDatabaseStorage};
 use gqls_fixture::fixture;
 use maplit::{hashmap, hashset};
 use smallvec::smallvec;
-use testing::{file_id, TestDatabaseExt};
+use testing::TestDatabaseExt;
 use vfs::Vfs;
 
 #[salsa::database(SourceDatabaseStorage, DefDatabaseStorage)]
@@ -97,24 +97,21 @@ fn test_definitions() {
         }
     );
 
-    let resolutions = db.resolve_item(bar, Name::unranged("Foo"));
-    assert_eq!(
-        resolutions.as_slice(),
-        [ItemRes { file: foo, idx: idx!(0) }, ItemRes { file: foo, idx: idx!(1) }]
-    );
+    let resolutions = db.resolve_item(InProject::new(bar, Name::unranged("Foo")));
+    assert_eq!(resolutions.as_slice(), [ItemRes::new(foo, idx!(0)), ItemRes::new(foo, idx!(1))]);
 
-    let resolutions = db.resolve_item(foo, Name::unranged("Bar"));
+    let resolutions = db.resolve_item(InProject::new(foo, Name::unranged("Bar")));
     assert_eq!(
         resolutions.into_iter().collect::<HashSet<_>>(),
         hashset! {
-            ItemRes { file: bar, idx: idx!(0) },
-            ItemRes { file: foo, idx: idx!(2) },
-            ItemRes { file: foo, idx: idx!(3) },
+            ItemRes::new(bar, idx!(0)),
+            ItemRes::new(foo, idx!(2)),
+            ItemRes::new(foo, idx!(3))
         }
     );
 
-    let resolutions = db.resolve_item(bar, Name::unranged("@d"));
-    assert_eq!(resolutions.as_slice(), [ItemRes { file: file_id!("bar"), idx: idx!(2) },]);
+    let resolutions = db.resolve_item(InProject::new(bar, Name::unranged("@d")));
+    assert_eq!(resolutions.as_slice(), [ItemRes::new(bar, idx!(2))]);
 
     let items = db.items(foo);
     expect![[r#"

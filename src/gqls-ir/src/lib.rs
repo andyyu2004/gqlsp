@@ -8,7 +8,7 @@ mod ty;
 pub use self::body::*;
 pub use self::ty::*;
 pub use db::{DefDatabase, DefDatabaseStorage};
-pub use gqls_base_db::{SourceDatabase, SourceDatabaseStorage};
+pub use gqls_base_db::{InFile, InProject, SourceDatabase, SourceDatabaseStorage};
 pub use la_arena::{Arena, Idx, RawIdx};
 
 use gqls_syntax::{Node, NodeExt, Point, Range, RangeExt};
@@ -264,17 +264,7 @@ pub enum Res {
     Field(FieldRes),
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-pub struct ItemRes {
-    pub file: FileId,
-    pub idx: Idx<Item>,
-}
-
-impl ItemRes {
-    pub fn new(file: FileId, idx: Idx<Item>) -> Self {
-        Self { file, idx }
-    }
-}
+pub type ItemRes = InFile<Idx<Item>>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct FieldRes {
