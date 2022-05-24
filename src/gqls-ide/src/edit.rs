@@ -122,6 +122,12 @@ impl Changeset {
     }
 }
 
+impl From<Change> for Changeset {
+    fn from(change: Change) -> Self {
+        Changeset::single(change)
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Change {
     pub file: FileId,

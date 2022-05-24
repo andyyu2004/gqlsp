@@ -1,6 +1,5 @@
 use gqls_ir::{self as ir, DefDatabase, ItemKind, ItemRes, TypeDefinitionKind};
-use ir::{FieldRes, Res};
-use vfs::FileId;
+use ir::{FieldRes, InProject, Res};
 
 use crate::{FieldType, FieldTypes, ImplError, InterfaceType, ObjectType, Ty, TyKind};
 
@@ -10,7 +9,7 @@ pub trait TyDatabase: DefDatabase {
     fn type_of_item(&self, res: ItemRes) -> Ty;
     fn field_types_of(&self, res: ItemRes) -> FieldTypes;
     fn type_of_field(&self, res: FieldRes) -> Ty;
-    fn lower_type(&self, file: FileId, ty: ir::Ty) -> Ty;
+    fn lower_type(&self, ty: InProject<ir::Ty>) -> Ty;
     fn implements_interface(&self, obj: ObjectType, interface: InterfaceType) -> Option<ImplError>;
 }
 
@@ -22,7 +21,7 @@ fn implements_interface(
     todo!()
 }
 
-fn lower_type(db: &dyn TyDatabase, file: FileId, ty: ir::Ty) -> Ty {
+fn lower_type(db: &dyn TyDatabase, ty: InProject<ir::Ty>) -> Ty {
     match &ty.kind {
         ir::TyKind::Named(name) => match name.as_str() {
             "ID" => TyKind::ID,
@@ -30,10 +29,13 @@ fn lower_type(db: &dyn TyDatabase, file: FileId, ty: ir::Ty) -> Ty {
             "Float" => TyKind::Float,
             "Int" => TyKind::Int,
             "String" => TyKind::String,
-            _ => todo!(),
+            _ => {
+                let item = db.resolve_item(ty.with_value(name.clone()));
+                todo!();
+            }
         },
-        ir::TyKind::NonNull(inner) => TyKind::NonNull(db.lower_type(file, inner.clone())),
-        ir::TyKind::List(inner) => TyKind::List(db.lower_type(file, inner.clone())),
+        ir::TyKind::NonNull(inner) => TyKind::NonNull(db.lower_type(ty.with_value(inner.clone()))),
+        ir::TyKind::List(inner) => TyKind::List(db.lower_type(ty.with_value(inner.clone()))),
     }
     .intern()
 }
@@ -47,7 +49,7 @@ fn type_of(db: &dyn TyDatabase, res: Res) -> Ty {
 
 fn type_of_field(db: &dyn TyDatabase, res: FieldRes) -> Ty {
     let field = db.field(res);
-    db.lower_type(res.item.file, field.ty)
+    db.lower_type(InProject::new(res.item.file, field.ty))
 }
 
 fn field_types_of(db: &dyn TyDatabase, res: ItemRes) -> FieldTypes {

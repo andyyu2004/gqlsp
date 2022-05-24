@@ -220,7 +220,14 @@ impl LanguageServer for Gqls {
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        let _ = params;
+        let summary = self.with_ide(|ide| {
+            let file = ide.intern_path(params.text_document.uri.to_path()?);
+            Ok(ide.apply_changeset(Change::set(file, params.text_document.text.clone())))
+        });
+        match summary {
+            Ok(summary) => self.diagnostics(summary).await,
+            Err(err) => tracing::error!(%err),
+        }
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {

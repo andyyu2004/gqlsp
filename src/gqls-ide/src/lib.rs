@@ -100,7 +100,12 @@ impl Ide {
     }
 
     #[must_use]
-    pub fn apply_changeset<'a>(&mut self, changeset: Changeset) -> ChangesetSummary {
+    pub fn apply_changeset(&mut self, changeset: impl Into<Changeset>) -> ChangesetSummary {
+        self.apply_changeset_(changeset.into())
+    }
+
+    #[must_use]
+    fn apply_changeset_(&mut self, changeset: Changeset) -> ChangesetSummary {
         self.db.request_cancellation();
         if let Some(projects) = changeset.projects {
             self.db.set_projects(Arc::new(projects));

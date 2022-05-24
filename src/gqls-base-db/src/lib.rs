@@ -1,5 +1,6 @@
 use smallvec::SmallVec;
 use std::collections::{HashMap, HashSet};
+use std::ops::Deref;
 use std::sync::Arc;
 use tree_sitter::Tree;
 use vfs::FileId;
@@ -99,6 +100,14 @@ pub struct InProject<T> {
     pub value: T,
 }
 
+impl<T> Deref for InProject<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
 impl InProject<()> {
     pub fn unit(file: FileId) -> Self {
         Self::new(file, ())
@@ -116,5 +125,9 @@ impl<T> InProject<T> {
 
     pub fn map<U>(self, f: impl FnOnce(T) -> U) -> InProject<U> {
         InProject::new(self.file, f(self.value))
+    }
+
+    pub fn with_value<U>(&self, value: U) -> InProject<U> {
+        InProject::new(self.file, value)
     }
 }
