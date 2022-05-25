@@ -146,7 +146,8 @@ impl Gqls {
         mut f: impl FnMut(&mut Ide) -> jsonrpc::Result<R> + UnwindSafe,
     ) -> jsonrpc::Result<R> {
         // FIXME hacking unwind safety
-        match salsa::Cancelled::catch(AssertUnwindSafe(|| {
+        let start = std::time::Instant::now();
+        let r = match salsa::Cancelled::catch(AssertUnwindSafe(|| {
             f(&mut self.ide.lock()).or_else(|_| {
                 self.reinit()?;
                 f(&mut self.ide.lock())
@@ -154,7 +155,9 @@ impl Gqls {
         })) {
             Ok(res) => res,
             Err(_) => Err(jsonrpc::Error::content_modified()),
-        }
+        };
+        tracing::info!("took {}ms", start.elapsed().as_millis());
+        r
     }
 }
 
@@ -390,7 +393,7 @@ impl Gqls {
 
     async fn handle_did_change(&self, params: DidChangeTextDocumentParams) -> Result<()> {
         let path = params.text_document.uri.to_path()?;
-        tracing::info!("did_change: {path:?}");
+        tracing::info!("path: {path:?}");
         let summary = self.with_ide(|ide| {
             let path = ide.intern_path(path.clone());
             let changes = params
