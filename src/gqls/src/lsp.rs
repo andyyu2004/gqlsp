@@ -160,6 +160,7 @@ impl Gqls {
 
 #[tower_lsp::async_trait]
 impl LanguageServer for Gqls {
+    #[tracing::instrument(skip_all)]
     async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
         // TODO should probably check client capabilities, but going to assume they have everything we need for now
 
@@ -174,23 +175,28 @@ impl LanguageServer for Gqls {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     async fn initialized(&self, _: InitializedParams) {
         tracing::info!("gqls initialized");
     }
 
+    #[tracing::instrument(skip_all)]
     async fn shutdown(&self) -> jsonrpc::Result<()> {
         Ok(())
     }
 
+    #[tracing::instrument(skip_all)]
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
         // maybe we can make sure text is not desynced by doing a hard reset with Change::Set using `params.text`
         let _ = params;
     }
 
+    #[tracing::instrument(skip_all)]
     async fn did_change_workspace_folders(&self, _params: DidChangeWorkspaceFoldersParams) {
         todo!("did_change_workspace_folders")
     }
 
+    #[tracing::instrument(skip_all)]
     async fn symbol(
         &self,
         params: WorkspaceSymbolParams,
@@ -202,6 +208,7 @@ impl LanguageServer for Gqls {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     async fn will_create_files(
         &self,
         _params: CreateFilesParams,
@@ -209,6 +216,7 @@ impl LanguageServer for Gqls {
         Ok(None)
     }
 
+    #[tracing::instrument(skip_all)]
     async fn will_rename_files(
         &self,
         _params: RenameFilesParams,
@@ -217,6 +225,7 @@ impl LanguageServer for Gqls {
         Ok(None)
     }
 
+    #[tracing::instrument(skip_all)]
     async fn will_delete_files(
         &self,
         _params: DeleteFilesParams,
@@ -224,6 +233,7 @@ impl LanguageServer for Gqls {
         Ok(None)
     }
 
+    #[tracing::instrument(skip_all)]
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         let summary = self.with_ide(|ide| {
             let file = ide.intern_path(params.text_document.uri.to_path()?);
@@ -235,12 +245,14 @@ impl LanguageServer for Gqls {
         }
     }
 
+    #[tracing::instrument(skip_all)]
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
         if let Err(err) = self.handle_did_change(params).await {
             tracing::error!(%err);
         }
     }
 
+    #[tracing::instrument(skip_all)]
     async fn completion(
         &self,
         params: CompletionParams,
@@ -253,6 +265,7 @@ impl LanguageServer for Gqls {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     async fn goto_definition(
         &self,
         params: GotoDefinitionParams,
@@ -265,6 +278,7 @@ impl LanguageServer for Gqls {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     async fn goto_type_definition(
         &self,
         params: GotoDefinitionParams,
@@ -277,6 +291,7 @@ impl LanguageServer for Gqls {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     async fn goto_implementation(
         &self,
         params: GotoDefinitionParams,
@@ -289,6 +304,7 @@ impl LanguageServer for Gqls {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     async fn references(&self, params: ReferenceParams) -> jsonrpc::Result<Option<Vec<Location>>> {
         let position = params.text_document_position;
         self.with_ide(|ide| {
@@ -301,6 +317,7 @@ impl LanguageServer for Gqls {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     async fn document_symbol(
         &self,
         params: DocumentSymbolParams,
@@ -313,6 +330,7 @@ impl LanguageServer for Gqls {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     async fn prepare_rename(
         &self,
         params: TextDocumentPositionParams,
@@ -323,6 +341,7 @@ impl LanguageServer for Gqls {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     async fn rename(&self, params: RenameParams) -> jsonrpc::Result<Option<WorkspaceEdit>> {
         let position = params.text_document_position;
         self.with_ide(|ide| {
@@ -337,6 +356,7 @@ impl LanguageServer for Gqls {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     async fn semantic_tokens_full(
         &self,
         params: SemanticTokensParams,
@@ -392,7 +412,7 @@ impl Gqls {
         Ok(())
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip_all)]
     async fn send_diagnostics(&self, summary: ChangesetSummary) {
         tracing::info!("emitting diagnostics");
         for (path, diagnostics) in summary.diagnostics {
