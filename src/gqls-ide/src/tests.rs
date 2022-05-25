@@ -3,7 +3,7 @@ use gqls_fixture::{fixture, fixture_file, Fixture};
 use maplit::hashmap;
 use vfs::FileId;
 
-use crate::{ChangeSummary, Changeset, ChangesetSummary, Ide, VFS};
+use crate::{Changeset, ChangesetSummary, Ide, VFS};
 
 macro_rules! idx {
     ($idx:expr) => {
@@ -68,10 +68,10 @@ impl Ide {
         let summary = self.setup_fixture_allow_errors(fixture);
         for file in fixture.fileset() {
             assert!(
-                summary[file].diagnostics.is_empty(),
+                summary.diagnostics[file].is_empty(),
                 "expected no diagnostics, file `{}`: `{:?}`",
                 file.display(),
-                summary[file].diagnostics
+                summary.diagnostics[file],
             );
         }
     }
@@ -99,7 +99,7 @@ fn test_ide() {
         .assert_eq(&ide.snapshot().syntax_tree(foo));
 
     let summary = apply_changeset!(ide: foo:0:7..0:10 => "Baz");
-    assert_eq!(summary, hashmap! { foo => ChangeSummary::default() });
+    assert_eq!(summary.diagnostics, hashmap! { foo => Default::default() });
     assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Baz");
     expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]]
         .assert_eq(&ide.snapshot().syntax_tree(foo));

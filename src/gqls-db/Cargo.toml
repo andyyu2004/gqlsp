@@ -11,3 +11,6 @@ path = "../gqls-base-db"
 
 [dependencies.gqls-ir]
 path = "../gqls-ir"
+
+[dependencies.gqls-ty]
+path = "../gqls-ty"

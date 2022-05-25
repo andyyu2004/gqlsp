@@ -309,6 +309,7 @@ version = "0.1.0"
 dependencies = [
  "gqls-base-db",
  "gqls-ir",
+ "gqls-ty",
  "salsa",
 ]
 
@@ -331,6 +332,7 @@ dependencies = [
  "gqls-fixture",
  "gqls-ir",
  "gqls-syntax",
+ "gqls-ty",
  "maplit",
  "once_cell",
  "parking_lot 0.12.0",

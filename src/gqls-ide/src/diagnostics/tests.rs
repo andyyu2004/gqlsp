@@ -25,7 +25,7 @@ fn test_error_code(fixture: &Fixture) {
 fn test_rendered(gql: &str, expect: Expect) {
     let (ide, file) = Ide::from_file(gql);
     let snapshot = ide.snapshot();
-    let diagnostics = snapshot.diagnostics(file);
+    let diagnostics = snapshot.file_diagnostics(file);
     let rendered = render_diagnostics(gql, diagnostics);
     expect.assert_eq(&rendered);
 }
@@ -37,7 +37,7 @@ where
     let ide = Ide::from_fixture_allow_errors(fixture);
     let snapshot = ide.snapshot();
     for (file, annotations) in fixture.annotations() {
-        let diagnostics = snapshot.diagnostics(file);
+        let diagnostics = snapshot.file_diagnostics(file);
         let expected =
             diagnostics.iter().map(|diag| (diag.range, f(&diag))).collect::<HashSet<_>>();
         let actual = annotations

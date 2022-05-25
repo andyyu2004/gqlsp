@@ -22,6 +22,7 @@ pub trait DefDatabase: SourceDatabase {
     fn items(&self, file: FileId) -> Arc<Items>;
     fn project_items(&self, project: InProject<()>) -> Arc<ProjectItems>;
     fn name_at(&self, position: Position) -> Option<Name>;
+    fn related_files(&self, file: InProject<()>) -> HashSet<FileId>;
     fn references(&self, res: Res) -> References;
     fn resolve(&self, position: Position) -> Option<Res>;
     fn resolve_item(&self, name: InProject<Name>) -> ItemResolutions;
@@ -30,13 +31,13 @@ pub trait DefDatabase: SourceDatabase {
     fn typedef(&self, file: FileId, idx: Idx<TypeDefinition>) -> TypeDefinition;
 }
 
-fn project_items(db: &dyn DefDatabase, project: InProject<()>) -> Arc<ProjectItems> {
-    let data = db
-        .projects_of(project)
-        .iter()
-        .flat_map(|project| db.project_files(project))
-        .map(|file| (file, db.items(file)))
-        .collect();
+// all files that are in a common project with `file`
+fn related_files(db: &dyn DefDatabase, file: InProject<()>) -> HashSet<FileId> {
+    db.projects_of(file).iter().flat_map(|project| db.project_files(project)).collect()
+}
+
+fn project_items(db: &dyn DefDatabase, file: InProject<()>) -> Arc<ProjectItems> {
+    let data = db.related_files(file).iter().map(|&file| (file, db.items(file))).collect();
     Arc::new(data)
 }
 

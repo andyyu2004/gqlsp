@@ -1,4 +1,4 @@
-use gqls_db::{DefDatabase, SourceDatabase};
+use gqls_db::{DefDatabase, Project, SourceDatabase};
 use gqls_ir::{
     Directive, Implementations, InProject, ItemKind, ItemRes, Ty, Type, TypeDefinitionKind
 };
@@ -12,7 +12,15 @@ use vfs::FileId;
 use crate::{Location, Range, Snapshot};
 
 impl Snapshot {
-    pub fn diagnostics(&self, file: FileId) -> Diagnostics {
+    pub fn diagnostics(&self, project: Project) -> Diagnostics {
+        self.project_files(project)
+            .into_iter()
+            .map(|file| (file, self.file_diagnostics(file)))
+            .collect()
+    }
+
+    // TODO this can probably be a database query so we get benefit of caching
+    pub fn file_diagnostics(&self, file: FileId) -> FileDiagnostics {
         DiagnosticsCtxt::new(self, file).diagnostics()
     }
 }
@@ -239,7 +247,8 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 }
 
-pub type Diagnostics = HashSet<Diagnostic>;
+pub type Diagnostics = HashMap<FileId, FileDiagnostics>;
+pub type FileDiagnostics = HashSet<Diagnostic>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Diagnostic {

@@ -19,6 +19,9 @@ path = "../gqls-ir"
 [dependencies.gqls-syntax]
 path = "../gqls-syntax"
 
+[dependencies.gqls-ty]
+path = "../gqls-ty"
+
 [dependencies.vfs]
 path = "../vfs"
 

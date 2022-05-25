@@ -67,7 +67,7 @@ type Bar {
 }"#,
     });
 
-    assert!(summary[foo].diagnostics.is_empty());
+    assert!(summary.diagnostics[foo].is_empty());
 
     let snapshot = ide.snapshot();
     assert!(snapshot.name_at(position!(foo:0:0)).is_none());

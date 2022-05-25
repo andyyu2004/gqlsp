@@ -166,7 +166,7 @@ impl LanguageServer for Gqls {
         let workspaces = params.workspace_folders.unwrap_or_default();
         self.workspace_folders.set(workspaces.clone()).expect("initialize called twice");
         let summary = self.init(workspaces)?;
-        self.diagnostics(summary).await;
+        self.send_diagnostics(summary).await;
 
         Ok(InitializeResult {
             capabilities: capabilities(),
@@ -180,6 +180,11 @@ impl LanguageServer for Gqls {
 
     async fn shutdown(&self) -> jsonrpc::Result<()> {
         Ok(())
+    }
+
+    async fn did_save(&self, params: DidSaveTextDocumentParams) {
+        // maybe we can make sure text is not desynced by doing a hard reset with Change::Set using `params.text`
+        let _ = params;
     }
 
     async fn did_change_workspace_folders(&self, _params: DidChangeWorkspaceFoldersParams) {
@@ -225,7 +230,7 @@ impl LanguageServer for Gqls {
             Ok(ide.apply_changeset(Change::set(file, params.text_document.text.clone())))
         });
         match summary {
-            Ok(summary) => self.diagnostics(summary).await,
+            Ok(summary) => self.send_diagnostics(summary).await,
             Err(err) => tracing::error!(%err),
         }
     }
@@ -366,7 +371,7 @@ impl Gqls {
     async fn handle_did_change(&self, params: DidChangeTextDocumentParams) -> Result<()> {
         let path = params.text_document.uri.to_path()?;
         tracing::info!("did_change: {path:?}");
-        let changeset_summary = self.with_ide(|ide| {
+        let summary = self.with_ide(|ide| {
             let path = ide.intern_path(path.clone());
             let changes = params
                 .content_changes
@@ -383,16 +388,15 @@ impl Gqls {
             let changeset = Changeset::new(changes);
             Ok(ide.apply_changeset(changeset))
         })?;
-        self.diagnostics(changeset_summary).await;
+        self.send_diagnostics(summary).await;
         Ok(())
     }
 
     #[tracing::instrument(skip(self))]
-    async fn diagnostics(&self, summary: ChangesetSummary) {
+    async fn send_diagnostics(&self, summary: ChangesetSummary) {
         tracing::info!("emitting diagnostics");
-        for (path, change_summary) in summary {
-            let diagnostics =
-                change_summary.diagnostics.iter().map(Convert::convert).collect::<Vec<_>>();
+        for (path, diagnostics) in summary.diagnostics {
+            let diagnostics = diagnostics.iter().map(Convert::convert).collect::<Vec<_>>();
             self.client
                 .send_notification::<PublishDiagnostics>(PublishDiagnosticsParams {
                     uri: path.to_url(),

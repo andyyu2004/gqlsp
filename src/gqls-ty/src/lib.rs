@@ -1,4 +1,4 @@
-pub use db::TyDatabaseStorage;
+pub use db::{TyDatabase, TyDatabaseStorage};
 
 mod db;
 mod fmt;

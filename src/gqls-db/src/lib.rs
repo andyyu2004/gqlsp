@@ -2,11 +2,16 @@
 
 pub use gqls_base_db::{FileData, Project, SourceDatabase};
 pub use gqls_ir::DefDatabase;
+pub use gqls_ty::TyDatabase;
 pub use salsa::{self, Database, ParallelDatabase, Snapshot};
 
 use std::mem::ManuallyDrop;
 
-#[salsa::database(gqls_base_db::SourceDatabaseStorage, gqls_ir::DefDatabaseStorage)]
+#[salsa::database(
+    gqls_base_db::SourceDatabaseStorage,
+    gqls_ir::DefDatabaseStorage,
+    gqls_ty::TyDatabaseStorage
+)]
 pub struct GqlsDatabase {
     storage: ManuallyDrop<salsa::Storage<Self>>,
 }

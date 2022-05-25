@@ -14,11 +14,13 @@ mod symbols;
 mod typedef;
 
 pub use self::completions::{CompletionItem, CompletionItemKind};
-pub use self::diagnostics::{Diagnostic, DiagnosticLabel, Diagnostics, ErrorCode, Severity};
+use self::diagnostics::Diagnostics;
+pub use self::diagnostics::{Diagnostic, DiagnosticLabel, ErrorCode, FileDiagnostics, Severity};
 pub use self::edit::{Change, ChangeKind, Changeset, FilePatches, Patch, Point, Range};
 pub use self::highlight::{SemanticToken, SemanticTokenKind};
 pub use self::rename::RenameError;
 pub use self::symbols::{DocumentSymbol, SymbolKind, SymbolTree, WorkspaceSymbol};
+use gqls_ir::InProject;
 pub use gqls_syntax::{Position, RangeExt};
 use parking_lot::RwLock;
 pub use tree_sitter;
@@ -43,11 +45,9 @@ pub struct Ide {
     file_ropes: HashMap<FileId, Rope>,
 }
 
-pub type ChangesetSummary = HashMap<FileId, ChangeSummary>;
-
 #[derive(Default, Debug, PartialEq, Eq, Clone)]
-pub struct ChangeSummary {
-    pub diagnostics: HashSet<Diagnostic>,
+pub struct ChangesetSummary {
+    pub diagnostics: Diagnostics,
 }
 
 pub struct Snapshot {
@@ -111,16 +111,23 @@ impl Ide {
             self.db.set_projects(Arc::new(projects));
         }
 
-        changeset.changes.iter().for_each(|change| {
-            self.apply(change);
-        });
+        changeset.changes.iter().for_each(|change| self.apply(change));
+        let snapshot = self.snapshot();
 
-        let files_changed =
-            changeset.changes.iter().map(|change| change.file).collect::<HashSet<_>>();
-        files_changed
-            .into_iter()
-            .map(|path| (path, ChangeSummary { diagnostics: self.snapshot().diagnostics(path) }))
-            .collect()
+        let affected_projects = changeset
+            .changes
+            .iter()
+            .map(|change| change.file)
+            .flat_map(|file| snapshot.projects_of(InProject::unit(file)))
+            .collect::<HashSet<_>>();
+
+        affected_projects.iter().map(|project| snapshot.diagnostics(project)).fold(
+            Default::default(),
+            |mut summary, diagnostics| {
+                summary.diagnostics.extend(diagnostics);
+                summary
+            },
+        )
     }
 
     fn apply(&mut self, change: &Change) {
