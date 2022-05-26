@@ -5,13 +5,16 @@ use la_arena::ArenaMap;
 
 use crate::*;
 
-pub(crate) struct BodyCtxt {
+pub(crate) struct BodyCtxt<'db> {
+    db: &'db dyn DefDatabase,
     text: Arc<str>,
+    file: FileId,
 }
 
-impl BodyCtxt {
-    pub(crate) fn new(text: Arc<str>) -> Self {
-        Self { text }
+impl<'db> BodyCtxt<'db> {
+    pub(crate) fn new(db: &'db dyn DefDatabase, file: FileId) -> Self {
+        let text = db.file_text(file);
+        Self { db, text, file }
     }
 
     pub fn lower_typedef(mut self, node: Node<'_>) -> ItemBody {
@@ -110,6 +113,48 @@ impl BodyCtxt {
         let name = self.name_of(node)?;
         let directives = self.lower_directives_of(node);
         Some(Field { range: node.range(), name, ty, directives })
+    }
+
+    pub(crate) fn lower_type(&mut self, node: Node<'_>) -> Option<Ty> {
+        assert!(matches!(
+            node.kind(),
+            NodeKind::TYPE | NodeKind::NAMED_TYPE | NodeKind::LIST_TYPE | NodeKind::NON_NULL_TYPE
+        ));
+        let ty =
+            if matches!(node.kind(), NodeKind::TYPE) { node.sole_named_child()? } else { node };
+        let kind = match ty.kind() {
+            NodeKind::NAMED_TYPE => return Some(self.lower_named_type(ty)),
+            NodeKind::LIST_TYPE => TyKind::List(self.lower_type(ty.sole_named_child()?)?),
+            NodeKind::NON_NULL_TYPE => {
+                let inner = ty.sole_named_child()?;
+                match inner.kind() {
+                    NodeKind::NAMED_TYPE => TyKind::NonNull(self.lower_named_type(inner)),
+                    NodeKind::LIST_TYPE => TyKind::NonNull(self.lower_list_type(inner)?),
+                    _ => unreachable!(),
+                }
+            }
+            _ => unreachable!(),
+        };
+        Some(Arc::new(Type { range: ty.range(), kind }))
+    }
+
+    fn lower_list_type(&mut self, node: Node<'_>) -> Option<Ty> {
+        assert_eq!(node.kind(), NodeKind::LIST_TYPE);
+        let kind = TyKind::List(self.lower_type(node.sole_named_child()?)?);
+        Some(Arc::new(Type { range: node.range(), kind }))
+    }
+
+    fn lower_named_type(&mut self, node: Node<'_>) -> Ty {
+        assert_eq!(node.kind(), NodeKind::NAMED_TYPE);
+        let name = Name::new(self, node);
+        let range = name.range;
+        let resolutions = self.db.resolve_item(InProject::new(self.file, name.clone()));
+        let kind = match &resolutions[..] {
+            // FIXME need to emit an error?
+            [] => TyKind::Err(name),
+            _ => TyKind::Named(name, resolutions),
+        };
+        Arc::new(Type { range, kind })
     }
 }
 
@@ -229,7 +274,7 @@ impl ItemCtxt {
         Some(
             implementations
                 .children_of_kind(cursor, NodeKind::NAMED_TYPE)
-                .map(|node| self.lower_named_type(node).name())
+                .map(|node| Name::new(self, node))
                 .collect(),
         )
     }
@@ -259,41 +304,6 @@ pub(crate) trait LowerCtxt: HasText {
         let name = Name::new(self, node.name_node()?);
         Some(Directive { range: node.range(), name })
     }
-
-    fn lower_type(&mut self, node: Node<'_>) -> Option<Ty> {
-        assert!(matches!(
-            node.kind(),
-            NodeKind::TYPE | NodeKind::NAMED_TYPE | NodeKind::LIST_TYPE | NodeKind::NON_NULL_TYPE
-        ));
-        let ty =
-            if matches!(node.kind(), NodeKind::TYPE) { node.sole_named_child()? } else { node };
-        let kind = match ty.kind() {
-            NodeKind::NAMED_TYPE => return Some(self.lower_named_type(ty)),
-            NodeKind::LIST_TYPE => TyKind::List(self.lower_type(ty.sole_named_child()?)?),
-            NodeKind::NON_NULL_TYPE => {
-                let inner = ty.sole_named_child()?;
-                match inner.kind() {
-                    NodeKind::NAMED_TYPE => TyKind::NonNull(self.lower_named_type(inner)),
-                    NodeKind::LIST_TYPE => TyKind::NonNull(self.lower_list_type(inner)?),
-                    _ => unreachable!(),
-                }
-            }
-            _ => unreachable!(),
-        };
-        Some(Arc::new(Type { range: ty.range(), kind }))
-    }
-
-    fn lower_list_type(&mut self, node: Node<'_>) -> Option<Ty> {
-        assert_eq!(node.kind(), NodeKind::LIST_TYPE);
-        let kind = TyKind::List(self.lower_type(node.sole_named_child()?)?);
-        Some(Arc::new(Type { range: node.range(), kind }))
-    }
-
-    fn lower_named_type(&mut self, node: Node<'_>) -> Ty {
-        assert_eq!(node.kind(), NodeKind::NAMED_TYPE);
-        let kind = TyKind::Named(Name::new(self, node));
-        Arc::new(Type { range: node.range(), kind })
-    }
 }
 
 impl<C: HasText> LowerCtxt for C {
@@ -305,7 +315,7 @@ impl HasText for ItemCtxt {
     }
 }
 
-impl HasText for BodyCtxt {
+impl HasText for BodyCtxt<'_> {
     fn text(&self) -> &str {
         &self.text
     }

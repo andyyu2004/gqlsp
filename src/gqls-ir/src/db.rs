@@ -7,7 +7,7 @@ use gqls_syntax::{NodeExt, NodeKind, Position, RangeExt};
 use smallvec::smallvec;
 use vfs::FileId;
 
-use crate::lower::{BodyCtxt, LowerCtxt};
+use crate::lower::BodyCtxt;
 use crate::*;
 
 #[salsa::query_group(DefDatabaseStorage)]
@@ -26,7 +26,6 @@ pub trait DefDatabase: SourceDatabase {
     fn references(&self, res: Res) -> References;
     fn resolve(&self, position: Position) -> Option<Res>;
     fn resolve_item(&self, name: InProject<Name>) -> ItemResolutions;
-    fn resolve_type(&self, ty: InProject<Ty>) -> ItemResolutions;
     fn type_at(&self, position: Position) -> Option<Ty>;
     fn typedef(&self, file: FileId, idx: Idx<TypeDefinition>) -> TypeDefinition;
 }
@@ -86,7 +85,7 @@ fn item_body(db: &dyn DefDatabase, res: ItemRes) -> Option<Arc<ItemBody>> {
     let tree = db.file_tree(res.file);
     let item = &items[res.value];
     let item_node = tree.root_node().named_descendant_for_range(item.range).unwrap();
-    let bcx = BodyCtxt::new(db.file_text(res.file));
+    let bcx = BodyCtxt::new(db, res.file);
     let body = match item.kind {
         ItemKind::TypeDefinition(_) => bcx.lower_typedef(item_node),
         ItemKind::DirectiveDefinition(_) => return None,
@@ -113,7 +112,7 @@ fn type_at(db: &dyn DefDatabase, position: Position) -> Option<Ty> {
             node,
         _ => return None,
     };
-    BodyCtxt::new(data.text).lower_type(type_node)
+    BodyCtxt::new(db, position.file).lower_type(type_node)
 }
 
 fn resolve(db: &dyn DefDatabase, position: Position) -> Option<Res> {
@@ -144,10 +143,6 @@ fn resolve(db: &dyn DefDatabase, position: Position) -> Option<Res> {
         // TODO
         _ => None,
     }
-}
-
-fn resolve_type(db: &dyn DefDatabase, ty: InProject<Ty>) -> ItemResolutions {
-    db.resolve_item(ty.map(|ty| ty.name()))
 }
 
 fn resolve_item(db: &dyn DefDatabase, name: InProject<Name>) -> ItemResolutions {
@@ -187,7 +182,7 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
             match res_item.kind {
                 ItemKind::TypeDefinition(_) => references.extend(
                     fields
-                        .filter(|field| field.ty.name() == name)
+                        .filter(|field| field.ty.name() == name.clone())
                         .map(|field| (file, field.ty.name().range)),
                 ),
                 ItemKind::DirectiveDefinition(_) => references.extend(

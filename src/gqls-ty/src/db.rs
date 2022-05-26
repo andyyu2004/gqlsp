@@ -23,7 +23,7 @@ fn implements_interface(
 
 fn lower_type(db: &dyn TyDatabase, ty: InProject<ir::Ty>) -> Ty {
     match &ty.kind {
-        ir::TyKind::Named(name) => match name.as_str() {
+        ir::TyKind::Named(name, _) => match name.as_str() {
             "ID" => TyKind::ID,
             "Boolean" => TyKind::Boolean,
             "Float" => TyKind::Float,
@@ -36,6 +36,7 @@ fn lower_type(db: &dyn TyDatabase, ty: InProject<ir::Ty>) -> Ty {
         },
         ir::TyKind::NonNull(inner) => TyKind::NonNull(db.lower_type(ty.with_value(inner.clone()))),
         ir::TyKind::List(inner) => TyKind::List(db.lower_type(ty.with_value(inner.clone()))),
+        ir::TyKind::Err(_) => TyKind::Err,
     }
     .intern()
 }

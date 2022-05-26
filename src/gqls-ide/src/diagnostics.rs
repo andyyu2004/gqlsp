@@ -52,7 +52,7 @@ macro_rules! error_msg {
         "{typedef_kind} `{name}` must define at least one field"
     };
     (E0007) => {
-        "expected an interface, found {typedef_kind} `{name}`"
+        "expected an interface, found {typedef_kind} `{ty:?}`"
     };
     ($ident:ident) => {
         compile_error!("unknown error code")
@@ -183,38 +183,47 @@ impl<'a> DiagnosticsCtxt<'a> {
         }
     }
 
-    fn check_input_ty<'d>(&mut self, _ty: Ty) {
+    fn check_input_ty(&mut self, _ty: Ty) {
         // TODO
     }
 
-    fn check_output_ty<'d>(&mut self, ty: Ty) {
+    fn check_output_ty(&mut self, ty: Ty) {
         // FIXME avoid all these haphazard builtin checks
-        if !ty.is_builtin()
-            && self.snapshot.resolve_type(InProject::new(self.file, ty.clone())).is_empty()
-        {
-            self.diagnose(diagnostic!(E0003 @ ty.range, typename = ty.name()))
-        }
+        // if !ty.is_builtin()
+        //     && self.snapshot.resolve_type(InProject::new(self.file, ty.clone())).is_empty()
+        // {
+        //     self.diagnose(diagnostic!(E0003 @ ty.range, typename = ty.name()))
+        // }
     }
 
-    fn check_implementations<'d>(&mut self, impls: &Implementations) {
+    fn check_implementations(&mut self, impls: &Implementations) {
         for name in impls {
-            let ty = Type::new_named(name.clone());
-            let resolutions = self.snapshot.resolve_type(InProject::new(self.file, ty.clone()));
-            if !ty.is_builtin() && resolutions.is_empty() {
-                self.diagnose(diagnostic!(E0003 @ name.range, typename = name))
-            }
+            // let ty = self.snapshot.resolve_type(InProject::new(self.file, name.clone()));
+            // if !ty.is_builtin() && ty.has_error() {
+            //     self.diagnose(diagnostic!(E0003 @ name.range, typename = name))
+            // }
 
-            for res in resolutions {
-                let item = self.snapshot.item(res);
-                let typedef = self.snapshot.typedef(res.file, item.kind.into_type_definition());
-                if !matches!(typedef.kind, TypeDefinitionKind::Interface) {
-                    self.diagnose(
-                        diagnostic!(E0007 @ name.range, typedef_kind = typedef.kind.desc(), name = item.name; [
-                            Location::new(res.file, item.name.range)  => "not an interface"
-                        ]),
-                    )
-                }
-            }
+            // match ty.kind {
+            //     gqls_ir::TyKind::Named(_, _) => {}
+            //     gqls_ir::TyKind::NonNull(_) | gqls_ir::TyKind::List(_) => self.diagnose(
+            //         diagnostic!(E0007 @ name.range, typedef_kind = "array | list (TODO)", ty = ty; [
+            //             Location::new(self.file, ty.range)  => "not an interface"
+            //         ]),
+            //     ),
+            //     gqls_ir::TyKind::Err(_) => todo!(),
+            // }
+
+            // for res in resolutions {
+            //     let item = self.snapshot.item(res);
+            //     let typedef = self.snapshot.typedef(res.file, item.kind.into_type_definition());
+            //     if !matches!(typedef.kind, TypeDefinitionKind::Interface) {
+            //         self.diagnose(
+            //             diagnostic!(E0007 @ name.range, typedef_kind = typedef.kind.desc(), name = item.name; [
+            //                 Location::new(res.file, item.name.range)  => "not an interface"
+            //             ]),
+            //         )
+            //     }
+            // }
         }
     }
 

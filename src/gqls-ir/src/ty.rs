@@ -1,4 +1,4 @@
-use crate::{Name, Range};
+use crate::{ItemRes, ItemResolutions, Name, Range};
 use std::fmt::{self, Debug};
 use std::sync::Arc;
 
@@ -11,14 +11,26 @@ pub struct Type {
 }
 
 impl Type {
-    pub fn new_named(name: Name) -> Ty {
-        Arc::new(Self { range: name.range, kind: TyKind::Named(name) })
+    pub fn resolutions(&self) -> &[ItemRes] {
+        match &self.kind {
+            TyKind::Named(_, res) => res,
+            TyKind::NonNull(ty) | TyKind::List(ty) => ty.resolutions(),
+            TyKind::Err(_) => &[],
+        }
     }
 
     pub fn name(&self) -> Name {
         match &self.kind {
-            TyKind::Named(name) => name.clone(),
+            TyKind::Named(name, _) | TyKind::Err(name) => name.clone(),
             TyKind::NonNull(ty) | TyKind::List(ty) => ty.name(),
+        }
+    }
+
+    pub fn has_error(&self) -> bool {
+        match &self.kind {
+            TyKind::Named(_, _) => false,
+            TyKind::NonNull(ty) | TyKind::List(ty) => ty.has_error(),
+            TyKind::Err(_) => true,
         }
     }
 
@@ -29,9 +41,10 @@ impl Type {
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum TyKind {
-    Named(Name),
+    Named(Name, ItemResolutions),
     NonNull(Ty),
     List(Ty),
+    Err(Name),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -58,7 +71,7 @@ impl Debug for Type {
 impl Debug for TyKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
-            TyKind::Named(name) => write!(f, "{}", name.name),
+            TyKind::Named(name, _) | TyKind::Err(name) => write!(f, "{}", name.name),
             TyKind::NonNull(ty) => write!(f, "{ty:?}!"),
             TyKind::List(ty) => write!(f, "[{ty:?}]"),
         }

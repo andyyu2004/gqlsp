@@ -12,12 +12,6 @@ impl Snapshot {
             .unwrap_or_default()
     }
 
-    pub(crate) fn resolve_type_at(&self, position: Position) -> ItemResolutions {
-        self.type_at(position)
-            .map(|ty| self.resolve_type(InProject::new(position.file, ty)))
-            .unwrap_or_default()
-    }
-
     pub(crate) fn resolve_item_at(&self, position: Position) -> Option<ItemRes> {
         self.item_at(position).map(|idx| ItemRes::new(position.file, idx))
     }

@@ -48,7 +48,8 @@ fn test_find_references_to_object_like_type() {
         extend type Bar {
             k: Foo
               #...
-        }"#;
+        }
+        "#;
 
     for kind in ["extend type", "type", "interface", "input"] {
         assert!(kind.len() <= "extend type".len());

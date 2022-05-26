@@ -218,8 +218,8 @@ impl Display for Name {
 }
 
 impl Name {
-    pub fn new(t: &(impl HasText + ?Sized), node: Node<'_>) -> Self {
-        Self { name: SmolStr::new(node.text(t.text())), range: node.range() }
+    pub fn new(text: &(impl HasText + ?Sized), node: Node<'_>) -> Self {
+        Self { name: SmolStr::new(node.text(text.text())), range: node.range() }
     }
 
     pub fn unranged(s: &str) -> Self {
