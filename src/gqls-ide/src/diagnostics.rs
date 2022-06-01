@@ -1,7 +1,5 @@
 use gqls_db::{DefDatabase, Project, SourceDatabase};
-use gqls_ir::{
-    Directive, Implementations, InProject, ItemKind, ItemRes, Ty, Type, TypeDefinitionKind
-};
+use gqls_ir::{Directive, Implementations, InProject, ItemKind, ItemRes, Ty, TypeDefinitionKind};
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};

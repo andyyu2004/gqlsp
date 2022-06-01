@@ -70,7 +70,16 @@ pub fn capabilities() -> ServerCapabilities {
                 did_rename: None,
                 will_rename: None,
                 did_delete: None,
-                will_delete: None,
+                will_delete: Some(FileOperationRegistrationOptions {
+                    filters: vec![FileOperationFilter {
+                        scheme: Some(String::from("file")),
+                        pattern: FileOperationPattern {
+                            glob: String::from("**"),
+                            matches: Some(FileOperationPatternKind::File),
+                            options: None,
+                        },
+                    }],
+                }),
             }),
         }),
         // hover_provider: Some(HoverProviderCapability::Simple(true)),
@@ -231,8 +240,18 @@ impl LanguageServer for Gqls {
     #[tracing::instrument(skip_all)]
     async fn will_delete_files(
         &self,
-        _params: DeleteFilesParams,
+        params: DeleteFilesParams,
     ) -> jsonrpc::Result<Option<WorkspaceEdit>> {
+        let summary = self.with_ide(|ide| {
+            let mut changeset = Changeset::default();
+            for file in &params.files {
+                let uri = Url::parse(&file.uri).expect("invalid uri");
+                let change = Change::set(ide.intern_path(uri.to_path()?), String::new());
+                changeset = changeset.with_change(change);
+            }
+            Ok(ide.apply_changeset(changeset))
+        })?;
+        self.send_diagnostics(summary).await;
         Ok(None)
     }
 

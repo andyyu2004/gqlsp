@@ -96,6 +96,7 @@ impl Patch {
     }
 }
 
+#[must_use]
 #[derive(Default, Debug, Eq, PartialEq, Clone)]
 pub struct Changeset {
     pub(crate) projects: Option<HashMap<Project, HashSet<FileId>>>,
