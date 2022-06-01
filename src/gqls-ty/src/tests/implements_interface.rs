@@ -1,8 +1,6 @@
 use gqls_fixture::{fixture_file, FixtureFile};
 use testing::TestDatabaseExt;
 
-
-
 use super::TestDB;
 
 fn test(fixture_file: &FixtureFile, _obj: &str, _interface: &str) {

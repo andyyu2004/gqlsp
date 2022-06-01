@@ -145,16 +145,16 @@ impl Gqls {
         &self,
         mut f: impl FnMut(&mut Ide) -> jsonrpc::Result<R> + UnwindSafe,
     ) -> jsonrpc::Result<R> {
-        // FIXME hacking unwind safety
         let start = std::time::Instant::now();
-        let r = match salsa::Cancelled::catch(AssertUnwindSafe(|| {
-            f(&mut self.ide.lock()).or_else(|_| {
+        // FIXME hacking unwind safety
+        // HACK when just any panics or errors, reinit and try once more
+        let r = match std::panic::catch_unwind(AssertUnwindSafe(|| f(&mut self.ide.lock()))) {
+            Ok(Ok(res)) => Ok(res),
+            _ => {
+                tracing::warn!("retrying failed request");
                 self.reinit()?;
                 f(&mut self.ide.lock())
-            })
-        })) {
-            Ok(res) => res,
-            Err(_) => Err(jsonrpc::Error::content_modified()),
+            }
         };
         tracing::info!("took {}ms", start.elapsed().as_millis());
         r
