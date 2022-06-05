@@ -73,12 +73,11 @@ fn test_typeof_simple_object() {
 
 #[test]
 fn test_typeof_recursive_object() {
-    return;
     let fixture = fixture_file! {
         "
             type Foo {
                 id: ID!
-                foo: [Foo]
+                foo: [Foo!]
             }
         "
     };
@@ -96,7 +95,8 @@ fn test_typeof_recursive_object() {
         "Foo",
         expect![[r#"
             {
-                id: Id!
+              id: ID!
+              foo: [object Foo!]
             }"#]],
     );
 }
