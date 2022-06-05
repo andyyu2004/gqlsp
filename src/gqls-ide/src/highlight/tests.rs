@@ -6,7 +6,7 @@ use gqls_fixture::{fixture, hashmap, Fixture};
 use crate::Ide;
 
 fn test(fixture: Fixture, expectations: HashMap<&'static str, Expect>) {
-    let ide = Ide::from_fixture(&fixture);
+    let ide = Ide::from_fixture_allow_errors(&fixture);
     for (file, _) in fixture.files() {
         let tokens = ide.snapshot().semantic_tokens(file);
         expectations[file.to_str().unwrap()].assert_debug_eq(&tokens);

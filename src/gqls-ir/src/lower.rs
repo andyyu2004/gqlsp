@@ -9,27 +9,29 @@ pub(crate) struct BodyCtxt<'db> {
     db: &'db dyn DefDatabase,
     text: Arc<str>,
     file: FileId,
+    diagnostics: Vec<Diagnostic>,
 }
 
 impl<'db> BodyCtxt<'db> {
     pub(crate) fn new(db: &'db dyn DefDatabase, file: FileId) -> Self {
         let text = db.file_text(file);
-        Self { db, text, file }
+        Self { db, text, file, diagnostics: Default::default() }
     }
 
     pub fn lower_typedef(mut self, node: Node<'_>) -> ItemBody {
-        match node.kind() {
+        let kind = match node.kind() {
             NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
-                ItemBody::ObjectTypeDefinition(self.lower_object_typedef(node)),
+                ItemBodyKind::ObjectTypeDefinition(self.lower_object_typedef(node)),
             NodeKind::INTERFACE_TYPE_DEFINITION =>
-                ItemBody::InterfaceDefinition(self.lower_interface_typedef(node)),
+                ItemBodyKind::InterfaceDefinition(self.lower_interface_typedef(node)),
             NodeKind::INPUT_OBJECT_TYPE_DEFINITION =>
-                ItemBody::InputObjectTypeDefinition(self.lower_input_object_typedef(node)),
+                ItemBodyKind::InputObjectTypeDefinition(self.lower_input_object_typedef(node)),
             NodeKind::UNION_TYPE_DEFINITION =>
-                ItemBody::UnionTypeDefinition(self.lower_union_typedef(node)),
+                ItemBodyKind::UnionTypeDefinition(self.lower_union_typedef(node)),
             // TODO enum etc
-            _ => ItemBody::Todo,
-        }
+            _ => ItemBodyKind::Todo,
+        };
+        ItemBody { diagnostics: self.diagnostics, kind }
     }
 
     fn lower_object_typedef(&mut self, node: Node<'_>) -> TypeDefinitionBody {
@@ -148,11 +150,14 @@ impl<'db> BodyCtxt<'db> {
         assert_eq!(node.kind(), NodeKind::NAMED_TYPE);
         let name = Name::new(self, node);
         let range = name.range;
-        let resolutions = self.db.resolve_item(InProject::new(self.file, name.clone()));
-        let kind = match &resolutions[..] {
-            // FIXME need to emit an error?
-            [] => TyKind::Err(name),
-            _ => TyKind::Named(name, resolutions),
+        let res = self.db.resolve_item(InProject::new(self.file, name.clone()));
+        let kind = match res {
+            Res::Err => {
+                self.diagnostics
+                    .push(Diagnostic::new(range, DiagnosticKind::UnresolvedType(name.clone())));
+                TyKind::Err(name)
+            }
+            _ => TyKind::Named(name, res),
         };
         Arc::new(Type { range, kind })
     }

@@ -11,11 +11,17 @@ use crate::{FilePatches, Patch, Range, Snapshot};
 impl Snapshot {
     // TODO can return a range indicating the rename scope (default behaviour works well enough for now)
     pub fn prepare_rename(&self, position: Position) -> Result<Range, RenameError> {
-        if self.resolve_item_name_at(position).is_empty() {
-            Err("no references found at position".to_owned())?;
+        let err = Err("no references found at position".to_owned());
+        match self.resolve_item_name_at(position) {
+            Some(res) if res.is_err() => err?,
+            None => err?,
+            _ => {
+                let name = self
+                    .name_at(position)
+                    .expect("there were references here so it must be a name");
+                Ok(name.range.into())
+            }
         }
-        let name = self.name_at(position).expect("there were references here so it must be a name");
-        Ok(name.range.into())
     }
 
     pub fn rename(&self, position: Position, to: &str) -> Result<Vec<FilePatches>, RenameError> {

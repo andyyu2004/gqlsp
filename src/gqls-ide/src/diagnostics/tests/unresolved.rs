@@ -36,7 +36,7 @@ fn test_unresolved_type_in_field() {
         "foo" => "
             type Foo {
                 bar: [Bar!]
-                    #......(unresolved type `Bar`)
+                     #...(unresolved type `Bar`)
             }
         "
     };

@@ -11,17 +11,20 @@ impl Debug for Type {
 impl Debug for TyKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Boolean => write!(f, "Boolean"),
-            Self::Float => write!(f, "Float"),
-            Self::ID => write!(f, "ID"),
-            Self::Int => write!(f, "Int"),
-            Self::String => write!(f, "String"),
-            Self::Object(obj) => obj.fmt(f),
-            Self::Input(..) => todo!(),
-            Self::Interface(..) => todo!(),
-            Self::NonNull(inner) => write!(f, "{inner:?}!"),
-            Self::List(inner) => write!(f, "[{inner:?}]"),
+            TyKind::Boolean => write!(f, "Boolean"),
+            TyKind::Float => write!(f, "Float"),
+            TyKind::ID => write!(f, "ID"),
+            TyKind::Int => write!(f, "Int"),
+            TyKind::String => write!(f, "String"),
+            TyKind::Object(obj) => obj.fmt(f),
+            TyKind::Input(..) => todo!(),
+            TyKind::Interface(..) => todo!(),
+            TyKind::NonNull(inner) => write!(f, "{inner:?}!"),
+            TyKind::List(inner) => write!(f, "[{inner:?}]"),
             TyKind::Err => write!(f, "<err>"),
+            TyKind::Union(_) => todo!(),
+            TyKind::Enum(_) => todo!(),
+            TyKind::Scalar(_) => todo!(),
         }
     }
 }

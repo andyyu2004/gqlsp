@@ -2,17 +2,18 @@
 
 mod body;
 mod db;
+mod diagnostic;
 mod lower;
 mod ty;
 
 pub use self::body::*;
+pub use self::db::{DefDatabase, DefDatabaseStorage};
+pub use self::diagnostic::{Diagnostic, DiagnosticKind};
 pub use self::ty::*;
-pub use db::{DefDatabase, DefDatabaseStorage};
 pub use gqls_base_db::{InFile, InProject, SourceDatabase, SourceDatabaseStorage};
-pub use la_arena::{Arena, Idx, RawIdx};
+pub use la_arena::{Arena, Idx, IdxRange, RawIdx};
 
 use gqls_syntax::{Node, NodeExt, Point, Range, RangeExt};
-use la_arena::IdxRange;
 use smallvec::SmallVec;
 use smol_str::SmolStr;
 use std::collections::{HashMap, HashSet};
@@ -254,14 +255,39 @@ impl HasText for str {
 pub type ProjectItems = HashMap<FileId, Arc<Items>>;
 pub type ItemMap = HashMap<Name, SmallVec<[Idx<Item>; 1]>>;
 pub type ItemResolutions = SmallVec<[ItemRes; 1]>;
-pub type Resolutions = SmallVec<[Res; 1]>;
 // TODO what is the right type for these (should it be something `Range` based or something more like `Res` and index based)
 pub type References = Vec<(FileId, Range)>;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum Res {
-    Item(ItemRes),
+    Builtin(BuiltinScalar),
+    // INVARIANT: should be non-empty
+    Item(ItemResolutions),
     Field(FieldRes),
+    Err,
+}
+
+impl Res {
+    pub fn into_item(self) -> ItemResolutions {
+        if let Self::Item(v) = self { v } else { panic!("expected item resolution") }
+    }
+
+    pub fn try_into_item(self) -> Result<ItemResolutions, Self> {
+        if let Self::Item(v) = self { Ok(v) } else { Err(self) }
+    }
+
+    pub fn is_err(&self) -> bool {
+        matches!(self, Self::Err)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub enum BuiltinScalar {
+    Boolean,
+    Float,
+    ID,
+    Int,
+    String,
 }
 
 pub type ItemRes = InFile<Idx<Item>>;

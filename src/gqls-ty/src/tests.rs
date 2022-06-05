@@ -18,7 +18,8 @@ impl salsa::Database for TestDB {
 
 fn test_type_of_item(fixture: &FixtureFile, name: &str, expect: Expect) {
     let db = TestDB::from_fixture_file(fixture);
-    let resolutions = db.resolve_item(InProject::new(file_id!(""), Name::unranged(name)));
+    let resolutions =
+        db.resolve_item(InProject::new(file_id!(""), Name::unranged(name))).into_item();
     assert_eq!(resolutions.len(), 1);
     let ty = db.type_of_item(resolutions[0]);
     expect.assert_debug_eq(&ty);
@@ -26,7 +27,8 @@ fn test_type_of_item(fixture: &FixtureFile, name: &str, expect: Expect) {
 
 fn test_field_types_of(fixture: &FixtureFile, name: &str, expect: Expect) {
     let db = TestDB::from_fixture_file(&fixture);
-    let resolutions = db.resolve_item(InProject::new(file_id!(""), Name::unranged(name)));
+    let resolutions =
+        db.resolve_item(InProject::new(file_id!(""), Name::unranged(name))).into_item();
     assert_eq!(resolutions.len(), 1);
     let fields = db.field_types_of(resolutions[0]);
     let mut s = String::new();

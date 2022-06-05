@@ -25,7 +25,7 @@ pub trait DefDatabase: SourceDatabase {
     fn related_files(&self, file: InProject<()>) -> HashSet<FileId>;
     fn references(&self, res: Res) -> References;
     fn resolve(&self, position: Position) -> Option<Res>;
-    fn resolve_item(&self, name: InProject<Name>) -> ItemResolutions;
+    fn resolve_item(&self, name: InProject<Name>) -> Res;
     fn type_at(&self, position: Position) -> Option<Ty>;
     fn typedef(&self, file: FileId, idx: Idx<TypeDefinition>) -> TypeDefinition;
 }
@@ -138,14 +138,23 @@ fn resolve(db: &dyn DefDatabase, position: Position) -> Option<Res> {
                 .iter()
                 .find_map(|(idx, item)| (item.range == parent.range()).then(|| idx))
                 .expect("item not found");
-            Some(Res::Item(ItemRes::new(position.file, idx)))
+            Some(Res::Item(smallvec![ItemRes::new(position.file, idx)]))
         }
         // TODO
         _ => None,
     }
 }
 
-fn resolve_item(db: &dyn DefDatabase, name: InProject<Name>) -> ItemResolutions {
+fn resolve_item(db: &dyn DefDatabase, name: InProject<Name>) -> Res {
+    match name.as_str() {
+        "ID" => return Res::Builtin(BuiltinScalar::ID),
+        "Float" => return Res::Builtin(BuiltinScalar::Float),
+        "Int" => return Res::Builtin(BuiltinScalar::Int),
+        "Boolean" => return Res::Builtin(BuiltinScalar::Boolean),
+        "String" => return Res::Builtin(BuiltinScalar::String),
+        _ => (),
+    }
+
     let mut resolutions = smallvec![];
     for project in db.projects_of(name.project()) {
         for file in db.project_files(project).iter() {
@@ -157,7 +166,8 @@ fn resolve_item(db: &dyn DefDatabase, name: InProject<Name>) -> ItemResolutions 
             }
         }
     }
-    resolutions
+
+    if resolutions.is_empty() { Res::Err } else { Res::Item(resolutions) }
 }
 
 fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
@@ -172,7 +182,7 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
 
             let body = db.item_body(ItemRes::new(file, idx));
 
-            if let Some(ItemBody::UnionTypeDefinition(union)) = body.as_deref() {
+            if let Some(ItemBodyKind::UnionTypeDefinition(union)) = body.as_ref().map(|b| &b.kind) {
                 references.extend(
                     union.types.iter().filter(|ty| ty.name() == name).map(|ty| (file, ty.range)),
                 )
@@ -200,8 +210,12 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
 
 fn references(db: &dyn DefDatabase, res: Res) -> References {
     match res {
-        Res::Item(item) => db.item_references(item),
+        Res::Item(resolutions) => match resolutions[..] {
+            [] => vec![],
+            [res, ..] => db.item_references(res),
+        },
         Res::Field(_) => todo!(),
+        Res::Builtin(_) | Res::Err => vec![],
     }
 }
 

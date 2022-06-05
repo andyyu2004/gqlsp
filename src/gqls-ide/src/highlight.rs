@@ -192,7 +192,7 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
             .snapshot
             .type_at(Position::new(self.file, at))
             .expect("expected a type at this position")
-            .resolutions()
+            .item_resolutions()
         {
             [] => SemanticTokenKind::Type,
             [res, ..] => match self.snapshot.item(*res).kind {

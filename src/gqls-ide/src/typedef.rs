@@ -10,7 +10,7 @@ impl Snapshot {
                 let field = self.field(res);
                 field
                     .ty
-                    .resolutions()
+                    .item_resolutions()
                     .iter()
                     .map(|&res| Location::new(res.file, self.item(res).name.range))
                     .collect()

@@ -1,4 +1,4 @@
-use gqls_db::{DefDatabase, Project, SourceDatabase};
+use gqls_db::{DefDatabase, Project, SourceDatabase, TyDatabase};
 use gqls_ir::{Directive, Implementations, InProject, ItemKind, ItemRes, Ty, TypeDefinitionKind};
 use gqls_syntax::{query, Query, QueryCursor};
 use once_cell::sync::Lazy;
@@ -83,6 +83,7 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 
     fn diagnostics(mut self) -> HashSet<Diagnostic> {
+        self.ir_diagnostics();
         self.syntax();
         self.empty_fields();
         self.duplicate_definitions();
@@ -92,6 +93,15 @@ impl<'a> DiagnosticsCtxt<'a> {
 
     fn diagnose(&mut self, diagnostic: Diagnostic) {
         self.diagnostics.insert(diagnostic);
+    }
+
+    fn ir_diagnostics(&mut self) {
+        let items = self.snapshot.items(self.file);
+        for (idx, _) in items.iter() {
+            if let Some(body) = self.snapshot.item_body(ItemRes::new(self.file, idx)) {
+                self.diagnostics.extend(body.diagnostics.iter().map(Into::into))
+            }
+        }
     }
 
     fn empty_fields(&mut self) {
@@ -186,6 +196,7 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 
     fn check_output_ty(&mut self, ty: Ty) {
+        let ty = self.snapshot.lower_type(ty);
         // FIXME avoid all these haphazard builtin checks
         // if !ty.is_builtin()
         //     && self.snapshot.resolve_type(InProject::new(self.file, ty.clone())).is_empty()
@@ -230,7 +241,7 @@ impl<'a> DiagnosticsCtxt<'a> {
             if self
                 .snapshot
                 .resolve_item(InProject::new(self.file, directive.name.clone()))
-                .is_empty()
+                .is_err()
             {
                 self.diagnose(diagnostic!(E0002 @ directive.name.range, name = directive.name))
             }
@@ -289,6 +300,15 @@ impl Diagnostic {
         labels: Vec<DiagnosticLabel>,
     ) -> Self {
         Self { range, code, message, severity: code.severity(), labels }
+    }
+}
+
+impl<'a> From<&'_ gqls_ir::Diagnostic> for Diagnostic {
+    fn from(diag: &'_ gqls_ir::Diagnostic) -> Self {
+        match &diag.kind {
+            gqls_ir::DiagnosticKind::UnresolvedType(typename) =>
+                diagnostic!(E0003 @ diag.range, typename = typename),
+        }
     }
 }
 

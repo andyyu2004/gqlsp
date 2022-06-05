@@ -1,7 +1,9 @@
 use gqls_ir::{self as ir, DefDatabase, ItemKind, ItemRes, TypeDefinitionKind};
-use ir::{FieldRes, InProject, Res};
+use ir::{FieldRes, Res};
 
-use crate::{FieldType, FieldTypes, ImplError, InterfaceType, ObjectType, Ty, TyKind};
+use crate::{
+    EnumType, FieldType, FieldTypes, ImplError, InputObjectType, InterfaceType, ObjectType, ScalarType, Ty, TyKind, UnionType
+};
 
 #[salsa::query_group(TyDatabaseStorage)]
 pub trait TyDatabase: DefDatabase {
@@ -9,7 +11,7 @@ pub trait TyDatabase: DefDatabase {
     fn type_of_item(&self, res: ItemRes) -> Ty;
     fn field_types_of(&self, res: ItemRes) -> FieldTypes;
     fn type_of_field(&self, res: FieldRes) -> Ty;
-    fn lower_type(&self, ty: InProject<ir::Ty>) -> Ty;
+    fn lower_type(&self, ty: ir::Ty) -> Ty;
     fn implements_interface(&self, obj: ObjectType, interface: InterfaceType) -> Option<ImplError>;
 }
 
@@ -21,21 +23,11 @@ fn implements_interface(
     todo!()
 }
 
-fn lower_type(db: &dyn TyDatabase, ty: InProject<ir::Ty>) -> Ty {
-    match &ty.kind {
-        ir::TyKind::Named(name, _) => match name.as_str() {
-            "ID" => TyKind::ID,
-            "Boolean" => TyKind::Boolean,
-            "Float" => TyKind::Float,
-            "Int" => TyKind::Int,
-            "String" => TyKind::String,
-            _ => {
-                let item = db.resolve_item(ty.with_value(name.clone()));
-                todo!();
-            }
-        },
-        ir::TyKind::NonNull(inner) => TyKind::NonNull(db.lower_type(ty.with_value(inner.clone()))),
-        ir::TyKind::List(inner) => TyKind::List(db.lower_type(ty.with_value(inner.clone()))),
+fn lower_type(db: &dyn TyDatabase, ty: ir::Ty) -> Ty {
+    match ty.kind.clone() {
+        ir::TyKind::Named(_, res) => return db.type_of(res),
+        ir::TyKind::NonNull(inner) => TyKind::NonNull(db.lower_type(inner)),
+        ir::TyKind::List(inner) => TyKind::List(db.lower_type(inner)),
         ir::TyKind::Err(_) => TyKind::Err,
     }
     .intern()
@@ -43,14 +35,20 @@ fn lower_type(db: &dyn TyDatabase, ty: InProject<ir::Ty>) -> Ty {
 
 fn type_of(db: &dyn TyDatabase, res: Res) -> Ty {
     match res {
-        Res::Item(res) => db.type_of_item(res),
+        Res::Item(res) => match res[..] {
+            [] => unreachable!("should be an `ir::TyKind::Err` if unresolved"),
+            [res, ..] => return db.type_of_item(res),
+            // TODO handle multiple res?
+        },
         Res::Field(res) => db.type_of_field(res),
+        Res::Builtin(builtin) => TyKind::from(builtin).intern(),
+        Res::Err => TyKind::Err.intern(),
     }
 }
 
 fn type_of_field(db: &dyn TyDatabase, res: FieldRes) -> Ty {
     let field = db.field(res);
-    db.lower_type(InProject::new(res.item.file, field.ty))
+    db.lower_type(field.ty)
 }
 
 fn field_types_of(db: &dyn TyDatabase, res: ItemRes) -> FieldTypes {
@@ -72,17 +70,23 @@ fn type_of_item(db: &dyn TyDatabase, res: ItemRes) -> Ty {
     match item.kind {
         ItemKind::TypeDefinition(idx) => {
             let typedef = &db.items(res.file)[idx];
-            let _body = db.item_body(res).expect("typedef should have a body");
+            let body = db.item_body(res).expect("typedef should have a body");
+            let name = item.name.name();
             let kind = match typedef.kind {
                 TypeDefinitionKind::Object => TyKind::Object(ObjectType {
                     name: item.name.name(),
                     fields: db.field_types_of(res),
                 }),
-                TypeDefinitionKind::Interface => todo!(),
-                TypeDefinitionKind::Input => todo!(),
-                TypeDefinitionKind::Scalar => todo!(),
-                TypeDefinitionKind::Enum => todo!(),
-                TypeDefinitionKind::Union => todo!(),
+                TypeDefinitionKind::Interface =>
+                    TyKind::Interface(InterfaceType { name, fields: db.field_types_of(res) }),
+                TypeDefinitionKind::Input =>
+                    TyKind::Input(InputObjectType { name, fields: db.field_types_of(res) }),
+                TypeDefinitionKind::Scalar => TyKind::Scalar(ScalarType {}),
+                TypeDefinitionKind::Enum => TyKind::Enum(EnumType {}),
+                TypeDefinitionKind::Union => {
+                    let union = body;
+                    TyKind::Union(UnionType { types: todo!() })
+                }
             };
             kind.intern()
         }

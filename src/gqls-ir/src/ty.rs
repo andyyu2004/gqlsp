@@ -1,4 +1,4 @@
-use crate::{ItemRes, ItemResolutions, Name, Range};
+use crate::{ItemRes, Name, Range, Res};
 use std::fmt::{self, Debug};
 use std::sync::Arc;
 
@@ -11,10 +11,13 @@ pub struct Type {
 }
 
 impl Type {
-    pub fn resolutions(&self) -> &[ItemRes] {
+    pub fn item_resolutions(&self) -> &[ItemRes] {
         match &self.kind {
-            TyKind::Named(_, res) => res,
-            TyKind::NonNull(ty) | TyKind::List(ty) => ty.resolutions(),
+            TyKind::Named(_, res) => match res {
+                Res::Item(res) => res,
+                _ => &[],
+            },
+            TyKind::NonNull(ty) | TyKind::List(ty) => ty.item_resolutions(),
             TyKind::Err(_) => &[],
         }
     }
@@ -25,23 +28,11 @@ impl Type {
             TyKind::NonNull(ty) | TyKind::List(ty) => ty.name(),
         }
     }
-
-    pub fn has_error(&self) -> bool {
-        match &self.kind {
-            TyKind::Named(_, _) => false,
-            TyKind::NonNull(ty) | TyKind::List(ty) => ty.has_error(),
-            TyKind::Err(_) => true,
-        }
-    }
-
-    pub fn is_builtin(&self) -> bool {
-        matches!(self.name().as_str(), "Int" | "Float" | "String" | "Boolean" | "ID")
-    }
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum TyKind {
-    Named(Name, ItemResolutions),
+    Named(Name, Res),
     NonNull(Ty),
     List(Ty),
     Err(Name),

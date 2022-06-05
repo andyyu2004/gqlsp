@@ -98,11 +98,14 @@ fn test_definitions() {
     );
 
     let resolutions = db.resolve_item(InProject::new(bar, Name::unranged("Foo")));
-    assert_eq!(resolutions.as_slice(), [ItemRes::new(foo, idx!(0)), ItemRes::new(foo, idx!(1))]);
+    assert_eq!(
+        resolutions.into_item().as_slice(),
+        [ItemRes::new(foo, idx!(0)), ItemRes::new(foo, idx!(1))]
+    );
 
     let resolutions = db.resolve_item(InProject::new(foo, Name::unranged("Bar")));
     assert_eq!(
-        resolutions.into_iter().collect::<HashSet<_>>(),
+        resolutions.into_item().into_iter().collect::<HashSet<_>>(),
         hashset! {
             ItemRes::new(bar, idx!(0)),
             ItemRes::new(foo, idx!(2)),
@@ -111,7 +114,7 @@ fn test_definitions() {
     );
 
     let resolutions = db.resolve_item(InProject::new(bar, Name::unranged("@d")));
-    assert_eq!(resolutions.as_slice(), [ItemRes::new(bar, idx!(2))]);
+    assert_eq!(resolutions.into_item().as_slice(), [ItemRes::new(bar, idx!(2))]);
 
     let items = db.items(foo);
     expect![[r#"

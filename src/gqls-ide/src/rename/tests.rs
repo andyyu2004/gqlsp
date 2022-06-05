@@ -32,6 +32,8 @@ fn test(fixture: &Fixture, to: &str) {
     }
 }
 
+// TODO test for rename on invalid location
+
 #[test]
 fn test_rename_simple() {
     let fixture = fixture! {

@@ -3,10 +3,16 @@ use std::fmt::{self, Debug};
 use gqls_syntax::{Range, RangeExt};
 use la_arena::{Arena, ArenaMap, Idx};
 
-use crate::{ArenaExt, Directives, Name, Ty};
+use crate::{ArenaExt, Diagnostic, Directives, Name, Ty};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ItemBody {
+pub struct ItemBody {
+    pub diagnostics: Vec<Diagnostic>,
+    pub kind: ItemBodyKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ItemBodyKind {
     ObjectTypeDefinition(TypeDefinitionBody),
     InterfaceDefinition(InterfaceDefinitionBody),
     InputObjectTypeDefinition(InputTypeDefinitionBody),
@@ -16,18 +22,26 @@ pub enum ItemBody {
 
 impl ItemBody {
     pub fn fields(&self) -> Option<&Arena<Field>> {
-        let fields = match self {
-            ItemBody::ObjectTypeDefinition(typedef) => &typedef.fields.fields,
-            ItemBody::InputObjectTypeDefinition(typedef) => &typedef.fields.fields,
-            ItemBody::InterfaceDefinition(iface) => &iface.fields.fields,
-            ItemBody::UnionTypeDefinition(_) => return None,
-            ItemBody::Todo => return None,
+        let fields = match &self.kind {
+            ItemBodyKind::ObjectTypeDefinition(typedef) => &typedef.fields.fields,
+            ItemBodyKind::InputObjectTypeDefinition(typedef) => &typedef.fields.fields,
+            ItemBodyKind::InterfaceDefinition(iface) => &iface.fields.fields,
+            ItemBodyKind::UnionTypeDefinition(_) => return None,
+            ItemBodyKind::Todo => return None,
         };
         Some(fields)
     }
 
     pub fn fields_slice(&self) -> Option<&[Field]> {
         self.fields().map(Arena::as_slice)
+    }
+
+    pub fn into_union(self) -> UnionTypeDefinitionBody {
+        if let ItemBodyKind::UnionTypeDefinition(v) = self.kind {
+            v
+        } else {
+            panic!("expected union typedef")
+        }
     }
 }
 
