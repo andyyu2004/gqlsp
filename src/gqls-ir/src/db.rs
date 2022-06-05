@@ -214,7 +214,6 @@ fn references(db: &dyn DefDatabase, res: Res) -> References {
             [] => vec![],
             [res, ..] => db.item_references(res),
         },
-        Res::Field(_) => todo!(),
         Res::Builtin(_) | Res::Err => vec![],
     }
 }

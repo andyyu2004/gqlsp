@@ -40,7 +40,6 @@ fn type_of(db: &dyn TyDatabase, res: Res) -> Ty {
             [res, ..] => return db.type_of_item(res),
             // TODO handle multiple res?
         },
-        Res::Field(res) => db.type_of_field(res),
         Res::Builtin(builtin) => TyKind::from(builtin).intern(),
         Res::Err => TyKind::Err.intern(),
     }

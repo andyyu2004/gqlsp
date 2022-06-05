@@ -263,7 +263,6 @@ pub enum Res {
     Builtin(BuiltinScalar),
     // INVARIANT: should be non-empty
     Item(ItemResolutions),
-    Field(FieldRes),
     Err,
 }
 
