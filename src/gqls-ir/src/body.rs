@@ -36,8 +36,8 @@ impl ItemBody {
         self.fields().map(Arena::as_slice)
     }
 
-    pub fn into_union(self) -> UnionTypeDefinitionBody {
-        if let ItemBodyKind::UnionTypeDefinition(v) = self.kind {
+    pub fn as_union(&self) -> &UnionTypeDefinitionBody {
+        if let ItemBodyKind::UnionTypeDefinition(v) = &self.kind {
             v
         } else {
             panic!("expected union typedef")

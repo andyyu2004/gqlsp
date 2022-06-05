@@ -71,7 +71,7 @@ fn type_of_item(db: &dyn TyDatabase, res: ItemRes) -> Ty {
             let typedef = &db.items(res.file)[idx];
             let body = db.item_body(res).expect("typedef should have a body");
             let name = item.name.name();
-            let kind = match typedef.kind {
+            let kind = match &typedef.kind {
                 TypeDefinitionKind::Object => TyKind::Object(ObjectType {
                     name: item.name.name(),
                     fields: db.field_types_of(res),
@@ -82,10 +82,14 @@ fn type_of_item(db: &dyn TyDatabase, res: ItemRes) -> Ty {
                     TyKind::Input(InputObjectType { name, fields: db.field_types_of(res) }),
                 TypeDefinitionKind::Scalar => TyKind::Scalar(ScalarType {}),
                 TypeDefinitionKind::Enum => TyKind::Enum(EnumType {}),
-                TypeDefinitionKind::Union => {
-                    let _union = body;
-                    TyKind::Union(UnionType { types: todo!() })
-                }
+                TypeDefinitionKind::Union => TyKind::Union(UnionType {
+                    types: body
+                        .as_union()
+                        .types
+                        .iter()
+                        .map(|ty| db.lower_type(ty.clone()))
+                        .collect(),
+                }),
             };
             kind.intern()
         }

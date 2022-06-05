@@ -16,10 +16,10 @@ pub(crate) struct TestDB {
 impl salsa::Database for TestDB {
 }
 
-fn test_type_of_item(fixture: &FixtureFile, name: &str, expect: Expect) {
+fn test_type_of_item(fixture: &FixtureFile, item_name: &str, expect: Expect) {
     let db = TestDB::from_fixture_file(fixture);
     let resolutions =
-        db.resolve_item(InProject::new(file_id!(""), Name::unranged(name))).into_item();
+        db.resolve_item(InProject::new(file_id!(""), Name::unranged(item_name))).into_item();
     assert_eq!(resolutions.len(), 1);
     let ty = db.type_of_item(resolutions[0]);
     expect.assert_debug_eq(&ty);
@@ -40,7 +40,32 @@ fn test_field_types_of(fixture: &FixtureFile, name: &str, expect: Expect) {
     expect.assert_eq(&s);
 }
 
+#[test]
 fn test_typeof_extended_object() {
+}
+
+#[test]
+fn test_typeof_union() {
+    let fixture = fixture_file! {
+        "
+            type Foo {
+                id: ID!
+            }
+
+            type Bar {
+                id: ID!
+            }
+
+            union Union = Foo | Bar
+        "
+    };
+    test_type_of_item(
+        &fixture,
+        "Union",
+        expect![[r#"
+            object Foo | object Bar
+        "#]],
+    )
 }
 
 #[test]

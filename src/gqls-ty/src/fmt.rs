@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::fmt::{self, Debug};
 
 use crate::{FieldType, FieldTypes, InterfaceType, Interned, ObjectType, TyKind, Type};
@@ -22,7 +23,7 @@ impl Debug for TyKind {
             TyKind::NonNull(inner) => write!(f, "{inner:?}!"),
             TyKind::List(inner) => write!(f, "[{inner:?}]"),
             TyKind::Err => write!(f, "<err>"),
-            TyKind::Union(_) => todo!(),
+            TyKind::Union(union) => write!(f, "{:?}", union.types.iter().format(" | ")),
             TyKind::Enum(_) => todo!(),
             TyKind::Scalar(_) => todo!(),
         }
