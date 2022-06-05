@@ -59,9 +59,7 @@ macro_rules! error_msg {
 
 impl ErrorCode {
     pub fn severity(self) -> Severity {
-        match self.0 {
-            _ => Severity::Error,
-        }
+        Severity::Error
     }
 }
 
@@ -196,7 +194,7 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 
     fn check_output_ty(&mut self, ty: Ty) {
-        let ty = self.snapshot.lower_type(ty);
+        let _ty = self.snapshot.lower_type(ty);
         // FIXME avoid all these haphazard builtin checks
         // if !ty.is_builtin()
         //     && self.snapshot.resolve_type(InProject::new(self.file, ty.clone())).is_empty()
@@ -206,7 +204,7 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 
     fn check_implementations(&mut self, impls: &Implementations) {
-        for name in impls {
+        for _name in impls {
             // let ty = self.snapshot.resolve_type(InProject::new(self.file, name.clone()));
             // if !ty.is_builtin() && ty.has_error() {
             //     self.diagnose(diagnostic!(E0003 @ name.range, typename = name))
@@ -331,7 +329,7 @@ impl FromStr for ErrorCode {
     type Err = std::convert::Infallible;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        assert!(s.starts_with("E"));
+        assert!(s.starts_with('E'));
         Ok(Self(u16::from_str_radix(&s[1..], 10).expect("failed to parse error code")))
     }
 }

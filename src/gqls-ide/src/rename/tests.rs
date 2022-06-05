@@ -5,7 +5,7 @@ use ropey::Rope;
 use crate::Ide;
 
 fn test(fixture: &Fixture, to: &str) {
-    let ide = Ide::from_fixture(&fixture);
+    let ide = Ide::from_fixture(fixture);
     let mut positions = fixture.positions();
 
     let position = positions.next().expect("fixture must have at least one position");

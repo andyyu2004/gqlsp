@@ -37,7 +37,7 @@ fn type_of(db: &dyn TyDatabase, res: Res) -> Ty {
     match res {
         Res::Item(res) => match res[..] {
             [] => unreachable!("should be an `ir::TyKind::Err` if unresolved"),
-            [res, ..] => return db.type_of_item(res),
+            [res, ..] => db.type_of_item(res),
             // TODO handle multiple res?
         },
         Res::Builtin(builtin) => TyKind::from(builtin).intern(),
@@ -83,7 +83,7 @@ fn type_of_item(db: &dyn TyDatabase, res: ItemRes) -> Ty {
                 TypeDefinitionKind::Scalar => TyKind::Scalar(ScalarType {}),
                 TypeDefinitionKind::Enum => TyKind::Enum(EnumType {}),
                 TypeDefinitionKind::Union => {
-                    let union = body;
+                    let _union = body;
                     TyKind::Union(UnionType { types: todo!() })
                 }
             };

@@ -7,7 +7,7 @@ use super::super::{CompletionCtxt, Context};
 
 #[track_caller]
 fn test(fixture: &Fixture, expected: Context) {
-    let ide = Ide::from_fixture_allow_errors(&fixture);
+    let ide = Ide::from_fixture_allow_errors(fixture);
     let snapshot = ide.snapshot();
     for position in fixture.positions() {
         let context = CompletionCtxt::infer_context(&snapshot, position);
