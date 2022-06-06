@@ -270,12 +270,13 @@ impl Convert for gqls_ide::SemanticTokenKind {
             gqls_ide::SemanticTokenKind::Interface => lsp_types::SemanticTokenType::INTERFACE,
             gqls_ide::SemanticTokenKind::Keyword => lsp_types::SemanticTokenType::KEYWORD,
             gqls_ide::SemanticTokenKind::Number => lsp_types::SemanticTokenType::NUMBER,
-            gqls_ide::SemanticTokenKind::InputObject | gqls_ide::SemanticTokenKind::Object =>
-                lsp_types::SemanticTokenType::STRUCT,
+            gqls_ide::SemanticTokenKind::Argument => lsp_types::SemanticTokenType::PARAMETER,
             gqls_ide::SemanticTokenKind::String => lsp_types::SemanticTokenType::STRING,
             gqls_ide::SemanticTokenKind::Type => lsp_types::SemanticTokenType::TYPE,
             gqls_ide::SemanticTokenKind::Scalar => tokens::TOKEN_TYPE_SCALAR,
             gqls_ide::SemanticTokenKind::Union => tokens::TOKEN_TYPE_UNION,
+            gqls_ide::SemanticTokenKind::InputObject | gqls_ide::SemanticTokenKind::Object =>
+                lsp_types::SemanticTokenType::STRUCT,
         }
     }
 }

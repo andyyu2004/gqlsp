@@ -59,6 +59,7 @@ fn test_highlight_scalars_and_enums() {
                 [
                     1:4..1:10 :: Keyword,
                     1:11..1:17 :: Scalar,
+                    3:4..3:8 :: Keyword,
                     3:9..3:10 :: Enum,
                     4:8..4:9 :: EnumValue,
                     5:8..5:9 :: EnumValue,
@@ -150,6 +151,7 @@ fn test_highlight_directive() {
                     9:12..9:13 :: Field,
                     9:15..9:21 :: Scalar,
                     9:22..9:26 :: Directive,
+                    12:8..12:12 :: Keyword,
                     12:13..12:14 :: Enum,
                     12:15..12:19 :: Directive,
                     13:12..13:13 :: EnumValue,
@@ -242,11 +244,43 @@ fn test_highlight_cross_file() {
                 [
                     1:12..1:18 :: Keyword,
                     1:19..1:20 :: Scalar,
+                    2:12..2:16 :: Keyword,
                     2:17..2:18 :: Enum,
                     2:21..2:23 :: EnumValue,
                     2:24..2:26 :: EnumValue,
                 ]
             "#]]
+        },
+    );
+}
+
+#[test]
+fn test_highlight_arguments() {
+    let fixture = fixture! {
+        "foo" => "
+            type Foo {
+                foo(
+                    id: ID!
+                    b: Boolean!
+                ): Foo!
+            }
+        "
+    };
+    test(
+        fixture,
+        hashmap! {
+            "foo" => expect![[r#"
+                [
+                    1:12..1:16 :: Keyword,
+                    1:17..1:20 :: Object,
+                    2:16..2:19 :: Field,
+                    3:20..3:22 :: Argument,
+                    3:24..3:27 :: Type,
+                    4:20..4:21 :: Argument,
+                    4:23..4:31 :: Type,
+                    5:19..5:23 :: Object,
+                ]
+            "#]],
         },
     );
 }

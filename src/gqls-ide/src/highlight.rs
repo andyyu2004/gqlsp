@@ -1,3 +1,5 @@
+// FIXME entire file is a messy hack that barely works
+// There is definitely a cleaner way to implement this
 use std::fmt::{self, Debug};
 
 use gqls_db::{DefDatabase, SourceDatabase};
@@ -21,6 +23,7 @@ impl Debug for SemanticToken {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SemanticTokenKind {
+    Argument,
     Comment,
     Directive,
     Enum,
@@ -54,6 +57,7 @@ struct Highlighter<'a, 'tree> {
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 enum Scope {
+    Argument,
     Directive,
     Document,
     Enum,
@@ -70,8 +74,9 @@ enum Scope {
 impl Scope {
     fn from_node_kind(kind: &'static str) -> Option<Self> {
         match kind {
+            NodeKind::ARGUMENTS_DEFINITION => Some(Scope::Argument),
             NodeKind::DIRECTIVE_DEFINITION => Some(Scope::Directive),
-            NodeKind::FIELD_DEFINITION | NodeKind::INPUT_VALUE_DEFINITION => Some(Scope::Field),
+            NodeKind::FIELD_DEFINITION | NodeKind::INPUT_FIELDS_DEFINITION => Some(Scope::Field),
             NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
                 Some(Scope::Object),
             NodeKind::INTERFACE_TYPE_DEFINITION | NodeKind::INTERFACE_TYPE_EXTENSION =>
@@ -145,7 +150,7 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
             let at = node.range().start_point;
             let kind = match node.kind() {
                 //TODO missing anonymous symbols
-                "type" | "scalar" | "interface" | "union" | "directive" | "on"
+                "type" | "enum" | "scalar" | "interface" | "union" | "directive" | "on"
                     if !node.is_named() =>
                     SemanticTokenKind::Keyword,
                 // TODO builtin types (ID, String, Int should be defaultLibrary types)
@@ -155,6 +160,7 @@ impl<'a, 'tree> Highlighter<'a, 'tree> {
                 NodeKind::DIRECTIVE => SemanticTokenKind::Directive,
                 NodeKind::ENUM_VALUE => SemanticTokenKind::EnumValue,
                 NodeKind::NAME | NodeKind::DIRECTIVE_NAME => match self.scope() {
+                    Scope::Argument => SemanticTokenKind::Argument,
                     Scope::Directive => SemanticTokenKind::Directive,
                     Scope::Enum => SemanticTokenKind::Enum,
                     Scope::Field => SemanticTokenKind::Field,
