@@ -45,10 +45,10 @@ impl Config {
         let ext = path.extension();
         if ext == Some("toml".as_ref()) {
             Ok(toml::from_str(&s)?)
-        } else if ext.is_none() || ext == Some("yaml".as_ref()) {
+        } else if ext.is_none() || ext == Some("yaml".as_ref()) || ext == Some("yml".as_ref()) {
             Ok(serde_yaml::from_str(&s)?)
         } else {
-            Err(anyhow::anyhow!("unsupported config file extension (yaml or toml only)"))
+            Err(anyhow::anyhow!("unsupported config file extension (yaml/yml or toml only)"))
         }
     }
 }
