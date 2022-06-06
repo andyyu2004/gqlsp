@@ -37,6 +37,9 @@ where
 
 #[macro_export]
 macro_rules! file_id {
+    () => {
+        $crate::file_id!("")
+    };
     ($file:literal) => {
         ::std::path::Path::new($file)
     };

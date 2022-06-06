@@ -2,7 +2,7 @@ use gqls_syntax::Range;
 use itertools::Itertools;
 use std::fmt::{self, Debug};
 
-use la_arena::{Arena, ArenaMap, Idx};
+use la_arena::Arena;
 
 use crate::{ArenaExt, Diagnostic, Directives, Name, Ty};
 
@@ -93,7 +93,7 @@ impl Fields {
     }
 }
 
-pub type Args = Arena<Arg>;
+pub type Args = Vec<Arg>;
 
 #[derive(Clone, PartialEq, Eq)]
 // FIXME would be nice to have a cleaner representation of args and default
@@ -111,7 +111,7 @@ impl Debug for Field {
         let Self { name, ty, directives, args, default, .. } = self;
         write!(f, "{name}")?;
         if !args.is_empty() {
-            todo!()
+            write!(f, "({:?})", args.iter().format(", "))?;
         }
         write!(f, ": {ty:?}")?;
         if let Some(default) = default {
@@ -124,13 +124,29 @@ impl Debug for Field {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Arg {
     pub range: Range,
     pub name: Name,
     pub ty: Ty,
     pub default_value: Option<Value>,
     pub directives: Directives,
+}
+
+impl Debug for Arg {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Self { name, ty, default_value, directives, .. } = self;
+        write!(f, "{name}: {ty:?}")?;
+        if let Some(value) = default_value {
+            write!(f, "= {value:?}")?;
+        }
+
+        if !directives.is_empty() {
+            write!(f, " {:?}", directives.iter().format(" "))?;
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
