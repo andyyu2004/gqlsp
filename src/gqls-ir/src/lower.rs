@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use gqls_syntax::{Node, NodeExt, NodeKind, Tree};
-use la_arena::ArenaMap;
 
 use crate::*;
 
@@ -78,27 +77,32 @@ impl<'db> BodyCtxt<'db> {
             .unwrap_or_default()
     }
 
-    fn lower_input_fields(&mut self, node: Node<'_>) -> InputFields {
+    fn lower_input_fields(&mut self, node: Node<'_>) -> Fields {
         assert_eq!(node.kind(), NodeKind::INPUT_FIELDS_DEFINITION);
         let cursor = &mut node.walk();
-        let fields = node
+        let args = node
             .children_of_kind(cursor, NodeKind::INPUT_VALUE_DEFINITION)
-            .filter_map(|field| self.lower_input_field(field))
-            .map(|(field, _default_value)| field);
-        InputFields::new(
-            // TODO
-            fields,
-            ArenaMap::default(),
-        )
+            .filter_map(|field| self.lower_input_field(field));
+        Fields::new(args)
     }
 
-    fn lower_input_field(&mut self, node: Node<'_>) -> Option<(Field, ())> {
+    fn lower_input_field(&mut self, node: Node<'_>) -> Option<Field> {
         assert_eq!(node.kind(), NodeKind::INPUT_VALUE_DEFINITION);
         let name = self.name_of(node)?;
         let ty = self.lower_type(node.child_of_kind(NodeKind::TYPE)?)?;
         let directives = self.lower_directives_of(node);
         // TODO default_value
-        Some((Field { range: node.range(), name, ty, directives }, ()))
+        let default = None;
+        Some(Field { range: node.range(), name, ty, directives, default, args: Default::default() })
+    }
+
+    fn lower_arg(&mut self, node: Node<'_>) -> Option<Arg> {
+        assert_eq!(node.kind(), NodeKind::INPUT_VALUE_DEFINITION);
+        let name = self.name_of(node)?;
+        let ty = self.lower_type(node.child_of_kind(NodeKind::TYPE)?)?;
+        let directives = self.lower_directives_of(node);
+        // TODO default_value
+        Some(Arg { range: node.range(), name, ty, default_value: None, directives })
     }
 
     fn lower_fields(&mut self, node: Node<'_>) -> Fields {
@@ -114,7 +118,21 @@ impl<'db> BodyCtxt<'db> {
         let ty = self.lower_type(node.child_of_kind(NodeKind::TYPE)?)?;
         let name = self.name_of(node)?;
         let directives = self.lower_directives_of(node);
-        Some(Field { range: node.range(), name, ty, directives })
+        let args = self.lower_args_of(node);
+        Some(Field { range: node.range(), name, ty, directives, args, default: None })
+    }
+
+    fn lower_args_of(&mut self, node: Node<'_>) -> Args {
+        node.child_of_kind(NodeKind::ARGUMENTS_DEFINITION)
+            .map(|args| self.lower_args(args))
+            .unwrap_or_default()
+    }
+
+    fn lower_args(&mut self, node: Node<'_>) -> Args {
+        assert_eq!(node.kind(), NodeKind::ARGUMENTS_DEFINITION);
+        node.children_of_kind(&mut node.walk(), NodeKind::INPUT_VALUE_DEFINITION)
+            .filter_map(|arg| self.lower_arg(arg))
+            .collect()
     }
 
     pub(crate) fn lower_type(&mut self, node: Node<'_>) -> Option<Ty> {

@@ -23,13 +23,13 @@ pub enum ItemBodyKind {
 impl ItemBody {
     pub fn fields(&self) -> Option<&Arena<Field>> {
         let fields = match &self.kind {
-            ItemBodyKind::ObjectTypeDefinition(typedef) => &typedef.fields.fields,
-            ItemBodyKind::InputObjectTypeDefinition(typedef) => &typedef.fields.fields,
-            ItemBodyKind::InterfaceDefinition(iface) => &iface.fields.fields,
+            ItemBodyKind::ObjectTypeDefinition(typedef) => &typedef.fields,
+            ItemBodyKind::InputObjectTypeDefinition(typedef) => &typedef.fields,
+            ItemBodyKind::InterfaceDefinition(iface) => &iface.fields,
             ItemBodyKind::UnionTypeDefinition(_) => return None,
             ItemBodyKind::Todo => return None,
         };
-        Some(fields)
+        Some(&fields.fields)
     }
 
     pub fn fields_slice(&self) -> Option<&[Field]> {
@@ -47,7 +47,7 @@ impl ItemBody {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InputTypeDefinitionBody {
-    pub fields: InputFields,
+    pub fields: Fields,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -81,12 +81,17 @@ impl Fields {
     }
 }
 
+pub type Args = Arena<Arg>;
+
 #[derive(Clone, PartialEq, Eq)]
+// FIXME would be nice to have a cleaner representation of args and default
 pub struct Field {
     pub range: Range,
     pub name: Name,
     pub ty: Ty,
     pub directives: Directives,
+    pub args: Args, // only valid for object fields (empty for input fields)
+    pub default: Option<Value>, // only valid for input fields (None for object fields)
 }
 
 impl Debug for Field {
@@ -96,21 +101,29 @@ impl Debug for Field {
             .field("name", &self.name)
             .field("ty", &self.ty)
             .field("directives", &self.directives)
+            .field("arguments", &self.args)
+            .field("default", &self.default)
             .finish()
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct InputFields {
-    pub fields: Arena<Field>,
-    pub default_values: ArenaMap<Idx<Field>, ()>,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Arg {
+    pub range: Range,
+    pub name: Name,
+    pub ty: Ty,
+    pub default_value: Option<Value>,
+    pub directives: Directives,
 }
 
-impl InputFields {
-    pub fn new(
-        fields: impl IntoIterator<Item = Field>,
-        default_values: ArenaMap<Idx<Field>, ()>,
-    ) -> Self {
-        Self { fields: fields.into_iter().collect(), default_values }
-    }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Value {
+    Int,
+    Float,
+    String,
+    Boolean,
+    Null,
+    Enum,
+    List,
+    Object,
 }

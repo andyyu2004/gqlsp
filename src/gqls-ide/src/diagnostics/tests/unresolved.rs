@@ -44,6 +44,19 @@ fn test_unresolved_type_in_field() {
 }
 
 #[test]
+fn test_unresolved_type_in_argument() {
+    let fixture = fixture! {
+        "foo" => "
+            type Foo {
+                bar(bar: Bar!): [ID!]!
+                        #...(unresolved type `Bar`)
+            }
+        "
+    };
+    test_error_message(&fixture);
+}
+
+#[test]
 fn test_unresolved_interface_in_implements_clause() {
     test_rendered(
         "type Foo implements Bar { id: ID! }",

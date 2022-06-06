@@ -46,12 +46,22 @@ fn test_lower_item_body() {
                                                 name: @qux,
                                             },
                                         ],
+                                        arguments: Arena {
+                                            len: 0,
+                                            data: [],
+                                        },
+                                        default: None,
                                     },
                                     Field {
                                         range: 4:12..4:23,
                                         name: list,
                                         ty: [Int],
                                         directives: [],
+                                        arguments: Arena {
+                                            len: 0,
+                                            data: [],
+                                        },
+                                        default: None,
                                     },
                                     Field {
                                         range: 5:12..5:30,
@@ -63,6 +73,11 @@ fn test_lower_item_body() {
                                                 name: @qux,
                                             },
                                         ],
+                                        arguments: Arena {
+                                            len: 0,
+                                            data: [],
+                                        },
+                                        default: None,
                                     },
                                     Field {
                                         range: 6:12..6:37,
@@ -74,18 +89,33 @@ fn test_lower_item_body() {
                                                 name: @qux,
                                             },
                                         ],
+                                        arguments: Arena {
+                                            len: 0,
+                                            data: [],
+                                        },
+                                        default: None,
                                     },
                                     Field {
                                         range: 7:12..7:21,
                                         name: a,
                                         ty: [Int!],
                                         directives: [],
+                                        arguments: Arena {
+                                            len: 0,
+                                            data: [],
+                                        },
+                                        default: None,
                                     },
                                     Field {
                                         range: 8:12..8:21,
                                         name: b,
                                         ty: [Int]!,
                                         directives: [],
+                                        arguments: Arena {
+                                            len: 0,
+                                            data: [],
+                                        },
+                                        default: None,
                                     },
                                 ],
                             },
