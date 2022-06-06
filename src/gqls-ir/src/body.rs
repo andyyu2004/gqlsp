@@ -1,5 +1,6 @@
 use gqls_syntax::Range;
 use itertools::Itertools;
+use std::collections::BTreeMap;
 use std::fmt::{self, Debug};
 
 use la_arena::Arena;
@@ -103,18 +104,18 @@ pub struct Field {
     pub ty: Ty,
     pub directives: Directives,
     pub args: Args, // only valid for object fields (empty for input fields)
-    pub default: Option<Value>, // only valid for input fields (None for object fields)
+    pub default_value: Option<Value>, // only valid for input fields (None for object fields)
 }
 
 impl Debug for Field {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let Self { name, ty, directives, args, default, .. } = self;
+        let Self { name, ty, directives, args, default_value, .. } = self;
         write!(f, "{name}")?;
         if !args.is_empty() {
             write!(f, "({:?})", args.iter().format(", "))?;
         }
         write!(f, ": {ty:?}")?;
-        if let Some(default) = default {
+        if let Some(default) = default_value {
             write!(f, " = {default:?}")?;
         }
         if !directives.is_empty() {
@@ -138,7 +139,7 @@ impl Debug for Arg {
         let Self { name, ty, default_value, directives, .. } = self;
         write!(f, "{name}: {ty:?}")?;
         if let Some(value) = default_value {
-            write!(f, "= {value:?}")?;
+            write!(f, " = {value:?}")?;
         }
 
         if !directives.is_empty() {
@@ -149,14 +150,31 @@ impl Debug for Arg {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Value {
-    Int,
-    Float,
-    String,
-    Boolean,
+    // storing as u64 to avoid f64 Eq pain
+    Boolean(bool),
+    Enum(String),
+    Float(u64),
+    Int(i32),
+    List(Vec<Value>),
     Null,
-    Enum,
-    List,
-    Object,
+    Object(BTreeMap<Name, Value>),
+    String(String),
+}
+
+impl Debug for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Int(i) => write!(f, "{i}"),
+            Self::Float(u) => write!(f, "{}", f64::from_bits(*u)),
+            Self::String(s) => write!(f, "{s:?}"),
+            Self::Boolean(b) => write!(f, "{b}"),
+            Self::Enum(s) => write!(f, "{s}"),
+            Self::List(vs) => write!(f, "[{:?}]", vs.iter().format(", ")),
+            Self::Object(vs) =>
+                write!(f, "{{ {} }}", vs.iter().map(|(k, v)| format!("{k}: {v:?}")).format(", ")),
+            Self::Null => write!(f, "null"),
+        }
+    }
 }

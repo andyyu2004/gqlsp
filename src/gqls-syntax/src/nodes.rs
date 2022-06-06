@@ -41,7 +41,6 @@ impl NodeKind {
     pub const ARGUMENTS: &'static str = "arguments";
     pub const ARGUMENT: &'static str = "argument";
     pub const VALUE: &'static str = "value";
-    pub const VARIABLE: &'static str = "variable";
     pub const STRING_VALUE: &'static str = "string_value";
     pub const BOOLEAN_VALUE: &'static str = "boolean_value";
     pub const ENUM_VALUE: &'static str = "enum_value";

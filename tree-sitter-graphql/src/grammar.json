@@ -1439,10 +1439,6 @@
       "members": [
         {
           "type": "SYMBOL",
-          "name": "variable"
-        },
-        {
-          "type": "SYMBOL",
           "name": "string_value"
         },
         {

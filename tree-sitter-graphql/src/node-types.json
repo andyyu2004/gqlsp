@@ -1049,10 +1049,6 @@
         {
           "type": "string_value",
           "named": true
-        },
-        {
-          "type": "variable",
-          "named": true
         }
       ]
     }

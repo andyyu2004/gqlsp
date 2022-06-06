@@ -238,7 +238,6 @@ module.exports = grammar({
     argument: ($) => seq($.name, ":", $.value),
     value: ($) =>
       choice(
-        $.variable,
         $.string_value,
         $.int_value,
         $.float_value,

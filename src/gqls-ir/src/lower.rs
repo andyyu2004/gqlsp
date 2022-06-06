@@ -90,19 +90,68 @@ impl<'db> BodyCtxt<'db> {
         assert_eq!(node.kind(), NodeKind::INPUT_VALUE_DEFINITION);
         let name = self.name_of(node)?;
         let ty = self.lower_type(node.child_of_kind(NodeKind::TYPE)?)?;
+        let default_value = self.lower_default_value_of(node);
         let directives = self.lower_directives_of(node);
-        // TODO default_value
-        let default = None;
-        Some(Field { range: node.range(), name, ty, directives, default, args: Default::default() })
+        Some(Field {
+            range: node.range(),
+            name,
+            ty,
+            directives,
+            default_value,
+            args: Default::default(),
+        })
     }
 
     fn lower_arg(&mut self, node: Node<'_>) -> Option<Arg> {
         assert_eq!(node.kind(), NodeKind::INPUT_VALUE_DEFINITION);
         let name = self.name_of(node)?;
         let ty = self.lower_type(node.child_of_kind(NodeKind::TYPE)?)?;
+        let default_value = self.lower_default_value_of(node);
         let directives = self.lower_directives_of(node);
-        // TODO default_value
-        Some(Arg { range: node.range(), name, ty, default_value: None, directives })
+        Some(Arg { range: node.range(), name, ty, default_value, directives })
+    }
+
+    fn lower_default_value_of(&mut self, node: Node<'_>) -> Option<Value> {
+        node.child_of_kind(NodeKind::DEFAULT_VALUE)
+            .and_then(NodeExt::sole_named_child)
+            .and_then(|value| self.lower_value(value))
+    }
+
+    fn lower_value(&mut self, node: Node<'_>) -> Option<Value> {
+        assert_eq!(node.kind(), NodeKind::VALUE);
+        let value = node.sole_named_child()?;
+        let t = value.text(self.text());
+        let value = match value.kind() {
+            NodeKind::STRING_VALUE => Value::String(t.trim_matches('"').to_owned()),
+            NodeKind::INT_VALUE => Value::Int(t.parse().unwrap()),
+            NodeKind::FLOAT_VALUE => Value::Float(t.parse().unwrap()),
+            NodeKind::BOOLEAN_VALUE => match t {
+                "true" => Value::Boolean(true),
+                "false" => Value::Boolean(false),
+                _ => unreachable!(),
+            },
+            NodeKind::NULL_VALUE => Value::Null,
+            NodeKind::ENUM_VALUE => Value::Enum(t.to_owned()),
+            NodeKind::LIST_VALUE => Value::List(
+                value
+                    .children_of_kind(&mut value.walk(), NodeKind::VALUE)
+                    .filter_map(|value| self.lower_value(value))
+                    .collect(),
+            ),
+            NodeKind::OBJECT_VALUE => Value::Object(
+                value
+                    .children_of_kind(&mut value.walk(), NodeKind::OBJECT_FIELD)
+                    .filter_map(|field| self.lower_object_field(field))
+                    .collect(),
+            ),
+            _ => unreachable!(),
+        };
+        Some(value)
+    }
+
+    fn lower_object_field(&mut self, node: Node<'_>) -> Option<(Name, Value)> {
+        assert_eq!(node.kind(), NodeKind::OBJECT_FIELD);
+        Some((self.name_of(node)?, self.lower_value(node.child_of_kind(NodeKind::VALUE)?)?))
     }
 
     fn lower_fields(&mut self, node: Node<'_>) -> Fields {
@@ -119,7 +168,7 @@ impl<'db> BodyCtxt<'db> {
         let name = self.name_of(node)?;
         let directives = self.lower_directives_of(node);
         let args = self.lower_args_of(node);
-        Some(Field { range: node.range(), name, ty, directives, args, default: None })
+        Some(Field { range: node.range(), name, ty, directives, args, default_value: None })
     }
 
     fn lower_args_of(&mut self, node: Node<'_>) -> Args {

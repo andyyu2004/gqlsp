@@ -80,3 +80,110 @@ fn test_lower_item_body_with_field_args() {
         "#]],
     );
 }
+
+#[test]
+fn test_lower_item_body_with_field_arg_defaults() {
+    let fixture = fixture_file! {
+        "
+        extend type Foo {
+            foo(a: Int!, b: Boolean! = false): Int @qux
+        }
+        directive @qux on FIELD_DEFINITION
+        "
+    };
+
+    test(
+        &fixture,
+        expect![[r#"
+            Some(
+                ItemBody {
+                    diagnostics: [],
+                    kind: ObjectTypeDefinition(
+                        TypeDefinitionBody {
+                            fields: [
+                              foo(a: Int!, b: Boolean! = false): Int @qux
+                            ],
+                        },
+                    ),
+                },
+            )
+        "#]],
+    );
+}
+
+#[test]
+fn test_lower_simple_value() {
+    let fixture = fixture_file! {
+        r#"
+        extend type Foo {
+            int(i: Int! = 5): Int
+            fls(b: Boolean! = false): Int
+            t(b: Boolean! = true): Int
+            n(b: Boolean = null): Int
+            s(b: String = "test"): Int
+        }
+        "#
+    };
+
+    test(
+        &fixture,
+        expect![[r#"
+            Some(
+                ItemBody {
+                    diagnostics: [],
+                    kind: ObjectTypeDefinition(
+                        TypeDefinitionBody {
+                            fields: [
+                              int(i: Int! = 5): Int
+                              fls(b: Boolean! = false): Int
+                              t(b: Boolean! = true): Int
+                              n(b: Boolean = null): Int
+                              s(b: String = "test"): Int
+                            ],
+                        },
+                    ),
+                },
+            )
+        "#]],
+    );
+}
+
+#[test]
+fn test_lower_value() {
+    let fixture = fixture_file! {
+        r#"
+        extend type Foo {
+            e(e: E = A): Int
+            xs(xs: [Int]! = [1,2,3]): Int
+            obj(input: Input! = { foo: 1, bar: false }): Int
+        }
+
+        enum E { A B }
+
+        input Input {
+            foo: Int
+            bar: Bool!
+        }
+        "#
+    };
+
+    test(
+        &fixture,
+        expect![[r#"
+            Some(
+                ItemBody {
+                    diagnostics: [],
+                    kind: ObjectTypeDefinition(
+                        TypeDefinitionBody {
+                            fields: [
+                              e(e: E = A): Int
+                              xs(xs: [Int]! = [1, 2, 3]): Int
+                              obj(input: Input! = { bar: false, foo: 1 }): Int
+                            ],
+                        },
+                    ),
+                },
+            )
+        "#]],
+    );
+}
