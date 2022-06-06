@@ -1,6 +1,7 @@
 use gqls_db::{DefDatabase, Project, SourceDatabase, TyDatabase};
 use gqls_ir::{Directive, Implementations, InProject, ItemKind, ItemRes, Ty, TypeDefinitionKind};
 use gqls_syntax::{query, Query, QueryCursor};
+use gqls_ty::TyKind;
 use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Display};
@@ -50,7 +51,7 @@ macro_rules! error_msg {
         "{typedef_kind} `{name}` must define at least one field"
     };
     (E0007) => {
-        "expected an interface, found {typedef_kind} `{ty:?}`"
+        "expected an interface, found {typedef_kind} `{typename:?}`"
     };
     ($ident:ident) => {
         compile_error!("unknown error code")
@@ -204,33 +205,29 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 
     fn check_implementations(&mut self, impls: &Implementations) {
-        for _name in impls {
-            // let ty = self.snapshot.resolve_type(InProject::new(self.file, name.clone()));
-            // if !ty.is_builtin() && ty.has_error() {
-            //     self.diagnose(diagnostic!(E0003 @ name.range, typename = name))
-            // }
-
-            // match ty.kind {
-            //     gqls_ir::TyKind::Named(_, _) => {}
-            //     gqls_ir::TyKind::NonNull(_) | gqls_ir::TyKind::List(_) => self.diagnose(
-            //         diagnostic!(E0007 @ name.range, typedef_kind = "array | list (TODO)", ty = ty; [
-            //             Location::new(self.file, ty.range)  => "not an interface"
-            //         ]),
-            //     ),
-            //     gqls_ir::TyKind::Err(_) => todo!(),
-            // }
-
-            // for res in resolutions {
-            //     let item = self.snapshot.item(res);
-            //     let typedef = self.snapshot.typedef(res.file, item.kind.into_type_definition());
-            //     if !matches!(typedef.kind, TypeDefinitionKind::Interface) {
-            //         self.diagnose(
-            //             diagnostic!(E0007 @ name.range, typedef_kind = typedef.kind.desc(), name = item.name; [
-            //                 Location::new(res.file, item.name.range)  => "not an interface"
-            //             ]),
-            //         )
-            //     }
-            // }
+        for name in impls {
+            let res = self.snapshot.resolve_item(InProject::new(self.file, name.clone()));
+            let ty = self.snapshot.type_of(res.clone());
+            match ty.kind {
+                TyKind::Boolean | TyKind::Float | TyKind::ID | TyKind::Int | TyKind::String =>
+                    self.diagnose(diagnostic!(E0007 @ name.range, typedef_kind = ty.kind.desc(), typename = ty.kind)),
+                TyKind::Err => self.diagnose(diagnostic!(E0003 @ name.range, typename = name)),
+                TyKind::Union(_)
+                | TyKind::Enum(_)
+                | TyKind::Scalar(_)
+                | TyKind::Object(_)
+                | TyKind::Input(_) =>
+                    for res in res.into_item() {
+                        let location = Location::new(res.file, self.snapshot.item(res).name.range);
+                        self.diagnose(
+                            diagnostic!(E0007 @ name.range, typedef_kind = ty.desc(), typename = name; [
+                                location => "not an interface"
+                            ]),
+                        )
+                    },
+                TyKind::Interface(_) => {}
+                TyKind::NonNull(_) | TyKind::List(_) => unreachable!(),
+            }
         }
     }
 

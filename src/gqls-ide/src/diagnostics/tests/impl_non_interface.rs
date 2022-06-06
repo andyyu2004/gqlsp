@@ -22,3 +22,23 @@ fn test_object_implements_non_interface() {
         "#]],
     );
 }
+
+#[test]
+fn test_object_implements_builtin_scalar() {
+    let gql = "
+        type Foo implements ID {
+            bar: Int
+        }
+    ";
+    test_rendered(
+        gql,
+        expect![[r#"
+            error[0007]: expected an interface, found builtin scalar `ID`
+              ┌─ test.graphql:2:29
+              │
+            2 │         type Foo implements ID {
+              │                             ^^
+
+        "#]],
+    );
+}

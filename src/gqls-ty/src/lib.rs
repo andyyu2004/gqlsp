@@ -39,6 +39,12 @@ pub struct Type {
     flags: TypeFlags,
 }
 
+impl Type {
+    pub fn desc(&self) -> &'static str {
+        self.kind.desc()
+    }
+}
+
 #[derive(PartialEq, Eq, Clone, Hash)]
 pub enum TyKind {
     Boolean,
@@ -55,6 +61,24 @@ pub enum TyKind {
     Interface(InterfaceType),
     NonNull(Ty),
     List(Ty),
+}
+
+impl TyKind {
+    pub fn desc(&self) -> &'static str {
+        match self {
+            TyKind::Boolean | TyKind::Float | TyKind::ID | TyKind::Int | TyKind::String =>
+                "builtin scalar",
+            TyKind::Scalar(_) => "scalar",
+            TyKind::Err => "<err>",
+            TyKind::Union(_) => "union",
+            TyKind::Enum(_) => "enum",
+            TyKind::Object(_) => "object",
+            TyKind::Input(_) => "input object",
+            TyKind::Interface(_) => "interface",
+            TyKind::NonNull(_) => "non null type",
+            TyKind::List(_) => "list type",
+        }
+    }
 }
 
 impl From<BuiltinScalar> for TyKind {
