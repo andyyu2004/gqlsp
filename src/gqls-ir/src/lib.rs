@@ -117,10 +117,7 @@ bitflags::bitflags! {
 
 impl Debug for Directive {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Directive")
-            .field("range", &self.range.debug())
-            .field("name", &self.name)
-            .finish()
+        write!(f, "{}", self.name)
     }
 }
 

@@ -357,6 +357,7 @@ dependencies = [
  "gqls-base-db",
  "gqls-fixture",
  "gqls-syntax",
+ "itertools",
  "la-arena",
  "maplit",
  "salsa",

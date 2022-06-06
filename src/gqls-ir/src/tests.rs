@@ -192,10 +192,7 @@ fn test_definitions() {
                 data: [
                     TypeDefinition {
                         directives: [
-                            Directive {
-                                range: 1:17..1:21,
-                                name: @qux,
-                            },
+                            @qux,
                         ],
                         implementations: None,
                         kind: Object,
@@ -225,10 +222,7 @@ fn test_definitions() {
                     },
                     TypeDefinition {
                         directives: [
-                            Directive {
-                                range: 19:17..19:21,
-                                name: @qux,
-                            },
+                            @qux,
                         ],
                         implementations: None,
                         kind: Scalar,
@@ -236,10 +230,7 @@ fn test_definitions() {
                     },
                     TypeDefinition {
                         directives: [
-                            Directive {
-                                range: 21:16..21:20,
-                                name: @qux,
-                            },
+                            @qux,
                         ],
                         implementations: None,
                         kind: Union,
@@ -247,10 +238,7 @@ fn test_definitions() {
                     },
                     TypeDefinition {
                         directives: [
-                            Directive {
-                                range: 23:16..23:20,
-                                name: @qux,
-                            },
+                            @qux,
                         ],
                         implementations: None,
                         kind: Input,
@@ -258,10 +246,7 @@ fn test_definitions() {
                     },
                     TypeDefinition {
                         directives: [
-                            Directive {
-                                range: 27:24..27:28,
-                                name: @qux,
-                            },
+                            @qux,
                         ],
                         implementations: None,
                         kind: Interface,
@@ -321,10 +306,7 @@ fn test_definitions() {
                     },
                     TypeDefinition {
                         directives: [
-                            Directive {
-                                range: 5:17..5:21,
-                                name: @foo,
-                            },
+                            @foo,
                         ],
                         implementations: None,
                         kind: Object,

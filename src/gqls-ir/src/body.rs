@@ -1,6 +1,7 @@
+use gqls_syntax::Range;
+use itertools::Itertools;
 use std::fmt::{self, Debug};
 
-use gqls_syntax::{Range, RangeExt};
 use la_arena::{Arena, ArenaMap, Idx};
 
 use crate::{ArenaExt, Diagnostic, Directives, Name, Ty};
@@ -70,9 +71,20 @@ pub struct InterfaceDefinitionBody {
     pub fields: Fields,
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Default, Clone, PartialEq, Eq)]
 pub struct Fields {
     pub fields: Arena<Field>,
+}
+
+impl Debug for Fields {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "[")?;
+        for (_, field) in self.fields.iter() {
+            writeln!(f, "  {field:?}")?;
+        }
+        write!(f, "]")?;
+        Ok(())
+    }
 }
 
 impl Fields {
@@ -96,14 +108,19 @@ pub struct Field {
 
 impl Debug for Field {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Field")
-            .field("range", &self.range.debug())
-            .field("name", &self.name)
-            .field("ty", &self.ty)
-            .field("directives", &self.directives)
-            .field("arguments", &self.args)
-            .field("default", &self.default)
-            .finish()
+        let Self { name, ty, directives, args, default, .. } = self;
+        write!(f, "{name}")?;
+        if !args.is_empty() {
+            todo!()
+        }
+        write!(f, ": {ty:?}")?;
+        if let Some(default) = default {
+            write!(f, " = {default:?}")?;
+        }
+        if !directives.is_empty() {
+            write!(f, " {:?}", directives.iter().format(" "))?;
+        }
+        Ok(())
     }
 }
 
