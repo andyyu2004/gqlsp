@@ -149,7 +149,7 @@ impl<'s> CompletionCtxt<'s> {
 
     fn complete_document(&mut self) {
         self.completions
-            .extend(["scalar", "enum", "struct", "union", "interface", "directive", "input"].map(
+            .extend(["type", "scalar", "enum", "union", "interface", "directive", "input"].map(
                 |s| CompletionItem { label: s.to_owned(), kind: CompletionItemKind::Keyword },
             ));
     }

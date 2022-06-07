@@ -40,9 +40,9 @@ fn test_toplevel_keyword_completions() {
         &fixture,
         expect![[r#"
             [
+                type :: Keyword,
                 scalar :: Keyword,
                 enum :: Keyword,
-                struct :: Keyword,
                 union :: Keyword,
                 interface :: Keyword,
                 directive :: Keyword,
