@@ -22,6 +22,24 @@ fn test(fixture: Fixture) {
 }
 
 #[test]
+fn test_find_references_to_input_type() {
+    let fixture = fixture! {
+        "foo" => "
+            input Foo {
+                 #...
+                foo: String
+            }
+
+            input Bar {
+               foo: Foo!
+                   #....
+            }
+        "
+    };
+    test(fixture);
+}
+
+#[test]
 fn test_find_references_to_object_like_type() {
     let foo = r#"
         extend type Foo {
@@ -40,18 +58,13 @@ fn test_find_references_to_object_like_type() {
                 #...
         }
 
-        input Input {
-            foo: Foo
-                #...
-        }
-
         extend type Bar {
             k: Foo
               #...
         }
         "#;
 
-    for kind in ["extend type", "type", "interface", "input"] {
+    for kind in ["extend type", "type", "interface"] {
         assert!(kind.len() <= "extend type".len());
         let padding = " ".repeat("extend type".len() - kind.len());
         let templated = foo.replace("extend type Foo", &format!("{padding}{kind} Foo"));
@@ -209,8 +222,8 @@ fn test_find_directive_references() {
 
             input Input @qux {
                        #....
-                foo: Foo @qux
-                        #....
+                foo: ID @qux
+                       #....
             }"#
 
         "baz" => "

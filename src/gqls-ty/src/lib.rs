@@ -5,6 +5,7 @@ mod fmt;
 
 use gqls_ir::{BuiltinScalar, FieldRes};
 use smol_str::SmolStr;
+use std::borrow::Cow;
 use std::ops::Deref;
 use std::sync::Arc;
 
@@ -40,8 +41,24 @@ pub struct Type {
 }
 
 impl Type {
-    pub fn desc(&self) -> &'static str {
+    pub fn desc(&self) -> Cow<'static, str> {
         self.kind.desc()
+    }
+
+    pub fn is_input(&self) -> bool {
+        match &self.kind {
+            TyKind::Object(_) | TyKind::Interface(_) | TyKind::Union(_) => false,
+            TyKind::NonNull(ty) | TyKind::List(ty) => ty.is_input(),
+            _ => true,
+        }
+    }
+
+    pub fn is_output(&self) -> bool {
+        match &self.kind {
+            TyKind::Input(_) => false,
+            TyKind::NonNull(ty) | TyKind::List(ty) => ty.is_output(),
+            _ => true,
+        }
     }
 }
 
@@ -64,8 +81,8 @@ pub enum TyKind {
 }
 
 impl TyKind {
-    pub fn desc(&self) -> &'static str {
-        match self {
+    pub fn desc(&self) -> Cow<'static, str> {
+        let s = match self {
             TyKind::Boolean | TyKind::Float | TyKind::ID | TyKind::Int | TyKind::String =>
                 "builtin scalar",
             TyKind::Scalar(_) => "scalar",
@@ -75,9 +92,10 @@ impl TyKind {
             TyKind::Object(_) => "object",
             TyKind::Input(_) => "input object",
             TyKind::Interface(_) => "interface",
-            TyKind::NonNull(_) => "non null type",
-            TyKind::List(_) => "list type",
-        }
+            TyKind::NonNull(ty) => return Cow::Owned(format!("non-null {}", ty.desc())),
+            TyKind::List(ty) => return Cow::Owned(format!("list of {}s", ty.desc())),
+        };
+        Cow::Borrowed(s)
     }
 }
 
@@ -95,6 +113,7 @@ impl From<BuiltinScalar> for TyKind {
 
 #[derive(PartialEq, Eq, Clone, Hash)]
 pub struct UnionType {
+    name: SmolStr,
     types: Vec<Ty>,
 }
 

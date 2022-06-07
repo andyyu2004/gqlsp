@@ -63,7 +63,7 @@ fn test_typeof_union() {
         &fixture,
         "Union",
         expect![[r#"
-            object Foo | object Bar
+            union Union(object Foo | object Bar)
         "#]],
     )
 }

@@ -83,6 +83,7 @@ fn type_of_item(db: &dyn TyDatabase, res: ItemRes) -> Ty {
                 TypeDefinitionKind::Scalar => TyKind::Scalar(ScalarType {}),
                 TypeDefinitionKind::Enum => TyKind::Enum(EnumType {}),
                 TypeDefinitionKind::Union => TyKind::Union(UnionType {
+                    name,
                     types: body
                         .as_union()
                         .types

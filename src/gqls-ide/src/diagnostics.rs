@@ -1,5 +1,7 @@
 use gqls_db::{DefDatabase, Project, SourceDatabase, TyDatabase};
-use gqls_ir::{Directive, Implementations, InProject, ItemKind, ItemRes, Ty, TypeDefinitionKind};
+use gqls_ir::{
+    Arg, Directive, Implementations, InProject, ItemKind, ItemRes, Ty, TypeDefinitionKind
+};
 use gqls_syntax::{query, Query, QueryCursor};
 use gqls_ty::TyKind;
 use once_cell::sync::Lazy;
@@ -51,7 +53,13 @@ macro_rules! error_msg {
         "{typedef_kind} `{name}` must define at least one field"
     };
     (E0007) => {
-        "expected an interface, found {typedef_kind} `{typename:?}`"
+        "expected an interface, found {typedef_kind} `{typename}`"
+    };
+    (E0008) => {
+        "expected an input type, found {ty_desc} `{ty}`"
+    };
+    (E0009) => {
+        "expected an output type, found {ty_desc} `{ty}`"
     };
     ($ident:ident) => {
         compile_error!("unknown error code")
@@ -86,7 +94,7 @@ impl<'a> DiagnosticsCtxt<'a> {
         self.syntax();
         self.empty_fields();
         self.duplicate_definitions();
-        self.unresolved_references();
+        self.check_items();
         self.diagnostics
     }
 
@@ -156,7 +164,7 @@ impl<'a> DiagnosticsCtxt<'a> {
         }
     }
 
-    fn unresolved_references(&mut self) {
+    fn check_items(&mut self) {
         let items = self.snapshot.items(self.file);
         for (idx, item) in items.iter() {
             let typedef = match item.kind {
@@ -176,7 +184,9 @@ impl<'a> DiagnosticsCtxt<'a> {
                 .and_then(|body| body.fields())
             {
                 for (_, field) in fields.iter() {
+                    // TODO check default value
                     self.check_directives(&field.directives);
+                    self.check_args(&field.args);
                     match typedef.kind {
                         TypeDefinitionKind::Object
                         | TypeDefinitionKind::Interface
@@ -190,18 +200,27 @@ impl<'a> DiagnosticsCtxt<'a> {
         }
     }
 
-    fn check_input_ty(&mut self, _ty: Ty) {
-        // TODO
+    fn check_args(&mut self, args: &[Arg]) {
+        for arg in args {
+            self.check_directives(&arg.directives);
+            self.check_input_ty(arg.ty.clone());
+        }
+    }
+
+    fn check_input_ty(&mut self, ty: Ty) {
+        let range = ty.range;
+        let ty = self.snapshot.lower_type(ty);
+        if !ty.is_input() {
+            self.diagnose(diagnostic!(E0008 @ range, ty_desc = ty.desc(), ty = ty));
+        }
     }
 
     fn check_output_ty(&mut self, ty: Ty) {
-        let _ty = self.snapshot.lower_type(ty);
-        // FIXME avoid all these haphazard builtin checks
-        // if !ty.is_builtin()
-        //     && self.snapshot.resolve_type(InProject::new(self.file, ty.clone())).is_empty()
-        // {
-        //     self.diagnose(diagnostic!(E0003 @ ty.range, typename = ty.name()))
-        // }
+        let range = ty.range;
+        let ty = self.snapshot.lower_type(ty);
+        if !ty.is_output() {
+            self.diagnose(diagnostic!(E0009 @ range, ty_desc = ty.desc(), ty = ty));
+        }
     }
 
     fn check_implementations(&mut self, impls: &Implementations) {
