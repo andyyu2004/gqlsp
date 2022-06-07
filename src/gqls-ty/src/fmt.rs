@@ -52,7 +52,7 @@ impl Debug for InterfaceType {
 
 impl Debug for EnumType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "enum {}", self.name)
+        write!(f, "enum {}({})", self.name, self.variants.iter().format(" | "))
     }
 }
 

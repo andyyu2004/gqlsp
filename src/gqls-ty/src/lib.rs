@@ -128,6 +128,7 @@ pub struct ScalarType {
 #[derive(PartialEq, Eq, Clone, Hash)]
 pub struct EnumType {
     name: SmolStr,
+    variants: Arc<[Arc<str>]>,
 }
 
 #[derive(PartialEq, Eq, Clone, Hash)]

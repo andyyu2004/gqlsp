@@ -12,6 +12,39 @@ fn test(fixture: &FixtureFile, expect: Expect) {
 }
 
 #[test]
+fn test_lower_enum_body() {
+    let fixture = fixture_file! {
+        "
+        enum Enum @qux {
+            A
+            B
+            C
+        }
+        directive @qux on FIELD_DEFINITION
+        "
+    };
+    test(
+        &fixture,
+        expect![[r#"
+            Some(
+                ItemBody {
+                    diagnostics: [],
+                    kind: Enum(
+                        EnumDefinitionBody {
+                            variants: [
+                                A,
+                                B,
+                                C,
+                            ],
+                        },
+                    ),
+                },
+            )
+        "#]],
+    )
+}
+
+#[test]
 fn test_lower_item_body() {
     let fixture = fixture_file! {
         "
@@ -30,24 +63,24 @@ fn test_lower_item_body() {
     test(
         &fixture,
         expect![[r#"
-        Some(
-            ItemBody {
-                diagnostics: [],
-                kind: ObjectTypeDefinition(
-                    TypeDefinitionBody {
-                        fields: [
-                          foo: Int @qux
-                          list: [Int]
-                          nonNull: Int! @qux
-                          nonNullList: [Int!]! @qux
-                          a: [Int!]
-                          b: [Int]!
-                        ],
-                    },
-                ),
-            },
-        )
-    "#]],
+            Some(
+                ItemBody {
+                    diagnostics: [],
+                    kind: Object(
+                        ObjectTypeDefinitionBody {
+                            fields: [
+                              foo: Int @qux
+                              list: [Int]
+                              nonNull: Int! @qux
+                              nonNullList: [Int!]! @qux
+                              a: [Int!]
+                              b: [Int]!
+                            ],
+                        },
+                    ),
+                },
+            )
+        "#]],
     );
 }
 
@@ -68,8 +101,8 @@ fn test_lower_item_body_with_field_args() {
             Some(
                 ItemBody {
                     diagnostics: [],
-                    kind: ObjectTypeDefinition(
-                        TypeDefinitionBody {
+                    kind: Object(
+                        ObjectTypeDefinitionBody {
                             fields: [
                               foo(a: Int!, b: Boolean!): Int @qux
                             ],
@@ -98,8 +131,8 @@ fn test_lower_item_body_with_field_arg_defaults() {
             Some(
                 ItemBody {
                     diagnostics: [],
-                    kind: ObjectTypeDefinition(
-                        TypeDefinitionBody {
+                    kind: Object(
+                        ObjectTypeDefinitionBody {
                             fields: [
                               foo(a: Int!, b: Boolean! = false): Int @qux
                             ],
@@ -131,8 +164,8 @@ fn test_lower_simple_value() {
             Some(
                 ItemBody {
                     diagnostics: [],
-                    kind: ObjectTypeDefinition(
-                        TypeDefinitionBody {
+                    kind: Object(
+                        ObjectTypeDefinitionBody {
                             fields: [
                               int(i: Int! = 5): Int
                               fls(b: Boolean! = false): Int
@@ -173,8 +206,8 @@ fn test_lower_value() {
             Some(
                 ItemBody {
                     diagnostics: [],
-                    kind: ObjectTypeDefinition(
-                        TypeDefinitionBody {
+                    kind: Object(
+                        ObjectTypeDefinitionBody {
                             fields: [
                               e(e: E = A): Int
                               xs(xs: [Int]! = [1, 2, 3]): Int

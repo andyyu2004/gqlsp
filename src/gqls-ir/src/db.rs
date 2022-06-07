@@ -182,7 +182,7 @@ fn item_references(db: &dyn DefDatabase, res: ItemRes) -> References {
 
             let body = db.item_body(ItemRes::new(file, idx));
 
-            if let Some(ItemBodyKind::UnionTypeDefinition(union)) = body.as_ref().map(|b| &b.kind) {
+            if let Some(ItemBodyKind::Union(union)) = body.as_ref().map(|b| &b.kind) {
                 references.extend(
                     union.types.iter().filter(|ty| ty.name() == name).map(|ty| (file, ty.range)),
                 )

@@ -20,25 +20,25 @@ impl<'db> BodyCtxt<'db> {
     pub fn lower_typedef(mut self, node: Node<'_>) -> ItemBody {
         let kind = match node.kind() {
             NodeKind::OBJECT_TYPE_DEFINITION | NodeKind::OBJECT_TYPE_EXTENSION =>
-                ItemBodyKind::ObjectTypeDefinition(self.lower_object_typedef(node)),
+                ItemBodyKind::Object(self.lower_object_typedef(node)),
             NodeKind::INTERFACE_TYPE_DEFINITION =>
-                ItemBodyKind::InterfaceDefinition(self.lower_interface_typedef(node)),
+                ItemBodyKind::Interface(self.lower_interface_typedef(node)),
             NodeKind::INPUT_OBJECT_TYPE_DEFINITION =>
-                ItemBodyKind::InputObjectTypeDefinition(self.lower_input_object_typedef(node)),
-            NodeKind::UNION_TYPE_DEFINITION =>
-                ItemBodyKind::UnionTypeDefinition(self.lower_union_typedef(node)),
-            // TODO enum etc
+                ItemBodyKind::InputObject(self.lower_input_object_typedef(node)),
+            NodeKind::UNION_TYPE_DEFINITION => ItemBodyKind::Union(self.lower_union_typedef(node)),
+            NodeKind::ENUM_TYPE_DEFINITION => ItemBodyKind::Enum(self.lower_enum_typedef(node)),
+            // TODO extensions etc
             _ => ItemBodyKind::Todo,
         };
         ItemBody { diagnostics: self.diagnostics, kind }
     }
 
-    fn lower_object_typedef(&mut self, node: Node<'_>) -> TypeDefinitionBody {
+    fn lower_object_typedef(&mut self, node: Node<'_>) -> ObjectTypeDefinitionBody {
         assert!(
             [NodeKind::OBJECT_TYPE_DEFINITION, NodeKind::OBJECT_TYPE_EXTENSION]
                 .contains(&node.kind())
         );
-        TypeDefinitionBody { fields: self.lower_fields_of(node) }
+        ObjectTypeDefinitionBody { fields: self.lower_fields_of(node) }
     }
 
     fn lower_input_object_typedef(&mut self, node: Node<'_>) -> InputTypeDefinitionBody {
@@ -55,13 +55,34 @@ impl<'db> BodyCtxt<'db> {
         InterfaceDefinitionBody { fields: self.lower_fields_of(node) }
     }
 
-    fn lower_union_typedef(&mut self, node: Node<'_>) -> UnionTypeDefinitionBody {
+    fn lower_enum_typedef(&mut self, node: Node<'_>) -> EnumDefinitionBody {
+        assert_eq!(node.kind(), NodeKind::ENUM_TYPE_DEFINITION);
+        let variants = node
+            .child_of_kind(NodeKind::ENUM_VALUES_DEFINITION)
+            .map(|variants| self.lower_enum_variants(variants))
+            .unwrap_or_default();
+        EnumDefinitionBody { variants }
+    }
+
+    fn lower_enum_variants(&mut self, node: Node<'_>) -> Variants {
+        assert_eq!(node.kind(), NodeKind::ENUM_VALUES_DEFINITION);
+        node.children_of_kind(&mut node.walk(), NodeKind::ENUM_VALUE_DEFINITION)
+            .filter_map(|variant| self.lower_enum_variant(variant))
+            .collect()
+    }
+
+    fn lower_enum_variant(&mut self, node: Node<'_>) -> Option<Variant> {
+        assert_eq!(node.kind(), NodeKind::ENUM_VALUE_DEFINITION);
+        Some(Variant { name: self.name_of(node.child_of_kind(NodeKind::ENUM_VALUE)?)? })
+    }
+
+    fn lower_union_typedef(&mut self, node: Node<'_>) -> UnionDefinitionBody {
         assert_eq!(node.kind(), NodeKind::UNION_TYPE_DEFINITION);
         let types = node
             .child_of_kind(NodeKind::UNION_MEMBER_TYPES)
             .map(|node| self.lower_union_member_types(node))
             .unwrap_or_default();
-        UnionTypeDefinitionBody { types }
+        UnionDefinitionBody { types }
     }
 
     fn lower_union_member_types(&mut self, node: Node<'_>) -> Vec<Ty> {
@@ -120,9 +141,9 @@ impl<'db> BodyCtxt<'db> {
     fn lower_value(&mut self, node: Node<'_>) -> Option<Value> {
         assert_eq!(node.kind(), NodeKind::VALUE);
         let value = node.sole_named_child()?;
-        let t = value.text(self.text());
+        let t = self.text_of(value);
         let value = match value.kind() {
-            NodeKind::STRING_VALUE => Value::String(t.trim_matches('"').to_owned()),
+            NodeKind::STRING_VALUE => Value::String(Arc::from(t.trim_matches('"'))),
             NodeKind::INT_VALUE => Value::Int(t.parse().unwrap()),
             NodeKind::FLOAT_VALUE => Value::Float(t.parse().unwrap()),
             NodeKind::BOOLEAN_VALUE => match t {
@@ -131,19 +152,19 @@ impl<'db> BodyCtxt<'db> {
                 _ => unreachable!(),
             },
             NodeKind::NULL_VALUE => Value::Null,
-            NodeKind::ENUM_VALUE => Value::Enum(t.to_owned()),
+            NodeKind::ENUM_VALUE => Value::Enum(Arc::from(t)),
             NodeKind::LIST_VALUE => Value::List(
                 value
                     .children_of_kind(&mut value.walk(), NodeKind::VALUE)
                     .filter_map(|value| self.lower_value(value))
                     .collect(),
             ),
-            NodeKind::OBJECT_VALUE => Value::Object(
+            NodeKind::OBJECT_VALUE => Value::Object(Arc::new(
                 value
                     .children_of_kind(&mut value.walk(), NodeKind::OBJECT_FIELD)
                     .filter_map(|field| self.lower_object_field(field))
                     .collect(),
-            ),
+            )),
             _ => unreachable!(),
         };
         Some(value)

@@ -1,3 +1,4 @@
+mod has_type;
 mod implements_interface;
 
 use crate::db::TyDatabase;
@@ -124,4 +125,64 @@ fn test_typeof_recursive_object() {
               foo: [object Foo!]
             }"#]],
     );
+}
+
+#[macro_export]
+macro_rules! val {
+    ([ $($tt:tt),* ]) => {
+        gqls_ir::Value::List(::std::sync::Arc::from([ $(val!($tt)),* ]))
+    };
+    ({ $($key:ident: $value:tt)* }) => {
+        gqls_ir::Value::Object(::std::sync::Arc::from(maplit::btreemap! {
+            $(
+                gqls_ir::Name::unranged(stringify!($key)) => val!($value),
+            )*
+        }))
+    };
+    (null) => {
+        gqls_ir::Value::Null
+    };
+    (false) => {
+        gqls_ir::Value::Boolean(false)
+    };
+    (true) => {
+        gqls_ir::Value::Boolean(true)
+    };
+    ($variant:ident) => {
+        gqls_ir::Value::Enum(stringify!($variant).into())
+    };
+    ($lit:literal) => {{ gqls_ir::Value::from($lit) }};
+}
+
+#[macro_export]
+macro_rules! ty {
+    ([ $($tt:tt)* ]) => {
+        $crate::TyKind::List(ty!($($tt)*)).intern()
+    };
+    (!$($tt:tt)*) => {
+        $crate::TyKind::NonNull(ty!($($tt)*)).intern()
+    };
+    (Boolean) => {
+        $crate::TyKind::Boolean.intern()
+    };
+    (Float) => {
+        $crate::TyKind::Float.intern()
+    };
+    (String) => {
+        $crate::TyKind::String.intern()
+    };
+    (Int) => {
+        $crate::TyKind::Int.intern()
+    };
+    (ID) => {
+        $crate::TyKind::ID.intern()
+    };
+    ($($variant:ident)|+) => {
+        $crate::TyKind::Enum($crate::EnumType {
+            name: "".into(),
+            variants: ::std::sync::Arc::from([
+                $(stringify!($variant).into()),+
+            ])
+        }).intern()
+    };
 }

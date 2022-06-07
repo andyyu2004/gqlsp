@@ -1,12 +1,13 @@
 use gqls_db::{DefDatabase, Project, SourceDatabase, TyDatabase};
 use gqls_ir::{
-    Arg, Directive, Implementations, InProject, ItemKind, ItemRes, Ty, TypeDefinitionKind
+    Arg, Directive, Implementations, InProject, ItemKind, ItemRes, Ty, TypeDefinitionKind, Value
 };
 use gqls_syntax::{query, Query, QueryCursor};
 use gqls_ty::TyKind;
 use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Display};
+use std::ops::Deref;
 use std::str::FromStr;
 use vfs::FileId;
 
@@ -30,6 +31,14 @@ struct DiagnosticsCtxt<'a> {
     snapshot: &'a Snapshot,
     file: FileId,
     diagnostics: HashSet<Diagnostic>,
+}
+
+impl<'a> Deref for DiagnosticsCtxt<'a> {
+    type Target = Snapshot;
+
+    fn deref(&self) -> &'a Self::Target {
+        &self.snapshot
+    }
 }
 
 #[macro_export]
@@ -103,16 +112,16 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 
     fn ir_diagnostics(&mut self) {
-        let items = self.snapshot.items(self.file);
+        let items = self.items(self.file);
         for (idx, _) in items.iter() {
-            if let Some(body) = self.snapshot.item_body(ItemRes::new(self.file, idx)) {
+            if let Some(body) = self.item_body(ItemRes::new(self.file, idx)) {
                 self.diagnostics.extend(body.diagnostics.iter().map(Into::into))
             }
         }
     }
 
     fn empty_fields(&mut self) {
-        for (file, items) in self.snapshot.project_items(InProject::unit(self.file)).iter() {
+        for (file, items) in self.project_items(InProject::unit(self.file)).iter() {
             for (idx, item) in items.iter() {
                 if let Some(fields) = self
                     .snapshot
@@ -132,7 +141,7 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 
     fn duplicate_definitions(&mut self) {
-        let project_items = self.snapshot.project_items(InProject::unit(self.file));
+        let project_items = self.project_items(InProject::unit(self.file));
         let mut directives = HashMap::new();
         let mut typedefs = HashMap::new();
 
@@ -165,7 +174,7 @@ impl<'a> DiagnosticsCtxt<'a> {
     }
 
     fn check_items(&mut self) {
-        let items = self.snapshot.items(self.file);
+        let items = self.items(self.file);
         for (idx, item) in items.iter() {
             let typedef = match item.kind {
                 ItemKind::TypeDefinition(idx) => &items[idx],
@@ -204,12 +213,18 @@ impl<'a> DiagnosticsCtxt<'a> {
         for arg in args {
             self.check_directives(&arg.directives);
             self.check_input_ty(arg.ty.clone());
+            if let Some(default_value) = arg.default_value.clone() {
+                self.ensure_subtype(&arg.ty, default_value);
+            }
         }
+    }
+
+    fn ensure_subtype(&mut self, expected: &Ty, value: Value) {
     }
 
     fn check_input_ty(&mut self, ty: Ty) {
         let range = ty.range;
-        let ty = self.snapshot.lower_type(ty);
+        let ty = self.lower_type(ty);
         if !ty.is_input() {
             self.diagnose(diagnostic!(E0008 @ range, ty_desc = ty.desc(), ty = ty));
         }
@@ -217,7 +232,7 @@ impl<'a> DiagnosticsCtxt<'a> {
 
     fn check_output_ty(&mut self, ty: Ty) {
         let range = ty.range;
-        let ty = self.snapshot.lower_type(ty);
+        let ty = self.lower_type(ty);
         if !ty.is_output() {
             self.diagnose(diagnostic!(E0009 @ range, ty_desc = ty.desc(), ty = ty));
         }
@@ -225,8 +240,8 @@ impl<'a> DiagnosticsCtxt<'a> {
 
     fn check_implementations(&mut self, impls: &Implementations) {
         for name in impls {
-            let res = self.snapshot.resolve_item(InProject::new(self.file, name.clone()));
-            let ty = self.snapshot.type_of(res.clone());
+            let res = self.resolve_item(InProject::new(self.file, name.clone()));
+            let ty = self.type_of_res(res.clone());
             match ty.kind {
                 TyKind::Boolean | TyKind::Float | TyKind::ID | TyKind::Int | TyKind::String =>
                     self.diagnose(diagnostic!(E0007 @ name.range, typedef_kind = ty.kind.desc(), typename = ty.kind)),
@@ -237,7 +252,7 @@ impl<'a> DiagnosticsCtxt<'a> {
                 | TyKind::Object(_)
                 | TyKind::Input(_) =>
                     for res in res.into_item() {
-                        let location = Location::new(res.file, self.snapshot.item(res).name.range);
+                        let location = Location::new(res.file, self.item(res).name.range);
                         self.diagnose(
                             diagnostic!(E0007 @ name.range, typedef_kind = ty.desc(), typename = name; [
                                 location => "not an interface"
@@ -266,7 +281,7 @@ impl<'a> DiagnosticsCtxt<'a> {
         // can't query for missing nodes atm, so just traversing the entire tree to find any missing nodes
         static QUERY: Lazy<Query> = Lazy::new(|| query("(ERROR) @error"));
         let mut cursor = QueryCursor::new();
-        let data = self.snapshot.file_data(self.file);
+        let data = self.file_data(self.file);
         let tree = data.tree;
         cursor.set_match_limit(30);
         let diags = cursor

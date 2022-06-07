@@ -16,6 +16,7 @@ pub use la_arena::{Arena, Idx, IdxRange, RawIdx};
 use gqls_syntax::{Node, NodeExt, Point, Range, RangeExt};
 use smallvec::SmallVec;
 use smol_str::SmolStr;
+use std::borrow::Borrow;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Debug, Display};
 use std::hash::{Hash, Hasher};
@@ -177,6 +178,12 @@ pub struct Name {
     pub range: Range,
 }
 
+impl Borrow<SmolStr> for Name {
+    fn borrow(&self) -> &SmolStr {
+        &self.name
+    }
+}
+
 impl Name {
     pub fn name(&self) -> SmolStr {
         self.name.clone()
@@ -235,6 +242,9 @@ impl Name {
 
 pub trait HasText {
     fn text(&self) -> &str;
+    fn text_of(&self, node: Node<'_>) -> &str {
+        node.text(self.text())
+    }
 }
 
 impl HasText for Arc<str> {
