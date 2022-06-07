@@ -80,8 +80,8 @@ fn type_of_item(db: &dyn TyDatabase, res: ItemRes) -> Ty {
                     TyKind::Interface(InterfaceType { name, fields: db.field_types_of(res) }),
                 TypeDefinitionKind::Input =>
                     TyKind::Input(InputObjectType { name, fields: db.field_types_of(res) }),
-                TypeDefinitionKind::Scalar => TyKind::Scalar(ScalarType {}),
-                TypeDefinitionKind::Enum => TyKind::Enum(EnumType {}),
+                TypeDefinitionKind::Scalar => TyKind::Scalar(ScalarType { name }),
+                TypeDefinitionKind::Enum => TyKind::Enum(EnumType { name }),
                 TypeDefinitionKind::Union => TyKind::Union(UnionType {
                     name,
                     types: body

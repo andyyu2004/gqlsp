@@ -121,10 +121,14 @@ impl UnionType {
 }
 
 #[derive(PartialEq, Eq, Clone, Hash)]
-pub struct ScalarType {}
+pub struct ScalarType {
+    name: SmolStr,
+}
 
 #[derive(PartialEq, Eq, Clone, Hash)]
-pub struct EnumType {}
+pub struct EnumType {
+    name: SmolStr,
+}
 
 #[derive(PartialEq, Eq, Clone, Hash)]
 pub struct FieldTypes {

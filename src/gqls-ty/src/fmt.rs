@@ -1,9 +1,6 @@
+use crate::*;
 use itertools::Itertools;
 use std::fmt::{self, Debug, Display};
-
-use crate::{
-    FieldType, FieldTypes, InputObjectType, InterfaceType, Interned, ObjectType, TyKind, Type, UnionType
-};
 
 impl Debug for Type {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -16,15 +13,15 @@ impl Debug for TyKind {
         match self {
             TyKind::Boolean | TyKind::Float | TyKind::ID | TyKind::Int | TyKind::String =>
                 write!(f, "{self}"),
-            TyKind::Object(obj) => Debug::fmt(obj, f),
-            TyKind::Input(..) => todo!(),
-            TyKind::Interface(..) => todo!(),
+            TyKind::Object(obj) => write!(f, "{obj:?}"),
+            TyKind::Input(input) => write!(f, "{input:?}"),
+            TyKind::Interface(interface) => write!(f, "{interface:?}"),
             TyKind::NonNull(inner) => write!(f, "{inner:?}!"),
             TyKind::List(inner) => write!(f, "[{inner:?}]"),
+            TyKind::Union(union) => write!(f, "{union:?}"),
+            TyKind::Enum(e) => write!(f, "{e:?}"),
+            TyKind::Scalar(scalar) => write!(f, "{scalar:?}"),
             TyKind::Err => write!(f, "<err>"),
-            TyKind::Union(union) => Debug::fmt(union, f),
-            TyKind::Enum(_) => todo!(),
-            TyKind::Scalar(_) => todo!(),
         }
     }
 }
@@ -50,6 +47,18 @@ impl Debug for UnionType {
 impl Debug for InterfaceType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "interface {}", self.name)
+    }
+}
+
+impl Debug for EnumType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "enum {}", self.name)
+    }
+}
+
+impl Debug for ScalarType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "scalar {}", self.name)
     }
 }
 
@@ -91,13 +100,13 @@ impl Display for TyKind {
             TyKind::String => write!(f, "String"),
             TyKind::Object(obj) => Display::fmt(obj, f),
             TyKind::Input(input) => Display::fmt(input, f),
-            TyKind::Interface(..) => todo!(),
+            TyKind::Interface(interface) => Display::fmt(interface, f),
             TyKind::NonNull(inner) => write!(f, "{inner}!"),
             TyKind::List(inner) => write!(f, "[{inner}]"),
             TyKind::Err => write!(f, "<err>"),
             TyKind::Union(union) => Display::fmt(union, f),
-            TyKind::Enum(_) => todo!(),
-            TyKind::Scalar(_) => todo!(),
+            TyKind::Enum(e) => Display::fmt(e, f),
+            TyKind::Scalar(scalar) => Display::fmt(scalar, f),
         }
     }
 }
@@ -115,6 +124,18 @@ impl Display for UnionType {
 }
 
 impl Display for InputObjectType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
+impl Display for ScalarType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
+impl Display for EnumType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name)
     }
