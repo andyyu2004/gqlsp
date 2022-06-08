@@ -100,18 +100,18 @@ impl Ide {
     }
 
     #[must_use]
-    pub fn apply_changeset(&mut self, changeset: impl Into<Changeset>) -> ChangesetSummary {
-        self.apply_changeset_(changeset.into())
+    pub fn apply(&mut self, changeset: impl Into<Changeset>) -> ChangesetSummary {
+        self.apply_(changeset.into())
     }
 
     #[must_use]
-    fn apply_changeset_(&mut self, changeset: Changeset) -> ChangesetSummary {
+    fn apply_(&mut self, changeset: Changeset) -> ChangesetSummary {
         self.db.request_cancellation();
         if let Some(projects) = changeset.projects {
             self.db.set_projects(Arc::new(projects));
         }
 
-        changeset.changes.iter().for_each(|change| self.apply(change));
+        changeset.changes.iter().for_each(|change| self.apply_change(change));
         let snapshot = self.snapshot();
 
         let affected_projects = changeset
@@ -130,7 +130,7 @@ impl Ide {
         )
     }
 
-    fn apply(&mut self, change: &Change) {
+    fn apply_change(&mut self, change: &Change) {
         self.patch_tree(change);
     }
 

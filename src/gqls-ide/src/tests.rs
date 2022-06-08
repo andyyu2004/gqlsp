@@ -13,13 +13,13 @@ macro_rules! idx {
 
 pub(crate) use idx;
 
-macro_rules! apply_changeset {
+macro_rules! apply {
     ($ide:ident: $file:ident:$a:literal:$b:literal..$x:literal:$y:literal => $text:expr) => {
-        $ide.apply_changeset($crate::Changeset::single($crate::change!($file:$a:$b..$x:$y => $text)))
+        $ide.apply($crate::Changeset::single($crate::change!($file:$a:$b..$x:$y => $text)))
     };
 }
 
-pub(crate) use apply_changeset;
+pub(crate) use apply;
 
 #[macro_export]
 macro_rules! change {
@@ -38,7 +38,7 @@ macro_rules! setup {
         let mut changeset = $crate::Changeset::default()
             .with_projects(maplit::hashmap! { "default" => maplit::hashset! { $($file),* } });
         $( changeset = changeset.with_change($crate::change!($file => $text)); )*
-        $ide.apply_changeset(changeset)
+        $ide.apply(changeset)
     }};
 }
 
@@ -83,7 +83,7 @@ impl Ide {
         for (file, fixture_file) in fixture.files() {
             changeset = changeset.with_change(change!(file => fixture_file.text));
         }
-        self.apply_changeset(changeset)
+        self.apply(changeset)
     }
 }
 
@@ -98,7 +98,7 @@ fn test_ide() {
     expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]]
         .assert_eq(&ide.snapshot().syntax_tree(foo));
 
-    let summary = apply_changeset!(ide: foo:0:7..0:10 => "Baz");
+    let summary = apply!(ide: foo:0:7..0:10 => "Baz");
     assert_eq!(summary.diagnostics, hashmap! { foo => Default::default() });
     assert_eq!(ide.file_ropes[&foo].to_string(), "scalar Baz");
     expect![[r#"(document (item (type_definition (scalar_type_definition (name)))))"#]]

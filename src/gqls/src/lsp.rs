@@ -38,9 +38,15 @@ impl Gqls {
 
 pub fn capabilities() -> ServerCapabilities {
     ServerCapabilities {
-        text_document_sync: Some(TextDocumentSyncCapability::Kind(
-            TextDocumentSyncKind::INCREMENTAL,
-        )),
+        text_document_sync: Some(TextDocumentSyncCapability::Options(TextDocumentSyncOptions {
+            open_close: Some(true),
+            change: Some(TextDocumentSyncKind::INCREMENTAL),
+            will_save: None,
+            will_save_wait_until: None,
+            save: Some(TextDocumentSyncSaveOptions::SaveOptions(SaveOptions {
+                include_text: Some(true),
+            })),
+        })),
         definition_provider: Some(OneOf::Left(true)),
         references_provider: Some(OneOf::Left(true)),
         document_symbol_provider: Some(OneOf::Left(true)),
@@ -144,7 +150,7 @@ impl Gqls {
             }
         }
 
-        Ok(ide.apply_changeset(changeset))
+        Ok(ide.apply(changeset))
     }
 
     // dirty hack to retry a request if it fails by reinitializing
@@ -200,7 +206,14 @@ impl LanguageServer for Gqls {
     #[tracing::instrument(skip_all)]
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
         // maybe we can make sure text is not desynced by doing a hard reset with Change::Set using `params.text`
-        let _ = params;
+        if let Ok(summary) = self.with_ide(|ide| {
+            let uri = params.text_document.uri.to_path()?;
+            let changeset =
+                Changeset::single(Change::set(ide.intern_path(uri), params.text.clone().unwrap()));
+            Ok(ide.apply(changeset))
+        }) {
+            self.send_diagnostics(summary).await;
+        }
     }
 
     #[tracing::instrument(skip_all)]
@@ -249,7 +262,7 @@ impl LanguageServer for Gqls {
                 let change = Change::set(ide.intern_path(uri.to_path()?), String::new());
                 changeset = changeset.with_change(change);
             }
-            Ok(ide.apply_changeset(changeset))
+            Ok(ide.apply(changeset))
         })?;
         self.send_diagnostics(summary).await;
         Ok(None)
@@ -259,7 +272,7 @@ impl LanguageServer for Gqls {
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
         let summary = self.with_ide(|ide| {
             let file = ide.intern_path(params.text_document.uri.to_path()?);
-            Ok(ide.apply_changeset(Change::set(file, params.text_document.text.clone())))
+            Ok(ide.apply(Change::set(file, params.text_document.text.clone())))
         });
         match summary {
             Ok(summary) => self.send_diagnostics(summary).await,
@@ -428,7 +441,7 @@ impl Gqls {
                 .map(|kind| Change::new(path, kind))
                 .collect();
             let changeset = Changeset::new(changes);
-            Ok(ide.apply_changeset(changeset))
+            Ok(ide.apply(changeset))
         })?;
         self.send_diagnostics(summary).await;
         Ok(())
