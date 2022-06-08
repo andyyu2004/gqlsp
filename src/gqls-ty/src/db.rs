@@ -6,6 +6,7 @@ use crate::*;
 #[salsa::query_group(TyDatabaseStorage)]
 pub trait TyDatabase: DefDatabase {
     fn is_subtype(&self, ty: Ty, of: Ty) -> bool;
+    fn ensure_has_type(&self, value: Value, ty: Ty) -> Result<(), TypeMismatch>;
     fn has_type(&self, value: Value, ty: Ty) -> bool;
     fn type_of_res(&self, res: Res) -> Ty;
     fn type_of_item(&self, res: ItemRes) -> Ty;
@@ -20,31 +21,61 @@ fn is_subtype(_db: &dyn TyDatabase, ty: Ty, of: Ty) -> bool {
     ty == of
 }
 
-fn has_type(db: &dyn TyDatabase, value: Value, ty: Ty) -> bool {
+fn ensure_has_type(db: &dyn TyDatabase, value: Value, ty: Ty) -> Result<(), TypeMismatch> {
     match (value, &ty.kind) {
         (_, TyKind::Err)
         | (Value::Boolean(_), TyKind::Boolean)
         | (Value::Float(_), TyKind::Float)
         | (Value::Int(_), TyKind::Int)
         | (Value::String(_), TyKind::String)
-        | (Value::String(_), TyKind::ID) => true,
-        (Value::Enum(variant), TyKind::Enum(e)) => e.variants.contains(&variant),
-        (Value::Null, _) => !matches!(ty.kind, TyKind::NonNull(_)),
-        (Value::List(values), TyKind::List(ty)) =>
-            values.iter().all(|value| db.has_type(value.clone(), ty.clone())),
-        (Value::Object(obj), TyKind::Input(ty)) => {
-            let fields = &ty.fields.fields;
-            let no_extraneous =
-                obj.keys().all(|name| fields.iter().any(|field| field.name == name.name()));
-            no_extraneous
-                && fields.iter().all(|field| match obj.get(&field.name) {
-                    Some(value) => db.has_type(value.clone(), db.type_of_field(field.res.clone())),
-                    None => db.type_of_field(field.res).is_nullable(),
-                })
+        | (Value::String(_), TyKind::ID) => Ok(()),
+        (Value::Enum(variant), TyKind::Enum(e)) if e.variants.contains(&variant) => Ok(()),
+        (Value::Enum(variant), TyKind::Enum(e)) =>
+            Err(TypeMismatch::InvalidVariant(variant, e.clone())),
+        (Value::Null, kind) => match kind {
+            TyKind::NonNull(_) => Err(TypeMismatch::InvalidNull),
+            _ => Ok(()),
+        },
+        (value, TyKind::NonNull(ty)) => db.ensure_has_type(value, ty.clone()),
+        (Value::List(values), TyKind::List(ty)) => {
+            match values
+                .iter()
+                .map(|value| db.ensure_has_type(value.clone(), ty.clone()))
+                .find_map(|x| x.err())
+            {
+                Some(err) => Err(err),
+                None => Ok(()),
+            }
         }
-        (value, TyKind::NonNull(ty)) => db.has_type(value, ty.clone()),
-        _ => false,
+        (Value::Object(obj), TyKind::Input(input)) => {
+            let fields = &input.fields.fields;
+            for name in obj.keys() {
+                if !fields.iter().any(|field| field.name == name.name()) {
+                    return Err(TypeMismatch::ExtraneousField(name.name(), ty.clone()));
+                }
+            }
+            match fields
+                .iter()
+                .map(|field| match obj.get(&field.name) {
+                    Some(value) =>
+                        db.ensure_has_type(value.clone(), db.type_of_field(field.res.clone())),
+                    None => match db.type_of_field(field.res).is_nullable() {
+                        true => Ok(()),
+                        false => Err(TypeMismatch::InvalidNullField(field.name.clone())),
+                    },
+                })
+                .find_map(|x| x.err())
+            {
+                Some(err) => Err(err),
+                None => Ok(()),
+            }
+        }
+        (value, _) => Err(TypeMismatch::Obvious(value, ty)),
     }
+}
+
+fn has_type(db: &dyn TyDatabase, value: Value, ty: Ty) -> bool {
+    db.ensure_has_type(value, ty).is_ok()
 }
 
 fn implements_interface(

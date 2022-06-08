@@ -33,7 +33,7 @@ fn test_object_implements_builtin_scalar() {
     test_rendered(
         gql,
         expect![[r#"
-            error[0007]: expected an interface, found builtin scalar `ID`
+            error[0007]: expected an interface, found ID `ID`
               ┌─ test.graphql:2:29
               │
             2 │         type Foo implements ID {

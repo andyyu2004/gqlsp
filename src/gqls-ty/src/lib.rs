@@ -3,7 +3,7 @@ pub use db::{TyDatabase, TyDatabaseStorage};
 mod db;
 mod fmt;
 
-use gqls_ir::{BuiltinScalar, FieldRes};
+use gqls_ir::{BuiltinScalar, FieldRes, Value};
 use smol_str::SmolStr;
 use std::borrow::Cow;
 use std::ops::Deref;
@@ -87,8 +87,11 @@ pub enum TyKind {
 impl TyKind {
     pub fn desc(&self) -> Cow<'static, str> {
         let s = match self {
-            TyKind::Boolean | TyKind::Float | TyKind::ID | TyKind::Int | TyKind::String =>
-                "builtin scalar",
+            TyKind::Boolean => "boolean",
+            TyKind::Float => "float",
+            TyKind::ID => "ID",
+            TyKind::Int => "int",
+            TyKind::String => "string",
             TyKind::Scalar(_) => "scalar",
             TyKind::Err => "<err>",
             TyKind::Union(_) => "union",
@@ -192,6 +195,15 @@ impl TyKind {
             }
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TypeMismatch {
+    InvalidVariant(Arc<str>, EnumType),
+    InvalidNull,
+    InvalidNullField(SmolStr),
+    ExtraneousField(SmolStr, Ty),
+    Obvious(Value, Ty),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]

@@ -182,6 +182,21 @@ pub enum Value {
     String(Arc<str>),
 }
 
+impl Value {
+    pub fn desc(&self) -> &'static str {
+        match self {
+            Value::Boolean(_) => "boolean",
+            Value::Enum(_) => "enum",
+            Value::Float(_) => "float",
+            Value::Int(_) => "integer",
+            Value::List(_) => "list",
+            Value::Null => "null",
+            Value::Object(_) => "object",
+            Value::String(_) => "string",
+        }
+    }
+}
+
 impl From<i32> for Value {
     fn from(v: i32) -> Self {
         Self::Int(v)

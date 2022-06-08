@@ -158,3 +158,20 @@ impl<T: Display> Display for Interned<T> {
         self.0.fmt(f)
     }
 }
+
+impl Display for TypeMismatch {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TypeMismatch::InvalidVariant(variant, e) =>
+                write!(f, "`{variant}` is not a valid variant of enum `{}`", e.name),
+            TypeMismatch::InvalidNullField(name) =>
+                write!(f, "non-nullable field `{}` must be provided", name),
+            TypeMismatch::ExtraneousField(name, ty) => {
+                write!(f, "field `{name}` is not a member of type `{ty}`")
+            }
+            TypeMismatch::InvalidNull => write!(f, "expected non-nullable value"),
+            TypeMismatch::Obvious(value, ty) =>
+                write!(f, "cannot use {} value as {} type", value.desc(), ty.desc()),
+        }
+    }
+}
