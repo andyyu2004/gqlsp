@@ -45,6 +45,10 @@ impl Type {
         self.kind.desc()
     }
 
+    pub fn is_nullable(&self) -> bool {
+        !matches!(self.kind, TyKind::NonNull(_))
+    }
+
     pub fn is_input(&self) -> bool {
         match &self.kind {
             TyKind::Object(_) | TyKind::Interface(_) | TyKind::Union(_) => false,

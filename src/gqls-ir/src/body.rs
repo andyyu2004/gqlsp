@@ -1,7 +1,7 @@
 use gqls_syntax::Range;
 use itertools::Itertools;
 use std::collections::BTreeMap;
-use std::fmt::{self, Debug};
+use std::fmt::{self, Debug, Display};
 use std::sync::Arc;
 
 use la_arena::Arena;
@@ -197,6 +197,12 @@ impl From<f64> for Value {
 impl<'a> From<&'a str> for Value {
     fn from(s: &'a str) -> Self {
         Value::String(s.into())
+    }
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:?}")
     }
 }
 

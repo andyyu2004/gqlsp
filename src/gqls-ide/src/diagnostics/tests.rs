@@ -38,8 +38,7 @@ where
     let snapshot = ide.snapshot();
     for (file, annotations) in fixture.annotations() {
         let diagnostics = snapshot.file_diagnostics(file);
-        let expected =
-            diagnostics.iter().map(|diag| (diag.range, f(diag))).collect::<HashSet<_>>();
+        let expected = diagnostics.iter().map(|diag| (diag.range, f(diag))).collect::<HashSet<_>>();
         let actual = annotations
             .map(|annotation| (Range::from(annotation.range.clone()), g(annotation)))
             .collect::<HashSet<_>>();
@@ -141,4 +140,5 @@ mod empty_fields;
 mod impl_non_interface;
 mod io;
 mod syntax;
+mod typecheck;
 mod unresolved;

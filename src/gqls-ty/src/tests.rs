@@ -132,7 +132,7 @@ macro_rules! val {
     ([ $($tt:tt),* ]) => {
         gqls_ir::Value::List(::std::sync::Arc::from([ $(val!($tt)),* ]))
     };
-    ({ $($key:ident: $value:tt)* }) => {
+    ({ $($key:ident: $value:tt),* }) => {
         gqls_ir::Value::Object(::std::sync::Arc::from(maplit::btreemap! {
             $(
                 gqls_ir::Name::unranged(stringify!($key)) => val!($value),
@@ -156,6 +156,7 @@ macro_rules! val {
 
 #[macro_export]
 macro_rules! ty {
+    // unclear how to do object type due to the indirection in fields
     ([ $($tt:tt)* ]) => {
         $crate::TyKind::List(ty!($($tt)*)).intern()
     };

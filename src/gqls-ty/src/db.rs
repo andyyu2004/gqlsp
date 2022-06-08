@@ -22,7 +22,8 @@ fn is_subtype(_db: &dyn TyDatabase, ty: Ty, of: Ty) -> bool {
 
 fn has_type(db: &dyn TyDatabase, value: Value, ty: Ty) -> bool {
     match (value, &ty.kind) {
-        (Value::Boolean(_), TyKind::Boolean)
+        (_, TyKind::Err)
+        | (Value::Boolean(_), TyKind::Boolean)
         | (Value::Float(_), TyKind::Float)
         | (Value::Int(_), TyKind::Int)
         | (Value::String(_), TyKind::String)
@@ -31,15 +32,15 @@ fn has_type(db: &dyn TyDatabase, value: Value, ty: Ty) -> bool {
         (Value::Null, _) => !matches!(ty.kind, TyKind::NonNull(_)),
         (Value::List(values), TyKind::List(ty)) =>
             values.iter().all(|value| db.has_type(value.clone(), ty.clone())),
-        (Value::Object(obj), TyKind::Object(ty)) => {
+        (Value::Object(obj), TyKind::Input(ty)) => {
             let fields = &ty.fields.fields;
-            if fields.len() != obj.keys().count() {
-                return false;
-            }
-            fields.iter().all(|field| match obj.get(&field.name) {
-                Some(value) => db.has_type(value.clone(), db.type_of_field(field.res.clone())),
-                None => false,
-            })
+            let no_extraneous =
+                obj.keys().all(|name| fields.iter().any(|field| field.name == name.name()));
+            no_extraneous
+                && fields.iter().all(|field| match obj.get(&field.name) {
+                    Some(value) => db.has_type(value.clone(), db.type_of_field(field.res.clone())),
+                    None => db.type_of_field(field.res).is_nullable(),
+                })
         }
         (value, TyKind::NonNull(ty)) => db.has_type(value, ty.clone()),
         _ => false,

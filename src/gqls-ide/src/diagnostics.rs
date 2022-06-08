@@ -70,6 +70,9 @@ macro_rules! error_msg {
     (E0009) => {
         "expected an output type, found {ty_desc} `{ty}`"
     };
+    (E0010) => {
+        "value `{value}` is incompatible with type `{ty}`"
+    };
     ($ident:ident) => {
         compile_error!("unknown error code")
     };
@@ -214,12 +217,17 @@ impl<'a> DiagnosticsCtxt<'a> {
             self.check_directives(&arg.directives);
             self.check_input_ty(arg.ty.clone());
             if let Some(default_value) = arg.default_value.clone() {
-                self.ensure_subtype(&arg.ty, default_value);
+                self.ensure_subtype(arg.range.into(), default_value, arg.ty.clone());
             }
         }
     }
 
-    fn ensure_subtype(&mut self, expected: &Ty, value: Value) {
+    fn ensure_subtype(&mut self, range: Range, value: Value, ty: Ty) {
+        let ty = self.lower_type(ty);
+        let diag = diagnostic!(E0010 @ range, value = value, ty = ty);
+        if !self.has_type(value, ty) {
+            self.diagnose(diag);
+        }
     }
 
     fn check_input_ty(&mut self, ty: Ty) {
