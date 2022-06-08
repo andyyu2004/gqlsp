@@ -113,3 +113,33 @@ fn test_incompatible_field_argument_object() {
         "#]],
     )
 }
+
+#[test]
+fn test_incompatible_field_argument_list() {
+    let gql = r#"
+        type Foo {
+            a(e: [Int!]! = []): [Foo!]
+            b(e: [Int]! = []): [Foo!]
+            c(e: [Int!] = []): [Foo!]
+            bad(e: [Int!] = [null]): [Foo!]
+            invalidType(e: [Int!] = [1, false, 3]): [Foo!]
+        }
+    "#;
+    test_rendered(
+        gql,
+        expect![[r#"
+            error[0010]: value `[null]` is incompatible with type `[Int!]` (expected non-nullable value)
+              ┌─ test.graphql:6:17
+              │
+            6 │             bad(e: [Int!] = [null]): [Foo!]
+              │                 ^^^^^^^^^^^^^^^^^^
+
+            error[0010]: value `[1, false, 3]` is incompatible with type `[Int!]` (cannot use boolean value as int type)
+              ┌─ test.graphql:7:25
+              │
+            7 │             invalidType(e: [Int!] = [1, false, 3]): [Foo!]
+              │                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        "#]],
+    )
+}
