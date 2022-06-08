@@ -1,10 +1,10 @@
 use std::collections::HashSet;
 
-use crate::tests::setup;
 use crate::{point, position, range, Ide, Location};
 use gqls_db::DefDatabase;
 use gqls_fixture::{fixture, Fixture};
 use gqls_ir::Name;
+use testing::file_id;
 
 fn test(fixture: Fixture) {
     let ide = Ide::from_fixture(&fixture);
@@ -56,18 +56,22 @@ type Qux {
 fn test_goto_definition() {
     let mut ide = Ide::default();
     let foo = ide.vfs().intern("foo.graphql");
-    let summary = setup!(ide: {
-               foo: r#"
+    let fixture = fixture! {
+       "foo.graphql" => "
 type Foo {
     bar: Bar
 }
 
 type Bar {
     foo: Foo
-}"#,
-    });
+},
+       "
+    };
+    ide.setup_fixture(&fixture);
+    let snapshot = ide.snapshot();
+    let diagnostics = snapshot.file_diagnostics(file_id!("foo.graphql"));
 
-    assert!(summary.diagnostics[foo].is_empty());
+    assert!(diagnostics.is_empty());
 
     let snapshot = ide.snapshot();
     assert!(snapshot.name_at(position!(foo:0:0)).is_none());

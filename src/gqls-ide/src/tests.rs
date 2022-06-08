@@ -31,19 +31,6 @@ macro_rules! change {
     };
 }
 
-macro_rules! setup {
-    ($ide:ident: {
-        $($file:ident: $text:expr,)*
-     }) => {{
-        let mut changeset = $crate::Changeset::default()
-            .with_projects(maplit::hashmap! { "default" => maplit::hashset! { $($file),* } });
-        $( changeset = changeset.with_change($crate::change!($file => $text)); )*
-        $ide.apply(changeset)
-    }};
-}
-
-pub(crate) use setup;
-
 impl Ide {
     pub fn from_file(gql: &str) -> (Self, FileId) {
         let file = VFS.write().intern("test");
