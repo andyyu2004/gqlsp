@@ -6,7 +6,7 @@ import { dirname, join } from "path";
 import { createGunzip } from "zlib";
 import assert = require("assert");
 
-const GQLS_VERSION = "v0.0.8";
+const GQLS_VERSION = "v0.0.10";
 
 export async function bootstrap(
   context: vscode.ExtensionContext,
