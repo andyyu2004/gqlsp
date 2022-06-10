@@ -2,15 +2,15 @@ use anyhow::Result;
 use expect_test::expect;
 use futures::StreamExt;
 use gqls::{Convert, Gqls};
-use lsp_types::notification::Notification as _;
-use lsp_types::request::Request as _;
-use lsp_types::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::sync::atomic::AtomicI64;
 use tower::{Service, ServiceExt};
 use tower_lsp::jsonrpc::{Request, Response};
+use tower_lsp::lsp_types::notification::Notification as _;
+use tower_lsp::lsp_types::request::Request as _;
+use tower_lsp::lsp_types::{self, *};
 use tower_lsp::LspService;
 
 macro_rules! make_service {
@@ -28,7 +28,8 @@ fn next_id() -> i64 {
 macro_rules! request {
     ($service:ident: $request:tt, $params:expr) => {{
         let response = $service.call(build_request!($request, $params)).await?.unwrap();
-        response.json::<<lsp_request!($request) as lsp_types::request::Request>::Result>()?
+        response
+            .json::<<lsp_request!($request) as tower_lsp::lsp_types::request::Request>::Result>()?
     }};
 }
 
@@ -45,21 +46,21 @@ fn verify<T: Serialize + DeserializeOwned>(value: Value) -> Value {
 
 macro_rules! build_notification {
     ($request:tt, $params:expr) => {{
-        type Notification = lsp_types::lsp_notification!($request);
+        type Notification = tower_lsp::lsp_types::lsp_notification!($request);
         Request::build(<Notification>::METHOD)
-            .params(verify::<<Notification as lsp_types::notification::Notification>::Params>(
-                serde_json::to_value($params).unwrap(),
-            ))
+            .params(verify::<
+                <Notification as tower_lsp::lsp_types::notification::Notification>::Params,
+            >(serde_json::to_value($params).unwrap()))
             .finish()
     }};
 }
 
 macro_rules! build_request {
     ($request:tt, $params:expr) => {{
-        type Req = lsp_types::lsp_request!($request);
+        type Req = tower_lsp::lsp_types::lsp_request!($request);
         Request::build(<Req>::METHOD)
             .id(next_id())
-            .params(verify::<<Req as lsp_types::request::Request>::Params>(
+            .params(verify::<<Req as tower_lsp::lsp_types::request::Request>::Params>(
                 serde_json::to_value($params).unwrap(),
             ))
             .finish()
@@ -77,7 +78,7 @@ macro_rules! fixture_path {
 }
 
 macro_rules! fixture {
-    ($name:literal) => {{ lsp_types::Url::from_directory_path(fixture_path!($name)).unwrap() }};
+    ($name:literal) => {{ tower_lsp::lsp_types::Url::from_directory_path(fixture_path!($name)).unwrap() }};
 }
 
 macro_rules! url {

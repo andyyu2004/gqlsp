@@ -1,5 +1,5 @@
-use lsp_types::WorkspaceFolder;
 use maplit::hashmap;
+use tower_lsp::lsp_types::{self, WorkspaceFolder};
 
 use crate::config::DEFAULT_PROJECT;
 use crate::lsp;

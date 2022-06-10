@@ -280,7 +280,6 @@ dependencies = [
  "futures",
  "globset",
  "gqls-ide",
- "lsp-types",
  "maplit",
  "once_cell",
  "parking_lot 0.12.1",

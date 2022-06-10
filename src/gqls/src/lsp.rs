@@ -6,12 +6,12 @@ use core::panic::{AssertUnwindSafe, UnwindSafe};
 use gqls_ide::{
     Change, ChangeKind, Changeset, ChangesetSummary, FileId, Ide, Patch, Vfs, VfsProxy
 };
-use lsp_types::notification::PublishDiagnostics;
-use lsp_types::*;
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use tower_lsp::lsp_types::notification::PublishDiagnostics;
+use tower_lsp::lsp_types::*;
 use tower_lsp::{jsonrpc, Client, ClientSocket, LanguageServer, LspService};
 
 pub struct Gqls {

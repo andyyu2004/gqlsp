@@ -1,6 +1,6 @@
-use lsp_types::NumberOrString;
 use std::path::{Path, PathBuf};
 use tower_lsp::jsonrpc;
+use tower_lsp::lsp_types::{self, NumberOrString};
 
 use crate::lsp::VfsExt;
 use crate::tokens;

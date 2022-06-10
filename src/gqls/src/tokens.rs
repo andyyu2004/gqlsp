@@ -1,5 +1,5 @@
 use gqls_ide::RangeExt;
-use lsp_types::{SemanticToken, SemanticTokenModifier, SemanticTokenType};
+use tower_lsp::lsp_types::{SemanticToken, SemanticTokenModifier, SemanticTokenType};
 
 use crate::Convert;
 
