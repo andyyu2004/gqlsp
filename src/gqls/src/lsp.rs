@@ -80,7 +80,7 @@ pub fn capabilities() -> ServerCapabilities {
                     filters: vec![FileOperationFilter {
                         scheme: Some(String::from("file")),
                         pattern: FileOperationPattern {
-                            glob: String::from("**"),
+                            glob: String::from("**/*.graphql"),
                             matches: Some(FileOperationPatternKind::File),
                             options: None,
                         },
