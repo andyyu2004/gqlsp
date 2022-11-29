@@ -1,4 +1,4 @@
-use gqls_ir::{self as ir, DefDatabase, ItemKind, ItemRes, TypeDefinitionKind};
+use gqls_ir::{self as ir, Builtin, DefDatabase, ItemKind, ItemRes, TypeDefinitionKind};
 use ir::{FieldRes, Res, Value};
 
 use crate::*;
@@ -103,7 +103,8 @@ fn type_of_res(db: &dyn TyDatabase, res: Res) -> Ty {
             [res, ..] => db.type_of_item(res),
             // TODO handle multiple res?
         },
-        Res::Builtin(builtin) => TyKind::from(builtin).intern(),
+        Res::Builtin(Builtin::Scalar(scalar)) => TyKind::from(scalar).intern(),
+        Res::Builtin(_) => TyKind::Err.intern(),
         Res::Err => TyKind::Err.intern(),
     }
 }

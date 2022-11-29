@@ -267,7 +267,7 @@ pub type References = Vec<(FileId, Range)>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum Res {
-    Builtin(BuiltinScalar),
+    Builtin(Builtin),
     // INVARIANT: should be non-empty
     Item(ItemResolutions),
     Err,
@@ -285,6 +285,29 @@ impl Res {
     pub fn is_err(&self) -> bool {
         matches!(self, Self::Err)
     }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub enum Builtin {
+    Scalar(BuiltinScalar),
+    Directive(BuiltinDirective),
+}
+
+impl From<BuiltinScalar> for Builtin {
+    fn from(v: BuiltinScalar) -> Self {
+        Self::Scalar(v)
+    }
+}
+
+impl From<BuiltinDirective> for Builtin {
+    fn from(v: BuiltinDirective) -> Self {
+        Self::Directive(v)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub enum BuiltinDirective {
+    Deprecated,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]

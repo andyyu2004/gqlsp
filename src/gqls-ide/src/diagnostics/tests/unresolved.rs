@@ -4,6 +4,20 @@ use gqls_fixture::fixture;
 use super::{test_error_code, test_error_message, test_rendered};
 
 #[test]
+fn test_resolve_builtin_directive() {
+    let fixture = fixture! {
+        "foo" => "
+            type Foo @deprecated {
+                bar: Int @deprecated
+            }
+
+        "
+    };
+
+    test_error_code(&fixture);
+}
+
+#[test]
 fn test_unresolved_directives() {
     let fixture = fixture! {
         "foo" => "

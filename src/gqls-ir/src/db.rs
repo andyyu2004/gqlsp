@@ -136,7 +136,7 @@ fn resolve(db: &dyn DefDatabase, position: Position) -> Option<Res> {
                 .items(position.file)
                 .items
                 .iter()
-                .find_map(|(idx, item)| (item.range == parent.range()).then(|| idx))
+                .find_map(|(idx, item)| (item.range == parent.range()).then_some(idx))
                 .expect("item not found");
             Some(Res::Item(smallvec![ItemRes::new(position.file, idx)]))
         }
@@ -147,11 +147,12 @@ fn resolve(db: &dyn DefDatabase, position: Position) -> Option<Res> {
 
 fn resolve_item(db: &dyn DefDatabase, name: InProject<Name>) -> Res {
     match name.as_str() {
-        "ID" => return Res::Builtin(BuiltinScalar::ID),
-        "Float" => return Res::Builtin(BuiltinScalar::Float),
-        "Int" => return Res::Builtin(BuiltinScalar::Int),
-        "Boolean" => return Res::Builtin(BuiltinScalar::Boolean),
-        "String" => return Res::Builtin(BuiltinScalar::String),
+        "ID" => return Res::Builtin(BuiltinScalar::ID.into()),
+        "Float" => return Res::Builtin(BuiltinScalar::Float.into()),
+        "Int" => return Res::Builtin(BuiltinScalar::Int.into()),
+        "Boolean" => return Res::Builtin(BuiltinScalar::Boolean.into()),
+        "String" => return Res::Builtin(BuiltinScalar::String.into()),
+        "@deprecated" => return Res::Builtin(BuiltinDirective::Deprecated.into()),
         _ => (),
     }
 
