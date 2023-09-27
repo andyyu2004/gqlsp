@@ -3,6 +3,7 @@ use gqls::Gqls;
 use tower_lsp::Server;
 use tracing::metadata::LevelFilter;
 use tracing_subscriber::filter::Targets;
+use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::EnvFilter;
 
@@ -10,7 +11,9 @@ use tracing_subscriber::EnvFilter;
 async fn main() -> Result<()> {
     Targets::new();
 
-    let mut layer = tracing_subscriber::fmt::layer().with_writer(std::io::stderr);
+    let mut layer = tracing_subscriber::fmt::layer()
+        .with_writer(std::io::stderr)
+        .with_span_events(FmtSpan::FULL);
     if atty::isnt(atty::Stream::Stderr) {
         layer = layer.with_ansi(false);
     }

@@ -131,6 +131,8 @@ impl Gqls {
             jsonrpc::Error::internal_error()
         })?;
 
+        tracing::info!("discovered graphql projects");
+
         let mut ide = self.ide.lock();
         let mut changeset = Changeset::default().with_projects(
             projects
@@ -180,6 +182,8 @@ impl Gqls {
 impl LanguageServer for Gqls {
     #[tracing::instrument(skip_all)]
     async fn initialize(&self, params: InitializeParams) -> jsonrpc::Result<InitializeResult> {
+        tracing::info!("gqls initializing");
+
         // TODO should probably check client capabilities, but going to assume they have everything we need for now
 
         let workspaces = params.workspace_folders.unwrap_or_default();
@@ -475,6 +479,7 @@ fn read_config(path: &Path) -> anyhow::Result<Option<Config>> {
     Ok(None)
 }
 
+#[tracing::instrument(skip_all)]
 fn discover_projects(
     workspaces: impl IntoIterator<Item = WorkspaceFolder>,
 ) -> anyhow::Result<HashMap<String, Vec<(PathBuf, String)>>> {
@@ -483,19 +488,17 @@ fn discover_projects(
         let path = workspace.uri.to_path()?;
         let config = read_config(&path)?;
         // FIXME drop this dependency
-        for entry in walkdir::WalkDir::new(&path)
-            .into_iter()
-            .filter_entry(|entry| !entry.path().ends_with(".git"))
-        {
+        for entry in ignore::Walk::new(&path) {
             let entry = entry?;
-            if !entry.file_type().is_file() {
+            if !entry.file_type().expect("should exist as not stdin").is_file() {
                 continue;
             }
+
             let file_projects = match &config {
                 Some(config) => config.project_matches(entry.path().strip_prefix(&path).unwrap()),
                 // If configuration file is found, then all `*.graphql` files are assigned to the default project
                 None => (entry.path().extension() == Some("graphql".as_ref()))
-                    .then(|| DEFAULT_PROJECT)
+                    .then_some(DEFAULT_PROJECT)
                     .into_iter()
                     .collect(),
             };
@@ -503,6 +506,7 @@ fn discover_projects(
             if file_projects.is_empty() {
                 continue;
             }
+
             let path = entry.path().to_path_buf();
             let content = std::fs::read_to_string(&path).unwrap();
             // FIXME shouldn't have to clone everything
